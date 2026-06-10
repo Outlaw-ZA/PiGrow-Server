@@ -51,10 +51,12 @@ export const AnyNull = runtime.AnyNull
 
 
 export const ModelName = {
-  Device: 'Device',
-  TelemetryLog: 'TelemetryLog',
-  LightStatusLog: 'LightStatusLog',
-  PumpStatusLog: 'PumpStatusLog'
+  Cycles: 'Cycles',
+  Phases: 'Phases',
+  Lights: 'Lights',
+  Sensors: 'Sensors',
+  PhaseLightSchedules: 'PhaseLightSchedules',
+  Temperature: 'Temperature'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -73,45 +75,72 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
-export const DeviceScalarFieldEnum = {
+export const CyclesScalarFieldEnum = {
   id: 'id',
-  createdAt: 'createdAt'
+  name: 'name',
+  description: 'description',
+  type: 'type',
+  start_date: 'start_date',
+  end_date: 'end_date',
+  plant_type: 'plant_type'
 } as const
 
-export type DeviceScalarFieldEnum = (typeof DeviceScalarFieldEnum)[keyof typeof DeviceScalarFieldEnum]
+export type CyclesScalarFieldEnum = (typeof CyclesScalarFieldEnum)[keyof typeof CyclesScalarFieldEnum]
 
 
-export const TelemetryLogScalarFieldEnum = {
+export const PhasesScalarFieldEnum = {
   id: 'id',
-  deviceId: 'deviceId',
-  temp: 'temp',
-  humidity: 'humidity',
-  createdAt: 'createdAt'
+  name: 'name',
+  description: 'description',
+  type: 'type',
+  start_date: 'start_date',
+  end_date: 'end_date',
+  cycle_id: 'cycle_id',
+  active: 'active'
 } as const
 
-export type TelemetryLogScalarFieldEnum = (typeof TelemetryLogScalarFieldEnum)[keyof typeof TelemetryLogScalarFieldEnum]
+export type PhasesScalarFieldEnum = (typeof PhasesScalarFieldEnum)[keyof typeof PhasesScalarFieldEnum]
 
 
-export const LightStatusLogScalarFieldEnum = {
+export const LightsScalarFieldEnum = {
   id: 'id',
-  deviceId: 'deviceId',
-  isOn: 'isOn',
-  brightness: 'brightness',
-  createdAt: 'createdAt'
+  name: 'name',
+  description: 'description',
+  cycle_id: 'cycle_id'
 } as const
 
-export type LightStatusLogScalarFieldEnum = (typeof LightStatusLogScalarFieldEnum)[keyof typeof LightStatusLogScalarFieldEnum]
+export type LightsScalarFieldEnum = (typeof LightsScalarFieldEnum)[keyof typeof LightsScalarFieldEnum]
 
 
-export const PumpStatusLogScalarFieldEnum = {
+export const SensorsScalarFieldEnum = {
   id: 'id',
-  deviceId: 'deviceId',
-  isActive: 'isActive',
-  flowRateLpm: 'flowRateLpm',
-  createdAt: 'createdAt'
+  name: 'name',
+  description: 'description',
+  cycle_id: 'cycle_id'
 } as const
 
-export type PumpStatusLogScalarFieldEnum = (typeof PumpStatusLogScalarFieldEnum)[keyof typeof PumpStatusLogScalarFieldEnum]
+export type SensorsScalarFieldEnum = (typeof SensorsScalarFieldEnum)[keyof typeof SensorsScalarFieldEnum]
+
+
+export const PhaseLightSchedulesScalarFieldEnum = {
+  phase_id: 'phase_id',
+  light_id: 'light_id',
+  trigger_on_time: 'trigger_on_time',
+  trigger_off_time: 'trigger_off_time'
+} as const
+
+export type PhaseLightSchedulesScalarFieldEnum = (typeof PhaseLightSchedulesScalarFieldEnum)[keyof typeof PhaseLightSchedulesScalarFieldEnum]
+
+
+export const TemperatureScalarFieldEnum = {
+  id: 'id',
+  sensor_id: 'sensor_id',
+  phase_id: 'phase_id',
+  value: 'value',
+  created_at: 'created_at'
+} as const
+
+export type TemperatureScalarFieldEnum = (typeof TemperatureScalarFieldEnum)[keyof typeof TemperatureScalarFieldEnum]
 
 
 export const SortOrder = {

@@ -9,7 +9,18 @@
 * 🟢 You can import this file directly.
 */
 
+export const CycleType = {
+  GROW: 'GROW'
+} as const
+
+export type CycleType = (typeof CycleType)[keyof typeof CycleType]
 
 
-// This file is empty because there are no enums in the schema.
-export {}
+export const PhaseType = {
+  PROPOGATION: 'PROPOGATION',
+  VEG: 'VEG',
+  FLOWER: 'FLOWER',
+  CURING: 'CURING'
+} as const
+
+export type PhaseType = (typeof PhaseType)[keyof typeof PhaseType]

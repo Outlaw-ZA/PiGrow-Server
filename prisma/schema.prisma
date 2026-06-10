@@ -1,43 +1,106 @@
 generator client {
-  provider = "prisma-client"            // 1. Change from prisma-client-js
-  output   = "../src/generated/client"   // 2. Explicitly point inside your src folder
+  provider = "prisma-client"
+  output   = "../src/generated/client"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-model Device {
-  id               String            @id // Matches your deviceId string (e.g., "rpi-01")
-  createdAt        DateTime          @default(now())
-  telemetryLogs    TelemetryLog[]
-  lightStatusLogs  LightStatusLog[]
-  pumpStatusLogs   PumpStatusLog[]
+model Cycles {
+  id                      String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                    String              @db.VarChar(100)
+  description             String              @db.VarChar(255)
+  type                    CycleType
+  start_date              DateTime            @db.Timestamp(6)
+  end_date                DateTime            @db.Timestamp(6)
+  plant_type              String              @db.VarChar(100)
+
+  phases                  Phases[]
+  lights                  Lights[]
+  sensors                 Sensors[]
+
+  @@map("cycles")  
 }
 
-model TelemetryLog {
-  id        Int      @id @default(autoincrement())
-  deviceId  String
-  temp      Float
-  humidity  Float
-  createdAt DateTime @default(now())
-  device    Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+model Phases {
+  id                      String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                    String              @db.VarChar(100)
+  description             String              @db.VarChar(255)
+  type                    PhaseType
+  start_date              DateTime            @db.Timestamp(6)
+  end_date                DateTime            @db.Timestamp(6)
+  cycle_id                String              @db.Uuid
+  active                  Boolean             @db.Boolean
+
+  phase_light_schedules   PhaseLightSchedules[]
+
+  cycles                  Cycles              @relation(fields: [cycle_id], references: [id], onDelete: Cascade)
+  
+
+  @@map("phases")
 }
 
-model LightStatusLog {
-  id         Int      @id @default(autoincrement())
-  deviceId   String
-  isOn       Boolean
-  brightness Int
-  createdAt  DateTime @default(now())
-  device     Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+model Lights {
+  id                      String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                    String              @db.VarChar(100)
+  description             String              @db.VarChar(255)
+  cycle_id                String              @db.Uuid
+
+  phase_light_schedules   PhaseLightSchedules[]
+
+  cycles                  Cycles              @relation(fields: [cycle_id], references: [id], onDelete: Cascade)
+
+  @@map("lights")
 }
 
-model PumpStatusLog {
-  id          Int      @id @default(autoincrement())
-  deviceId    String
-  isActive    Boolean
-  flowRateLpm Float
-  createdAt   DateTime @default(now())
-  device      Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+model Sensors {
+  id                      String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                    String              @db.VarChar(100)
+  description             String              @db.VarChar(255)
+  cycle_id                String              @db.Uuid
+
+  cycles                  Cycles              @relation(fields: [cycle_id], references: [id], onDelete: Cascade)
+
+  @@map("sensors")
+}
+
+model PhaseLightSchedules {
+  phase_id                String              @db.Uuid
+  light_id                String              @db.Uuid
+  trigger_on_time         DateTime            @db.Timestamp(6)
+  trigger_off_time        DateTime            @db.Timestamp(6)
+
+  phases                  Phases              @relation(fields: [phase_id], references: [id], onDelete: Cascade)
+  lights                  Lights              @relation(fields: [light_id], references: [id], onDelete: Cascade)
+
+  @@unique([phase_id, light_id])
+
+  @@map("phase_light_schedules")
+}
+
+model Temperature {
+  id                      String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sensor_id               String              @db.Uuid
+  phase_id                String              @db.Uuid
+  value                   Float               @db.DoublePrecision
+  created_at              DateTime            
+}
+
+
+
+
+enum CycleType {
+  GROW
+
+  @@map("cycle_types")
+}
+
+enum PhaseType {
+  PROPOGATION
+  VEG
+  FLOWER
+  CURING
+
+  @@map("phase_types")
 }

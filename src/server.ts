@@ -1,10 +1,9 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import mqtt from 'mqtt';
-import { handleTelemetry } from './handlers/telemetry-handler.js';
+import { handleTelemetry } from './mqtt-handlers/telemetry-handler.js';
 import mqttMatch from 'mqtt-match';
 import { Server as SocketIOServer } from 'socket.io';
-import { prisma } from './prisma.js';
 
 // 1. Initialize Fastify and register CORS for the Frontend
 const fastify = Fastify({ logger: true });
@@ -75,20 +74,6 @@ mqttClient.on('message', (topic: string, message: Buffer) => {
   } else {
     console.warn(`⚠️ Warning: Received data on unhandled topic: ${topic}`);
   }
-});
-
-// 4. REST Endpoints for Frontend Actions
-// Endpoint A: Fetching historical data log sequences out of Postgres
-fastify.get('/api/devices/:id/history', async (request, reply) => {
-  const { id } = request.params as { id: string };
-  
-  const history = await prisma.telemetryLog.findMany({
-    where: { deviceId: id },
-    orderBy: { createdAt: 'desc' },
-    take: 50 // Pull down the last 50 data entries for rendering UI chart elements
-  });
-
-  return history;
 });
 
 // 5. Start Fastify (Listen on Port 4000 for both REST and Socket.io traffic)
