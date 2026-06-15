@@ -104,7 +104,7 @@ export class GrowCyclesController {
                   {
                     deviceId: lightDevice.id,
                     triggerType: "SCHEDULE" as const,
-                    configData: { onTime: "06:00", durationHours: 18 },
+                    configData: { onTime: "06:00", durationHours: 22 },
                   },
                 ]
               : []),
@@ -149,7 +149,7 @@ export class GrowCyclesController {
         },
       },
       {
-        name: "Flushing / Harvest",
+        name: "Curing / Harvest",
         order: 4,
         durationDays: 7,
         isActive: false,
@@ -159,8 +159,8 @@ export class GrowCyclesController {
               ? [
                   {
                     deviceId: lightDevice.id,
-                    triggerType: "SCHEDULE" as const,
-                    configData: { onTime: "06:00", durationHours: 12 },
+                    triggerType: "ALWAYS_OFF" as const,
+                    configData: {},
                   },
                 ]
               : []),
