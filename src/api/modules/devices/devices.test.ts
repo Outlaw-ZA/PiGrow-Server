@@ -29,10 +29,10 @@ describe("Devices API Feature Module", () => {
     await app.close();
   });
 
-  test("POST /device - Should provision a relay channel assignment", async () => {
+  test("POST /devices - Should provision a relay channel assignment", async () => {
     const response = await app.inject({
       method: "POST",
-      url: "/device",
+      url: "/api/devices",
       payload: {
         controllerId: testControllerId,
         name: "SpiderFarmer LED Panel",

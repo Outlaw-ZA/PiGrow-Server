@@ -14,14 +14,29 @@ const DeviceTypeEnum = Type.Union([
   Type.Literal("CO2_INJECTOR"),
 ]);
 
+// Body shape for a single device entry (used by both single and batch create)
+const DeviceBody = Type.Object({
+  name: Type.String({ maxLength: 100 }),
+  type: DeviceTypeEnum,
+  pinNumber: Type.Integer({ minimum: 0, maximum: 40 }),
+  mqttTopic: Type.String({ maxLength: 150 }),
+  isActive: Type.Optional(Type.Boolean({ default: true })),
+});
+
 // Schema for provisioning a new physical device on a Pi
 export const CreateDeviceSchema = Type.Object({
   controllerId: Type.String({ format: "uuid" }),
   name: Type.String({ maxLength: 100 }),
   type: DeviceTypeEnum,
-  pinNumber: Type.Integer({ minimum: 0, maximum: 40 }), // Valid Raspberry Pi GPIO map
+  pinNumber: Type.Integer({ minimum: 0, maximum: 40 }),
   mqttTopic: Type.String({ maxLength: 150 }),
   isActive: Type.Optional(Type.Boolean({ default: true })),
+});
+
+// Schema for bulk provisioning multiple devices on a single Pi
+export const BatchCreateDeviceSchema = Type.Object({
+  controllerId: Type.String({ format: "uuid" }),
+  devices: Type.Array(DeviceBody, { minItems: 1 }),
 });
 
 // Schema for modifying hardware parameters
@@ -31,6 +46,11 @@ export const UpdateDeviceSchema = Type.Object({
   pinNumber: Type.Optional(Type.Integer({ minimum: 0, maximum: 40 })),
   mqttTopic: Type.Optional(Type.String({ maxLength: 150 })),
   isActive: Type.Optional(Type.Boolean()),
+});
+
+// Schema for sending a ON/OFF command to a device
+export const DeviceCommandSchema = Type.Object({
+  action: Type.Union([Type.Literal("ON"), Type.Literal("OFF")]),
 });
 
 export const DeviceParamsIdSchema = Type.Object({

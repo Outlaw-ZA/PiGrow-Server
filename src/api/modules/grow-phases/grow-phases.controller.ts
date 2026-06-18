@@ -91,4 +91,33 @@ export class GrowPhasesController {
       where: { id },
     });
   }
+
+  // 6. ACTIVATE A PHASE (clears all other phases in the same grow cycle)
+  async activatePhase(id: string) {
+    const phase = await this.prisma.growPhase.findUniqueOrThrow({
+      where: { id },
+    });
+
+    await this.prisma.$transaction([
+      this.prisma.growPhase.updateMany({
+        where: { growCycleId: phase.growCycleId },
+        data: { isActive: false },
+      }),
+      this.prisma.growPhase.update({
+        where: { id },
+        data: { isActive: true },
+      }),
+    ]);
+
+    return await this.prisma.growPhase.findUnique({
+      where: { id },
+      include: {
+        deviceConfigs: {
+          include: {
+            device: true,
+          },
+        },
+      },
+    });
+  }
 }

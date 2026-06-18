@@ -72,4 +72,12 @@ export class ControllersController {
       where: { id },
     });
   }
+
+  // 6. HEARTBEAT STATUS UPDATE
+  async heartbeat(id: string, status: "ONLINE" | "OFFLINE") {
+    return await this.prisma.controller.update({
+      where: { id },
+      data: { status },
+    });
+  }
 }

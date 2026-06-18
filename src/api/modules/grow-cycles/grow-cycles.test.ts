@@ -45,10 +45,10 @@ describe("Grow Cycles API Feature Module", () => {
     await app.close();
   });
 
-  test("POST /grow-cycle - Should initialize cycle and auto-generate 4 structural phases with hardware configurations embedded", async () => {
+  test("POST /grow-cycles - Should initialize cycle and auto-generate 4 structural phases with hardware configurations embedded", async () => {
     const response = await app.inject({
       method: "POST",
-      url: "/grow-cycle",
+      url: "/api/grow-cycles",
       payload: {
         name: "Blue Dream Automated Crop Run",
         controllerId: testControllerId,

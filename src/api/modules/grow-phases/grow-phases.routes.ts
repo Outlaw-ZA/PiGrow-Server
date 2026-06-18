@@ -94,4 +94,19 @@ export default async function growPhaseRoutes(server: FastifyInstance) {
       }
     },
   );
+
+  // 6. ACTIVATE A PHASE (sets isActive, clears all others in the same cycle)
+  router.patch(
+    "/api/grow-phases/:id/activate",
+    { schema: { params: GrowPhaseParamsIdSchema } },
+    async (request, reply) => {
+      try {
+        return await controller.activatePhase(request.params.id);
+      } catch (error) {
+        return reply
+          .code(404)
+          .send({ error: "Grow phase could not be activated" });
+      }
+    },
+  );
 }

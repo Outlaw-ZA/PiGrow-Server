@@ -5,7 +5,9 @@ import {
   DeviceParamsControllerIdSchema,
   DeviceParamsIdSchema,
   CreateDeviceSchema,
+  BatchCreateDeviceSchema,
   UpdateDeviceSchema,
+  DeviceCommandSchema,
 } from "./devices.schema.js";
 
 export default async function deviceRoutes(server: FastifyInstance) {
@@ -31,7 +33,7 @@ export default async function deviceRoutes(server: FastifyInstance) {
 
   // 2. GET SINGLE DEVICE SPECIFICATIONS
   router.get(
-    "/api/device/:id",
+    "/api/devices/:id",
     { schema: { params: DeviceParamsIdSchema } },
     async (request, reply) => {
       try {
@@ -46,7 +48,7 @@ export default async function deviceRoutes(server: FastifyInstance) {
 
   // 3. PROVISION A NEW DEVICE ONTO A PI
   router.post(
-    "/api/device",
+    "/api/devices",
     { schema: { body: CreateDeviceSchema } },
     async (request, reply) => {
       try {
@@ -61,9 +63,26 @@ export default async function deviceRoutes(server: FastifyInstance) {
     },
   );
 
-  // 4. CHANGE DEVICE CONFIGURATION OR GPIO PIN
+  // 4. BULK PROVISION MULTIPLE DEVICES ONTO A PI
+  router.post(
+    "/api/devices/batch",
+    { schema: { body: BatchCreateDeviceSchema } },
+    async (request, reply) => {
+      try {
+        const newDevices = await controller.createDevicesBatch(request.body);
+        return reply.code(201).send(newDevices);
+      } catch (error) {
+        server.log.error(error);
+        return reply
+          .code(400)
+          .send({ error: "Failed to map batch hardware devices" });
+      }
+    },
+  );
+
+  // 5. CHANGE DEVICE CONFIGURATION OR GPIO PIN
   router.put(
-    "/api/device/:id",
+    "/api/devices/:id",
     { schema: { params: DeviceParamsIdSchema, body: UpdateDeviceSchema } },
     async (request, reply) => {
       try {
@@ -77,9 +96,9 @@ export default async function deviceRoutes(server: FastifyInstance) {
     },
   );
 
-  // 5. UNMAP / REMOVE A DEVICE
+  // 6. UNMAP / REMOVE A DEVICE
   router.delete(
-    "/api/device/:id",
+    "/api/devices/:id",
     { schema: { params: DeviceParamsIdSchema } },
     async (request, reply) => {
       try {
@@ -89,6 +108,30 @@ export default async function deviceRoutes(server: FastifyInstance) {
         return reply
           .code(404)
           .send({ error: "Hardware profile deletion failed" });
+      }
+    },
+  );
+
+  // 7. SEND ON/OFF COMMAND TO A DEVICE
+  router.post(
+    "/api/devices/:id/command",
+    {
+      schema: {
+        params: DeviceParamsIdSchema,
+        body: DeviceCommandSchema,
+      },
+    },
+    async (request, reply) => {
+      try {
+        return await controller.sendCommand(
+          request.params.id,
+          request.body.action,
+        );
+      } catch (error) {
+        server.log.error(error);
+        return reply
+          .code(404)
+          .send({ error: "Device command dispatch failed" });
       }
     },
   );

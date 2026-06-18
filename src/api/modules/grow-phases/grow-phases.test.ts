@@ -55,7 +55,7 @@ describe("Grow Phases API Feature Module", () => {
   test("GET /grow-phases/cycle/:growCycleId - Should load chronological configurations by parent ID", async () => {
     const response = await app.inject({
       method: "GET",
-      url: `/grow-phases/cycle/${testGrowCycleId}`,
+      url: `/api/grow-phases/cycle/${testGrowCycleId}`,
     });
 
     const body = JSON.parse(response.body);
@@ -65,10 +65,10 @@ describe("Grow Phases API Feature Module", () => {
     assert.equal(body[0].id, targetedPhaseId);
   });
 
-  test("PUT /grow-phase/:id - Should modify timing profiles cleanly", async () => {
+  test("PUT /grow-phases/:id - Should modify timing profiles cleanly", async () => {
     const response = await app.inject({
       method: "PUT",
-      url: `/grow-phase/${targetedPhaseId}`,
+      url: `/api/grow-phases/${targetedPhaseId}`,
       payload: {
         name: "Upgraded Veg Horizon",
         durationDays: 45,

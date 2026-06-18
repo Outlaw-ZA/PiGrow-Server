@@ -5,6 +5,7 @@ import {
   ControllerParamsIdSchema,
   CreateControllerSchema,
   UpdateControllerSchema,
+  HeartbeatSchema,
 } from "./controllers.schema.js";
 
 export default async function controllerRoutes(server: FastifyInstance) {
@@ -83,6 +84,29 @@ export default async function controllerRoutes(server: FastifyInstance) {
         return reply.code(204).send();
       } catch (error) {
         return reply.code(404).send({ error: "Profile unlinking rejected" });
+      }
+    },
+  );
+
+  // 6. PI HEARTBEAT STATUS REPORTING
+  router.patch(
+    "/api/controllers/:id/heartbeat",
+    {
+      schema: {
+        params: ControllerParamsIdSchema,
+        body: HeartbeatSchema,
+      },
+    },
+    async (request, reply) => {
+      try {
+        return await controller.heartbeat(
+          request.params.id,
+          request.body.status,
+        );
+      } catch (error) {
+        return reply
+          .code(404)
+          .send({ error: "Controller not found for heartbeat update" });
       }
     },
   );

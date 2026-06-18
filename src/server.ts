@@ -6,7 +6,11 @@ import mqttMatch from "mqtt-match";
 import { Server as SocketIOServer } from "socket.io";
 import prismaPlugin from "./plugins/prisma.js";
 import growCycleRoutes from "./api/modules/grow-cycles/grow-cycles.routes.js";
+import growPhaseRoutes from "./api/modules/grow-phases/grow-phases.routes.js";
 import controllerRoutes from "./api/modules/controllers/controllers.route.js";
+import deviceRoutes from "./api/modules/devices/devices.routes.js";
+import deviceConfigRoutes from "./api/modules/device-configs/device-configs.routes.js";
+import telemetryRoutes from "./api/modules/telemetry/telemetry.routes.js";
 
 // 1. Initialize Fastify and register CORS for the Frontend
 const fastify = Fastify({ logger: true });
@@ -22,7 +26,7 @@ export const io = new SocketIOServer(fastify.server, {
 
 // Fallback configuration parameters
 const BROKER_URL = process.env.MQTT_BROKER_URL || "mqtt://localhost:1883";
-const mqttClient = mqtt.connect(BROKER_URL);
+export const mqttClient = mqtt.connect(BROKER_URL);
 
 // 2. Manage frontend socket connections
 io.on("connection", (socket) => {
@@ -44,7 +48,7 @@ io.on("connection", (socket) => {
     );
   });
 
-  socket.on("disconnect", () => console.log("💻 Frontend Client Disconnected"));
+  socket.on("disconnect", () => console.log(`💻 Frontend Client Disconnected`));
 });
 
 // Dynamic Topic Registry Map
@@ -85,7 +89,11 @@ mqttClient.on("message", (topic: string, message: Buffer) => {
 
 await fastify.register(prismaPlugin);
 await fastify.register(growCycleRoutes);
+await fastify.register(growPhaseRoutes);
 await fastify.register(controllerRoutes);
+await fastify.register(deviceRoutes);
+await fastify.register(deviceConfigRoutes);
+await fastify.register(telemetryRoutes);
 
 // 5. Start Fastify (Listen on Port 4000 for both REST and Socket.io traffic)
 const start = async () => {

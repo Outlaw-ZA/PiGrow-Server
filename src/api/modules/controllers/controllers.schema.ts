@@ -33,3 +33,8 @@ export const UpdateControllerSchema = Type.Object({
 export const ControllerParamsIdSchema = Type.Object({
   id: Type.String({ format: "uuid" }),
 });
+
+// Schema for Pi status heartbeat reporting
+export const HeartbeatSchema = Type.Object({
+  status: Type.Union([Type.Literal("ONLINE"), Type.Literal("OFFLINE")]),
+});
