@@ -1,16 +1,56 @@
 import { FastifyInstance } from "fastify";
 
-interface CreateDeviceConfigInput {
-  growPhaseId: string;
-  deviceId: string;
-  triggerType: "SCHEDULE" | "THRESHOLD" | "ALWAYS_ON" | "ALWAYS_OFF";
-  configData: any;
-}
+type TriggerType = "SCHEDULE" | "THRESHOLD" | "ALWAYS_ON" | "ALWAYS_OFF";
 
-interface UpdateDeviceConfigInput {
-  triggerType?: "SCHEDULE" | "THRESHOLD" | "ALWAYS_ON" | "ALWAYS_OFF";
-  configData?: any;
-}
+type ScheduleConfigData =
+  | { onTime: string; durationHours: number }
+  | { onTime: string; offTime: string };
+
+type ThresholdConfigData =
+  | { metric: string; high: number }
+  | {
+      sensor: string;
+      condition:
+        | "GREATER_THAN"
+        | "LESS_THAN"
+        | "GREATER_THAN_OR_EQUAL"
+        | "LESS_THAN_OR_EQUAL"
+        | "EQUAL";
+      value: number;
+      action: "ON" | "OFF" | "TOGGLE";
+    };
+
+type CreateDeviceConfigInput =
+  | {
+      growPhaseId: string;
+      deviceId: string;
+      triggerType: "SCHEDULE";
+      configData: ScheduleConfigData;
+    }
+  | {
+      growPhaseId: string;
+      deviceId: string;
+      triggerType: "THRESHOLD";
+      configData: ThresholdConfigData;
+    }
+  | {
+      growPhaseId: string;
+      deviceId: string;
+      triggerType: "ALWAYS_ON";
+      configData: Record<string, unknown>;
+    }
+  | {
+      growPhaseId: string;
+      deviceId: string;
+      triggerType: "ALWAYS_OFF";
+      configData: Record<string, unknown>;
+    };
+
+type UpdateDeviceConfigInput =
+  | { triggerType: "SCHEDULE"; configData: ScheduleConfigData }
+  | { triggerType: "THRESHOLD"; configData: ThresholdConfigData }
+  | { triggerType: "ALWAYS_ON"; configData: Record<string, unknown> }
+  | { triggerType: "ALWAYS_OFF"; configData: Record<string, unknown> };
 
 export class DeviceConfigsController {
   private prisma;
@@ -47,7 +87,7 @@ export class DeviceConfigsController {
         growPhaseId: body.growPhaseId,
         deviceId: body.deviceId,
         triggerType: body.triggerType,
-        configData: body.configData,
+        configData: body.configData as object,
       },
       include: {
         device: true,
@@ -61,7 +101,7 @@ export class DeviceConfigsController {
       where: { id },
       data: {
         triggerType: body.triggerType,
-        configData: body.configData,
+        configData: body.configData as object,
       },
       include: {
         device: true,

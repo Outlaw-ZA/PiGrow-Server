@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "GrowCycle" ALTER COLUMN "startAt" SET DATA TYPE DATE;

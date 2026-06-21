@@ -336,7 +336,7 @@ export type GrowPhaseCreateInput = {
   name: string
   order: number
   durationDays: number
-  isActive: boolean
+  isActive?: boolean
   startAt?: Date | string | null
   endAt?: Date | string | null
   createdAt?: Date | string
@@ -351,7 +351,7 @@ export type GrowPhaseUncheckedCreateInput = {
   name: string
   order: number
   durationDays: number
-  isActive: boolean
+  isActive?: boolean
   startAt?: Date | string | null
   endAt?: Date | string | null
   createdAt?: Date | string
@@ -393,7 +393,7 @@ export type GrowPhaseCreateManyInput = {
   name: string
   order: number
   durationDays: number
-  isActive: boolean
+  isActive?: boolean
   startAt?: Date | string | null
   endAt?: Date | string | null
   createdAt?: Date | string
@@ -531,10 +531,6 @@ export type GrowPhaseUncheckedUpdateManyWithoutGrowCycleNestedInput = {
   deleteMany?: Prisma.GrowPhaseScalarWhereInput | Prisma.GrowPhaseScalarWhereInput[]
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type GrowPhaseCreateNestedOneWithoutDeviceConfigsInput = {
   create?: Prisma.XOR<Prisma.GrowPhaseCreateWithoutDeviceConfigsInput, Prisma.GrowPhaseUncheckedCreateWithoutDeviceConfigsInput>
   connectOrCreate?: Prisma.GrowPhaseCreateOrConnectWithoutDeviceConfigsInput
@@ -554,7 +550,7 @@ export type GrowPhaseCreateWithoutGrowCycleInput = {
   name: string
   order: number
   durationDays: number
-  isActive: boolean
+  isActive?: boolean
   startAt?: Date | string | null
   endAt?: Date | string | null
   createdAt?: Date | string
@@ -567,7 +563,7 @@ export type GrowPhaseUncheckedCreateWithoutGrowCycleInput = {
   name: string
   order: number
   durationDays: number
-  isActive: boolean
+  isActive?: boolean
   startAt?: Date | string | null
   endAt?: Date | string | null
   createdAt?: Date | string
@@ -622,7 +618,7 @@ export type GrowPhaseCreateWithoutDeviceConfigsInput = {
   name: string
   order: number
   durationDays: number
-  isActive: boolean
+  isActive?: boolean
   startAt?: Date | string | null
   endAt?: Date | string | null
   createdAt?: Date | string
@@ -636,7 +632,7 @@ export type GrowPhaseUncheckedCreateWithoutDeviceConfigsInput = {
   name: string
   order: number
   durationDays: number
-  isActive: boolean
+  isActive?: boolean
   startAt?: Date | string | null
   endAt?: Date | string | null
   createdAt?: Date | string
@@ -690,7 +686,7 @@ export type GrowPhaseCreateManyGrowCycleInput = {
   name: string
   order: number
   durationDays: number
-  isActive: boolean
+  isActive?: boolean
   startAt?: Date | string | null
   endAt?: Date | string | null
   createdAt?: Date | string

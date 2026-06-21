@@ -29,6 +29,7 @@ export type GrowCycleMinAggregateOutputType = {
   controllerId: string | null
   name: string | null
   isActive: boolean | null
+  startAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -38,6 +39,7 @@ export type GrowCycleMaxAggregateOutputType = {
   controllerId: string | null
   name: string | null
   isActive: boolean | null
+  startAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -47,6 +49,7 @@ export type GrowCycleCountAggregateOutputType = {
   controllerId: number
   name: number
   isActive: number
+  startAt: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -58,6 +61,7 @@ export type GrowCycleMinAggregateInputType = {
   controllerId?: true
   name?: true
   isActive?: true
+  startAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -67,6 +71,7 @@ export type GrowCycleMaxAggregateInputType = {
   controllerId?: true
   name?: true
   isActive?: true
+  startAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -76,6 +81,7 @@ export type GrowCycleCountAggregateInputType = {
   controllerId?: true
   name?: true
   isActive?: true
+  startAt?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -158,6 +164,7 @@ export type GrowCycleGroupByOutputType = {
   controllerId: string
   name: string
   isActive: boolean
+  startAt: Date | null
   createdAt: Date
   updatedAt: Date
   _count: GrowCycleCountAggregateOutputType | null
@@ -188,6 +195,7 @@ export type GrowCycleWhereInput = {
   controllerId?: Prisma.StringFilter<"GrowCycle"> | string
   name?: Prisma.StringFilter<"GrowCycle"> | string
   isActive?: Prisma.BoolFilter<"GrowCycle"> | boolean
+  startAt?: Prisma.DateTimeNullableFilter<"GrowCycle"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"GrowCycle"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"GrowCycle"> | Date | string
   controller?: Prisma.XOR<Prisma.ControllerScalarRelationFilter, Prisma.ControllerWhereInput>
@@ -200,6 +208,7 @@ export type GrowCycleOrderByWithRelationInput = {
   controllerId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  startAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   controller?: Prisma.ControllerOrderByWithRelationInput
@@ -215,6 +224,7 @@ export type GrowCycleWhereUniqueInput = Prisma.AtLeast<{
   controllerId?: Prisma.StringFilter<"GrowCycle"> | string
   name?: Prisma.StringFilter<"GrowCycle"> | string
   isActive?: Prisma.BoolFilter<"GrowCycle"> | boolean
+  startAt?: Prisma.DateTimeNullableFilter<"GrowCycle"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"GrowCycle"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"GrowCycle"> | Date | string
   controller?: Prisma.XOR<Prisma.ControllerScalarRelationFilter, Prisma.ControllerWhereInput>
@@ -227,6 +237,7 @@ export type GrowCycleOrderByWithAggregationInput = {
   controllerId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  startAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.GrowCycleCountOrderByAggregateInput
@@ -242,6 +253,7 @@ export type GrowCycleScalarWhereWithAggregatesInput = {
   controllerId?: Prisma.StringWithAggregatesFilter<"GrowCycle"> | string
   name?: Prisma.StringWithAggregatesFilter<"GrowCycle"> | string
   isActive?: Prisma.BoolWithAggregatesFilter<"GrowCycle"> | boolean
+  startAt?: Prisma.DateTimeNullableWithAggregatesFilter<"GrowCycle"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"GrowCycle"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"GrowCycle"> | Date | string
 }
@@ -250,6 +262,7 @@ export type GrowCycleCreateInput = {
   id?: string
   name: string
   isActive?: boolean
+  startAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   controller: Prisma.ControllerCreateNestedOneWithoutGrowCyclesInput
@@ -262,6 +275,7 @@ export type GrowCycleUncheckedCreateInput = {
   controllerId: string
   name: string
   isActive?: boolean
+  startAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   phases?: Prisma.GrowPhaseUncheckedCreateNestedManyWithoutGrowCycleInput
@@ -272,6 +286,7 @@ export type GrowCycleUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   controller?: Prisma.ControllerUpdateOneRequiredWithoutGrowCyclesNestedInput
@@ -284,6 +299,7 @@ export type GrowCycleUncheckedUpdateInput = {
   controllerId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   phases?: Prisma.GrowPhaseUncheckedUpdateManyWithoutGrowCycleNestedInput
@@ -295,6 +311,7 @@ export type GrowCycleCreateManyInput = {
   controllerId: string
   name: string
   isActive?: boolean
+  startAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -303,6 +320,7 @@ export type GrowCycleUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -312,6 +330,7 @@ export type GrowCycleUncheckedUpdateManyInput = {
   controllerId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -331,6 +350,7 @@ export type GrowCycleCountOrderByAggregateInput = {
   controllerId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  startAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -340,6 +360,7 @@ export type GrowCycleMaxOrderByAggregateInput = {
   controllerId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  startAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -349,6 +370,7 @@ export type GrowCycleMinOrderByAggregateInput = {
   controllerId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  startAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -400,6 +422,10 @@ export type GrowCycleUncheckedUpdateManyWithoutControllerNestedInput = {
   deleteMany?: Prisma.GrowCycleScalarWhereInput | Prisma.GrowCycleScalarWhereInput[]
 }
 
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
+}
+
 export type GrowCycleCreateNestedOneWithoutPhasesInput = {
   create?: Prisma.XOR<Prisma.GrowCycleCreateWithoutPhasesInput, Prisma.GrowCycleUncheckedCreateWithoutPhasesInput>
   connectOrCreate?: Prisma.GrowCycleCreateOrConnectWithoutPhasesInput
@@ -432,6 +458,7 @@ export type GrowCycleCreateWithoutControllerInput = {
   id?: string
   name: string
   isActive?: boolean
+  startAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   phases?: Prisma.GrowPhaseCreateNestedManyWithoutGrowCycleInput
@@ -442,6 +469,7 @@ export type GrowCycleUncheckedCreateWithoutControllerInput = {
   id?: string
   name: string
   isActive?: boolean
+  startAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   phases?: Prisma.GrowPhaseUncheckedCreateNestedManyWithoutGrowCycleInput
@@ -482,6 +510,7 @@ export type GrowCycleScalarWhereInput = {
   controllerId?: Prisma.StringFilter<"GrowCycle"> | string
   name?: Prisma.StringFilter<"GrowCycle"> | string
   isActive?: Prisma.BoolFilter<"GrowCycle"> | boolean
+  startAt?: Prisma.DateTimeNullableFilter<"GrowCycle"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"GrowCycle"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"GrowCycle"> | Date | string
 }
@@ -490,6 +519,7 @@ export type GrowCycleCreateWithoutPhasesInput = {
   id?: string
   name: string
   isActive?: boolean
+  startAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   controller: Prisma.ControllerCreateNestedOneWithoutGrowCyclesInput
@@ -501,6 +531,7 @@ export type GrowCycleUncheckedCreateWithoutPhasesInput = {
   controllerId: string
   name: string
   isActive?: boolean
+  startAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   telemetry?: Prisma.TelemetryUncheckedCreateNestedManyWithoutGrowCycleInput
@@ -526,6 +557,7 @@ export type GrowCycleUpdateWithoutPhasesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   controller?: Prisma.ControllerUpdateOneRequiredWithoutGrowCyclesNestedInput
@@ -537,6 +569,7 @@ export type GrowCycleUncheckedUpdateWithoutPhasesInput = {
   controllerId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   telemetry?: Prisma.TelemetryUncheckedUpdateManyWithoutGrowCycleNestedInput
@@ -546,6 +579,7 @@ export type GrowCycleCreateWithoutTelemetryInput = {
   id?: string
   name: string
   isActive?: boolean
+  startAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   controller: Prisma.ControllerCreateNestedOneWithoutGrowCyclesInput
@@ -557,6 +591,7 @@ export type GrowCycleUncheckedCreateWithoutTelemetryInput = {
   controllerId: string
   name: string
   isActive?: boolean
+  startAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   phases?: Prisma.GrowPhaseUncheckedCreateNestedManyWithoutGrowCycleInput
@@ -582,6 +617,7 @@ export type GrowCycleUpdateWithoutTelemetryInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   controller?: Prisma.ControllerUpdateOneRequiredWithoutGrowCyclesNestedInput
@@ -593,6 +629,7 @@ export type GrowCycleUncheckedUpdateWithoutTelemetryInput = {
   controllerId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   phases?: Prisma.GrowPhaseUncheckedUpdateManyWithoutGrowCycleNestedInput
@@ -602,6 +639,7 @@ export type GrowCycleCreateManyControllerInput = {
   id?: string
   name: string
   isActive?: boolean
+  startAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -610,6 +648,7 @@ export type GrowCycleUpdateWithoutControllerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   phases?: Prisma.GrowPhaseUpdateManyWithoutGrowCycleNestedInput
@@ -620,6 +659,7 @@ export type GrowCycleUncheckedUpdateWithoutControllerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   phases?: Prisma.GrowPhaseUncheckedUpdateManyWithoutGrowCycleNestedInput
@@ -630,6 +670,7 @@ export type GrowCycleUncheckedUpdateManyWithoutControllerInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -679,6 +720,7 @@ export type GrowCycleSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   controllerId?: boolean
   name?: boolean
   isActive?: boolean
+  startAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   controller?: boolean | Prisma.ControllerDefaultArgs<ExtArgs>
@@ -692,6 +734,7 @@ export type GrowCycleSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   controllerId?: boolean
   name?: boolean
   isActive?: boolean
+  startAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   controller?: boolean | Prisma.ControllerDefaultArgs<ExtArgs>
@@ -702,6 +745,7 @@ export type GrowCycleSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   controllerId?: boolean
   name?: boolean
   isActive?: boolean
+  startAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   controller?: boolean | Prisma.ControllerDefaultArgs<ExtArgs>
@@ -712,11 +756,12 @@ export type GrowCycleSelectScalar = {
   controllerId?: boolean
   name?: boolean
   isActive?: boolean
+  startAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type GrowCycleOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "controllerId" | "name" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["growCycle"]>
+export type GrowCycleOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "controllerId" | "name" | "isActive" | "startAt" | "createdAt" | "updatedAt", ExtArgs["result"]["growCycle"]>
 export type GrowCycleInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   controller?: boolean | Prisma.ControllerDefaultArgs<ExtArgs>
   phases?: boolean | Prisma.GrowCycle$phasesArgs<ExtArgs>
@@ -742,6 +787,7 @@ export type $GrowCyclePayload<ExtArgs extends runtime.Types.Extensions.InternalA
     controllerId: string
     name: string
     isActive: boolean
+    startAt: Date | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["growCycle"]>
@@ -1174,6 +1220,7 @@ export interface GrowCycleFieldRefs {
   readonly controllerId: Prisma.FieldRef<"GrowCycle", 'String'>
   readonly name: Prisma.FieldRef<"GrowCycle", 'String'>
   readonly isActive: Prisma.FieldRef<"GrowCycle", 'Boolean'>
+  readonly startAt: Prisma.FieldRef<"GrowCycle", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"GrowCycle", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"GrowCycle", 'DateTime'>
 }

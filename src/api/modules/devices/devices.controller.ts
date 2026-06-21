@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { mqttClient } from "../../../server.js";
+import { mqttClient } from "../../../mqtt/client.js";
 
 type DeviceTypeLiteral =
   | "LIGHT"

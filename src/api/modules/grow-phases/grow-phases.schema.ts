@@ -26,14 +26,14 @@ export const CreateGrowPhaseSchema = Type.Object({
   ),
   startAt: Type.Optional(
     Type.String({
-      format: "date-time",
-      description: "When this phase actively started execution",
+      format: "date",
+      description: "Date (YYYY-MM-DD) when this phase actively started execution",
     }),
   ),
   endAt: Type.Optional(
     Type.String({
-      format: "date-time",
-      description: "When this phase concluded",
+      format: "date",
+      description: "Date (YYYY-MM-DD) when this phase concluded",
     }),
   ),
 });
@@ -44,8 +44,8 @@ export const UpdateGrowPhaseSchema = Type.Object({
   order: Type.Optional(Type.Integer({ minimum: 1 })),
   durationDays: Type.Optional(Type.Integer({ minimum: 1 })),
   isActive: Type.Optional(Type.Boolean()),
-  startAt: Type.Optional(Type.String({ format: "date-time" })),
-  endAt: Type.Optional(Type.String({ format: "date-time" })),
+  startAt: Type.Optional(Type.String({ format: "date" })),
+  endAt: Type.Optional(Type.String({ format: "date" })),
 });
 
 // Schema for matching the dynamic URL path parameter of a single Phase

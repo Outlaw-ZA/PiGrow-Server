@@ -61,6 +61,7 @@ model GrowCycle {
   controllerId String      // Links this specific grow cycle to a physical Pi
   name         String
   isActive     Boolean     @default(false)
+  startAt      DateTime?   @db.Date // Optional cycle-level start date (date only, no timestamp)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
@@ -76,8 +77,8 @@ model GrowPhase {
   order       Int            // Execution order sequence
   durationDays Int           // Target days for this phase
   isActive    Boolean        @default(false)
-  startAt     DateTime?
-  endAt       DateTime?         
+  startAt     DateTime?        @db.Date
+  endAt       DateTime?        @db.Date
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 

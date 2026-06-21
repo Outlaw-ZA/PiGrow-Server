@@ -83,4 +83,71 @@ describe("Grow Phases API Feature Module", () => {
     assert.equal(body.durationDays, 45);
     assert.equal(body.isActive, true);
   });
+
+  test("PUT /grow-phases/:id - Should accept a date-only endAt (YYYY-MM-DD) and return it without a timestamp", async () => {
+    const updateResponse = await app.inject({
+      method: "PUT",
+      url: `/api/grow-phases/${targetedPhaseId}`,
+      payload: {
+        startAt: "2026-06-16",
+        endAt: "2026-07-30",
+      },
+    });
+
+    const updated = JSON.parse(updateResponse.body);
+
+    assert.equal(updateResponse.statusCode, 200);
+    assert.equal(
+      updated.startAt,
+      "2026-06-16",
+      "PUT response should expose startAt as a date-only YYYY-MM-DD string",
+    );
+    assert.equal(
+      updated.endAt,
+      "2026-07-30",
+      "PUT response should expose endAt as a date-only YYYY-MM-DD string",
+    );
+
+    const getResponse = await app.inject({
+      method: "GET",
+      url: `/api/grow-phases/${targetedPhaseId}`,
+    });
+    const fetched = JSON.parse(getResponse.body);
+    assert.equal(getResponse.statusCode, 200);
+    assert.equal(fetched.startAt, "2026-06-16");
+    assert.equal(fetched.endAt, "2026-07-30");
+
+    const listResponse = await app.inject({
+      method: "GET",
+      url: `/api/grow-phases/cycle/${testGrowCycleId}`,
+    });
+    const list = JSON.parse(listResponse.body);
+    const listed = list.find((p: { id: string }) => p.id === targetedPhaseId);
+    assert.equal(listed.startAt, "2026-06-16");
+    assert.equal(listed.endAt, "2026-07-30");
+  });
+
+  test("PUT /grow-phases/:id - Should reject a full date-time string for startAt or endAt (timestamp is no longer accepted)", async () => {
+    const startAtResponse = await app.inject({
+      method: "PUT",
+      url: `/api/grow-phases/${targetedPhaseId}`,
+      payload: { startAt: "2026-06-16T00:00:00.000Z" },
+    });
+    assert.equal(
+      startAtResponse.statusCode,
+      400,
+      "Validation must reject date-time strings now that startAt is date-only",
+    );
+
+    const endAtResponse = await app.inject({
+      method: "PUT",
+      url: `/api/grow-phases/${targetedPhaseId}`,
+      payload: { endAt: "2026-07-30T00:00:00.000Z" },
+    });
+    assert.equal(
+      endAtResponse.statusCode,
+      400,
+      "Validation must reject date-time strings now that endAt is date-only",
+    );
+  });
 });

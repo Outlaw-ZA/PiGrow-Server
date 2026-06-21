@@ -23,6 +23,12 @@ export const UpdateGrowCycleSchema = Type.Object({
   name: Type.Optional(Type.String({ maxLength: 100 })),
   controllerId: Type.Optional(Type.String({ format: "uuid" })),
   isActive: Type.Optional(Type.Boolean()),
+  startAt: Type.Optional(
+    Type.String({
+      format: "date",
+      description: "Date (YYYY-MM-DD) marking when this grow cycle started",
+    }),
+  ),
 });
 
 // Schema for validating the URL path UUID parameter

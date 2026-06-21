@@ -7,9 +7,37 @@ export class GrowCyclesController {
     this.prisma = server.prisma;
   }
 
+  private formatDateOnly(date: Date | null): string | null {
+    return date ? date.toISOString().slice(0, 10) : null;
+  }
+
+  private serializeStartAt<T extends { startAt: Date | null } | { startAt: Date | null }[]>(cycle: T): T {
+    if (Array.isArray(cycle)) {
+      return cycle.map((c) => ({ ...c, startAt: this.formatDateOnly(c.startAt) })) as T;
+    }
+    return { ...cycle, startAt: this.formatDateOnly(cycle.startAt) } as T;
+  }
+
+  private serializePhaseDates<T extends { startAt: Date | null; endAt: Date | null } | { startAt: Date | null; endAt: Date | null }[]>(phases: T): T {
+    if (Array.isArray(phases)) {
+      return phases.map((p) => ({
+        ...p,
+        startAt: this.formatDateOnly(p.startAt),
+        endAt: this.formatDateOnly(p.endAt),
+      })) as T;
+    }
+    return {
+      ...phases,
+      startAt: this.formatDateOnly(phases.startAt),
+      endAt: this.formatDateOnly(phases.endAt),
+    } as T;
+  }
+
+
+
   // 1. READ ALL (Includes assigned Raspberry Pi details)
   async getAllGrowCycles() {
-    return await this.prisma.growCycle.findMany({
+    const cycles = await this.prisma.growCycle.findMany({
       include: {
         controller: {
           select: {
@@ -19,11 +47,12 @@ export class GrowCyclesController {
         },
       },
     });
+    return this.serializeStartAt(cycles);
   }
 
   // 2. READ ONE (Deeply fetches related phases and active device rules)
   async getGrowCycleById(id: string) {
-    return await this.prisma.growCycle.findUniqueOrThrow({
+    const cycle = await this.prisma.growCycle.findUniqueOrThrow({
       where: { id },
       include: {
         controller: true,
@@ -41,6 +70,8 @@ export class GrowCyclesController {
         },
       },
     });
+    cycle.phases = this.serializePhaseDates(cycle.phases);
+    return this.serializeStartAt(cycle);
   }
 
   // 3. CREATE (Fetches hardware devices, then generates phases and rules dynamically)
@@ -179,7 +210,7 @@ export class GrowCyclesController {
     ];
 
     // 3. Execute the single unified atomic transaction in Postgres
-    return await this.prisma.growCycle.create({
+    const created = await this.prisma.growCycle.create({
       data: {
         name: body.name,
         controllerId: body.controllerId,
@@ -199,21 +230,30 @@ export class GrowCyclesController {
         },
       },
     });
+    created.phases = this.serializePhaseDates(created.phases);
+    return this.serializeStartAt(created);
   }
 
   // 4. UPDATE
   async updateGrowCycle(
     id: string,
-    body: { name?: string; controllerId?: string; isActive?: boolean },
+    body: {
+      name?: string;
+      controllerId?: string;
+      isActive?: boolean;
+      startAt?: string;
+    },
   ) {
-    return await this.prisma.growCycle.update({
+    const { startAt, ...rest } = body;
+
+    const updated = await this.prisma.growCycle.update({
       where: { id },
       data: {
-        name: body.name,
-        controllerId: body.controllerId,
-        isActive: body.isActive,
+        ...rest,
+        startAt: startAt ? new Date(startAt) : undefined,
       },
     });
+    return this.serializeStartAt(updated);
   }
 
   // 5. DELETE

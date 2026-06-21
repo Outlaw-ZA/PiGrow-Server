@@ -108,6 +108,7 @@ export const GrowCycleScalarFieldEnum = {
   controllerId: 'controllerId',
   name: 'name',
   isActive: 'isActive',
+  startAt: 'startAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const

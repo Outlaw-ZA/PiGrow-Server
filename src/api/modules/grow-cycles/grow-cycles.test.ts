@@ -80,4 +80,76 @@ describe("Grow Cycles API Feature Module", () => {
       "Phase mappings must include pre-populated automated device rule configurations",
     );
   });
+
+  test("PUT /grow-cycles/:id - Should accept a date-only startAt (YYYY-MM-DD) and return it without a timestamp", async () => {
+    // Create a fresh cycle to update
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/api/grow-cycles",
+      payload: {
+        name: "Date Only Start Run",
+        controllerId: testControllerId,
+        isActive: true,
+      },
+    });
+    const created = JSON.parse(createResponse.body);
+    assert.equal(createResponse.statusCode, 201);
+    assert.equal(created.startAt, null, "Freshly created cycle should have null startAt");
+
+    // Update with a date-only string — no timestamp component
+    const updateResponse = await app.inject({
+      method: "PUT",
+      url: `/api/grow-cycles/${created.id}`,
+      payload: { startAt: "2026-06-16" },
+    });
+    const updated = JSON.parse(updateResponse.body);
+    assert.equal(updateResponse.statusCode, 200);
+    assert.equal(
+      updated.startAt,
+      "2026-06-16",
+      "PUT response should expose startAt as a date-only YYYY-MM-DD string",
+    );
+
+    // Confirm the same shape on subsequent reads (GET by id and via the list)
+    const getResponse = await app.inject({
+      method: "GET",
+      url: `/api/grow-cycles/${created.id}`,
+    });
+    const fetched = JSON.parse(getResponse.body);
+    assert.equal(getResponse.statusCode, 200);
+    assert.equal(fetched.startAt, "2026-06-16");
+
+    const listResponse = await app.inject({
+      method: "GET",
+      url: "/api/grow-cycles",
+    });
+    const list = JSON.parse(listResponse.body);
+    const listed = list.find((c: { id: string }) => c.id === created.id);
+    assert.equal(listed.startAt, "2026-06-16");
+  });
+
+  test("PUT /grow-cycles/:id - Should reject a full date-time string (timestamp is no longer accepted)", async () => {
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/api/grow-cycles",
+      payload: {
+        name: "Reject DateTime Run",
+        controllerId: testControllerId,
+        isActive: false,
+      },
+    });
+    const created = JSON.parse(createResponse.body);
+
+    const updateResponse = await app.inject({
+      method: "PUT",
+      url: `/api/grow-cycles/${created.id}`,
+      payload: { startAt: "2026-06-16T00:00:00.000Z" },
+    });
+
+    assert.equal(
+      updateResponse.statusCode,
+      400,
+      "Validation must reject date-time strings now that startAt is date-only",
+    );
+  });
 });

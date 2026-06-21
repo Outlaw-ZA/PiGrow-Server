@@ -26,9 +26,28 @@ export class GrowPhasesController {
     this.prisma = server.prisma;
   }
 
+  private formatDateOnly(date: Date | null): string | null {
+    return date ? date.toISOString().slice(0, 10) : null;
+  }
+
+  private serializePhaseDates<T extends { startAt: Date | null; endAt: Date | null } | { startAt: Date | null; endAt: Date | null }[]>(phase: T): T {
+    if (Array.isArray(phase)) {
+      return phase.map((p) => ({
+        ...p,
+        startAt: this.formatDateOnly(p.startAt),
+        endAt: this.formatDateOnly(p.endAt),
+      })) as T;
+    }
+    return {
+      ...phase,
+      startAt: this.formatDateOnly(phase.startAt),
+      endAt: this.formatDateOnly(phase.endAt),
+    } as T;
+  }
+
   // 1. READ ALL PHASES FOR A SPECIFIC CYCLE
   async getPhasesByCycleId(growCycleId: string) {
-    return await this.prisma.growPhase.findMany({
+    const phases = await this.prisma.growPhase.findMany({
       where: { growCycleId },
       orderBy: {
         order: "asc", // Ensures phases return in sequential order
@@ -41,11 +60,12 @@ export class GrowPhasesController {
         },
       },
     });
+    return this.serializePhaseDates(phases);
   }
 
   // 2. READ ONE INDIVIDUAL PHASE
   async getGrowPhaseById(id: string) {
-    return await this.prisma.growPhase.findUniqueOrThrow({
+    const phase = await this.prisma.growPhase.findUniqueOrThrow({
       where: { id },
       include: {
         deviceConfigs: {
@@ -55,13 +75,14 @@ export class GrowPhasesController {
         },
       },
     });
+    return this.serializePhaseDates(phase);
   }
 
   // 3. CREATE A CUSTOM PHASE
   async createGrowPhase(body: CreatePhaseInput) {
     const { startAt, endAt, isActive, ...rest } = body;
 
-    return await this.prisma.growPhase.create({
+    const created = await this.prisma.growPhase.create({
       data: {
         ...rest,
         isActive: isActive ?? false,
@@ -69,13 +90,14 @@ export class GrowPhasesController {
         endAt: endAt ? new Date(endAt) : null,
       },
     });
+    return this.serializePhaseDates(created);
   }
 
   // 4. UPDATE A PHASE'S PARAMETERS
   async updateGrowPhase(id: string, body: UpdatePhaseInput) {
     const { startAt, endAt, ...rest } = body;
 
-    return await this.prisma.growPhase.update({
+    const updated = await this.prisma.growPhase.update({
       where: { id },
       data: {
         ...rest,
@@ -83,6 +105,7 @@ export class GrowPhasesController {
         endAt: endAt ? new Date(endAt) : undefined,
       },
     });
+    return this.serializePhaseDates(updated);
   }
 
   // 5. DELETE A PHASE
@@ -109,7 +132,7 @@ export class GrowPhasesController {
       }),
     ]);
 
-    return await this.prisma.growPhase.findUnique({
+    const result = await this.prisma.growPhase.findUnique({
       where: { id },
       include: {
         deviceConfigs: {
@@ -119,5 +142,6 @@ export class GrowPhasesController {
         },
       },
     });
+    return result ? this.serializePhaseDates(result) : result;
   }
 }

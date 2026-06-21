@@ -167,6 +167,7 @@ List all grow cycles (includes basic controller info).
   controllerId: string;
   name: string;
   isActive: boolean;
+  startAt: string | null;        // Date only: "YYYY-MM-DD" (no timestamp)
   createdAt: string;
   updatedAt: string;
   controller: {
@@ -191,8 +192,8 @@ Get a grow cycle with full nested details (phases, device configs, devices).
     order: number;
     durationDays: number;
     isActive: boolean;
-    startAt: string | null;        // ISO 8601
-    endAt: string | null;          // ISO 8601
+    startAt: string | null;        // Date only: "YYYY-MM-DD"
+    endAt: string | null;          // Date only: "YYYY-MM-DD"
     createdAt: string;
     updatedAt: string;
     deviceConfigs: {
@@ -247,6 +248,7 @@ Update a grow cycle.
   name?: string;
   controllerId?: string;
   isActive?: boolean;
+  startAt?: string;              // Date only: "YYYY-MM-DD" (no timestamp). Date-time strings are rejected.
 }
 ```
 
@@ -275,8 +277,8 @@ List all phases for a grow cycle (includes device configs).
   order: number;
   durationDays: number;
   isActive: boolean;
-  startAt: string | null;
-  endAt: string | null;
+  startAt: string | null;        // Date only: "YYYY-MM-DD"
+  endAt: string | null;          // Date only: "YYYY-MM-DD"
   createdAt: string;
   updatedAt: string;
   deviceConfigs: {
@@ -310,8 +312,8 @@ Create a custom phase.
   order: number;          // integer >= 1
   durationDays: number;   // integer >= 1
   isActive?: boolean;     // default: false
-  startAt?: string;       // ISO 8601
-  endAt?: string;         // ISO 8601
+  startAt?: string;       // Date only: "YYYY-MM-DD" (no timestamp). Date-time strings are rejected.
+  endAt?: string;         // Date only: "YYYY-MM-DD" (no timestamp). Date-time strings are rejected.
 }
 ```
 
@@ -328,8 +330,8 @@ Update a phase.
   order?: number;          // >= 1
   durationDays?: number;   // >= 1
   isActive?: boolean;
-  startAt?: string;        // ISO 8601
-  endAt?: string;          // ISO 8601
+  startAt?: string;        // Date only: "YYYY-MM-DD" (no timestamp). Date-time strings are rejected.
+  endAt?: string;          // Date only: "YYYY-MM-DD" (no timestamp). Date-time strings are rejected.
 }
 ```
 
@@ -346,16 +348,104 @@ Delete a phase.
 
 ## Device Configs
 
-> **Note:** Device configs are managed indirectly through grow cycle creation (which auto-generates them) and do not have standalone REST endpoints. They are returned as nested resources under phases.
+A `DeviceConfig` is the rule that ties a physical `Device` to a `GrowPhase` — it controls when and how the device is triggered. Device configs are created both by grow-cycle auto-generation (see `POST /api/grow-cycles`) and via the standalone endpoints below.
 
-### Trigger Types & ConfigData Shapes
+### Model
 
-| TriggerType | Example configData |
-|---|---|
-| `SCHEDULE` | `{ "onTime": "06:00", "durationHours": 18 }` |
-| `THRESHOLD` | `{ "metric": "TEMP", "high": 26.5 }` |
-| `ALWAYS_ON` | `{}` |
-| `ALWAYS_OFF` | `{}` |
+```ts
+{
+  id: string;
+  growPhaseId: string;            // UUID
+  deviceId: string;               // UUID
+  triggerType: "SCHEDULE" | "THRESHOLD" | "ALWAYS_ON" | "ALWAYS_OFF";
+  configData: ConfigData;         // Discriminated union — shape depends on triggerType
+  createdAt: string;
+  updatedAt: string;
+  device: Device;                 // Full Device object (included in all read responses)
+}
+```
+
+### `configData` shapes (discriminated union by `triggerType`)
+
+The API accepts **multiple known variants** for each trigger type for backwards compatibility with data already in the database. New clients should prefer the canonical (auto-generated) form.
+
+| `triggerType` | Canonical form | Alternative form (also accepted) |
+|---|---|---|
+| `SCHEDULE` | `{ onTime: "06:00", durationHours: 18 }` | `{ onTime: "06:00", offTime: "00:00" }` |
+| `THRESHOLD` | `{ metric: "TEMP", high: 26.5 }` | `{ sensor: "TEMPERATURE", condition: "GREATER_THAN", value: 26.5, action: "ON" }` |
+| `ALWAYS_ON` | `{}` | any object (lenient — extra keys ignored) |
+| `ALWAYS_OFF` | `{}` | any object (lenient — extra keys ignored) |
+
+- `onTime` / `offTime` must match `^([01][0-9]|2[0-3]):[0-5][0-9]$` (24h `HH:MM`).
+- `durationHours` must be a number in `[0.1, 24]`.
+- `condition` must be one of: `"GREATER_THAN" | "LESS_THAN" | "GREATER_THAN_OR_EQUAL" | "LESS_THAN_OR_EQUAL" | "EQUAL"`.
+- `action` must be one of: `"ON" | "OFF" | "TOGGLE"`.
+
+### `GET /api/device-configs/phase/:phaseId`
+
+List all device configs for a phase. Always includes the full `device` object on each entry.
+
+**Response `200`** — Array of `DeviceConfig` (with nested `device`), ordered by `createdAt` ascending.
+
+**`400`** — `{ error: "Failed to load device configurations" }`
+
+### `GET /api/device-configs/:id`
+
+Fetch a single device config by ID.
+
+**Response `200`** — `DeviceConfig` (with nested `device`).
+
+**`404`** — `{ error: "Device configuration not found" }`
+
+### `POST /api/device-configs`
+
+Create a device config linking a device to a phase with a trigger rule.
+
+**Request body** (discriminated by `triggerType`):
+
+```ts
+// SCHEDULE — one of:
+{ growPhaseId: string; deviceId: string; triggerType: "SCHEDULE";
+  configData: { onTime: "06:00"; durationHours: 18 } }
+| { growPhaseId: string; deviceId: string; triggerType: "SCHEDULE";
+  configData: { onTime: "06:00"; offTime: "00:00" } }
+
+// THRESHOLD — one of:
+| { growPhaseId: string; deviceId: string; triggerType: "THRESHOLD";
+  configData: { metric: "TEMP"; high: 26.5 } }
+| { growPhaseId: string; deviceId: string; triggerType: "THRESHOLD";
+  configData: { sensor: "TEMPERATURE"; condition: "GREATER_THAN"; value: 26.5; action: "ON" } }
+
+// ALWAYS_ON / ALWAYS_OFF — any object (lenient)
+| { growPhaseId: string; deviceId: string; triggerType: "ALWAYS_ON" | "ALWAYS_OFF";
+  configData: Record<string, unknown> }
+```
+
+**Response `201`** — Created `DeviceConfig` (with nested `device`).
+
+**`400`** — `{ error: "Failed to create device configuration" }` — returned for any validation failure (unknown `triggerType`, missing `configData` fields, bad time format, non-UUID IDs, etc.) or DB error.
+
+### `PUT /api/device-configs/:id`
+
+Update a device config's trigger rule. **`triggerType` and `configData` must be sent together** as a consistent pair — partial updates are rejected.
+
+- `growPhaseId` and `deviceId` are **immutable** after creation. To move a config to a different phase or device, delete and recreate it.
+
+**Request body** — same shape as `POST` minus `growPhaseId` and `deviceId`.
+
+**Response `200`** — Updated `DeviceConfig` (with nested `device`).
+
+**`400`** — `{ error: "Failed to update device configuration" }` — validation or DB error.
+
+### `DELETE /api/device-configs/:id`
+
+Remove a device config.
+
+**Response `204`** — No body.
+
+**`404`** — `{ error: "Device configuration deletion failed" }`
+
+---
 
 ---
 
@@ -427,6 +517,7 @@ interface GrowCycle {
   controllerId: string;
   name: string;
   isActive: boolean;
+  startAt: string | null;        // Date only: "YYYY-MM-DD" (no timestamp)
   createdAt: string;
   updatedAt: string;
 }
@@ -438,8 +529,8 @@ interface GrowPhase {
   order: number;
   durationDays: number;
   isActive: boolean;
-  startAt: string | null;
-  endAt: string | null;
+  startAt: string | null;    // Date only: "YYYY-MM-DD"
+  endAt: string | null;      // Date only: "YYYY-MM-DD"
   createdAt: string;
   updatedAt: string;
 }
@@ -449,10 +540,20 @@ interface DeviceConfig {
   growPhaseId: string;
   deviceId: string;
   triggerType: TriggerType;
-  configData: Record<string, unknown>;
+  configData: ConfigData;       // Discriminated union — see below
   createdAt: string;
   updatedAt: string;
+  device: Device;               // Always included in API responses
 }
+
+// Discriminated union — narrow with `deviceConfig.triggerType`
+type ConfigData =
+  | { triggerType: "SCHEDULE"; configData: { onTime: string; durationHours: number } | { onTime: string; offTime: string } }
+  | { triggerType: "THRESHOLD"; configData: { metric: string; high: number } | { sensor: string; condition: "GREATER_THAN" | "LESS_THAN" | "GREATER_THAN_OR_EQUAL" | "LESS_THAN_OR_EQUAL" | "EQUAL"; value: number; action: "ON" | "OFF" | "TOGGLE" } }
+  | { triggerType: "ALWAYS_ON" | "ALWAYS_OFF"; configData: Record<string, unknown> };
+
+// Helper to access the typed configData given a triggerType
+type ConfigDataFor<T extends TriggerType> = Extract<ConfigData, { triggerType: T }>["configData"];
 
 interface Telemetry {
   id: string;

@@ -1,6 +1,5 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
-import mqtt from "mqtt";
 import { handleTelemetry } from "./mqtt-handlers/telemetry-handler.js";
 import mqttMatch from "mqtt-match";
 import { Server as SocketIOServer } from "socket.io";
@@ -11,10 +10,14 @@ import controllerRoutes from "./api/modules/controllers/controllers.route.js";
 import deviceRoutes from "./api/modules/devices/devices.routes.js";
 import deviceConfigRoutes from "./api/modules/device-configs/device-configs.routes.js";
 import telemetryRoutes from "./api/modules/telemetry/telemetry.routes.js";
+import { mqttClient, MQTT_BROKER_URL } from "./mqtt/client.js";
 
 // 1. Initialize Fastify and register CORS for the Frontend
 const fastify = Fastify({ logger: true });
-await fastify.register(cors, { origin: "*" });
+await fastify.register(cors, {
+  origin: "*",
+  methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+});
 
 // 2. Initialize Socket.io by binding it directly to Fastify's underlying HTTP server instance
 export const io = new SocketIOServer(fastify.server, {
@@ -23,10 +26,6 @@ export const io = new SocketIOServer(fastify.server, {
     methods: ["GET", "POST"],
   },
 });
-
-// Fallback configuration parameters
-const BROKER_URL = process.env.MQTT_BROKER_URL || "mqtt://localhost:1883";
-export const mqttClient = mqtt.connect(BROKER_URL);
 
 // 2. Manage frontend socket connections
 io.on("connection", (socket) => {
@@ -58,7 +57,7 @@ const topicRegistry: Record<string, (topic: string, message: Buffer) => void> =
   };
 
 mqttClient.on("connect", () => {
-  console.log(`\n⚡ Backend Server connected to MQTT Broker at: ${BROKER_URL}`);
+  console.log(`\n⚡ Backend Server connected to MQTT Broker at: ${MQTT_BROKER_URL}`);
 
   // Subscribe to all registry definitions
   Object.keys(topicRegistry).forEach((topicPattern) => {
