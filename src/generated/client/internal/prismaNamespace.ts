@@ -907,7 +907,7 @@ export type ControllerScalarFieldEnum = (typeof ControllerScalarFieldEnum)[keyof
 
 export const DeviceScalarFieldEnum = {
   id: 'id',
-  controllerId: 'controllerId',
+  growCycleId: 'growCycleId',
   name: 'name',
   type: 'type',
   pinNumber: 'pinNumber',

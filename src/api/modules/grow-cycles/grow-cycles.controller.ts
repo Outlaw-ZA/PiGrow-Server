@@ -7,6 +7,33 @@ export class SkipPhaseError extends Error {
   }
 }
 
+export class ControllerBusyError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ControllerBusyError";
+  }
+}
+
+type DeviceTypeLiteral =
+  | "LIGHT"
+  | "EXHAUST_FAN"
+  | "INTAKE_FAN"
+  | "CIRCULATION_FAN"
+  | "WATER_PUMP"
+  | "AIR_CONDITIONER"
+  | "HEATER"
+  | "HUMIDIFIER"
+  | "DEHUMIDIFIER"
+  | "CO2_INJECTOR";
+
+interface GrowDeviceItem {
+  name: string;
+  type: DeviceTypeLiteral;
+  pinNumber: number;
+  mqttTopic: string;
+  isActive?: boolean;
+}
+
 export class GrowCyclesController {
   private prisma;
 
@@ -40,7 +67,22 @@ export class GrowCyclesController {
     } as T;
   }
 
-
+  // Reject if the controller already has an active grow cycle.
+  private async assertControllerAvailable(controllerId: string, exceptGrowCycleId?: string) {
+    const active = await this.prisma.growCycle.findFirst({
+      where: {
+        controllerId,
+        isActive: true,
+        ...(exceptGrowCycleId ? { NOT: { id: exceptGrowCycleId } } : {}),
+      },
+      select: { id: true },
+    });
+    if (active) {
+      throw new ControllerBusyError(
+        "Controller already has an active grow cycle. End the current grow before starting a new one.",
+      );
+    }
+  }
 
   // 1. READ ALL (Includes assigned Raspberry Pi details)
   async getAllGrowCycles() {
@@ -63,6 +105,7 @@ export class GrowCyclesController {
       where: { id },
       include: {
         controller: true,
+        devices: true,
         phases: {
           orderBy: {
             order: "asc",
@@ -81,27 +124,62 @@ export class GrowCyclesController {
     return this.serializeStartAt(cycle);
   }
 
-  // 3. CREATE (Fetches hardware devices, then generates phases and rules dynamically)
+  // 3. CREATE
+  // Atomically provisions: GrowCycle + per-grow Devices + 4 phases + per-phase DeviceConfigs.
+  // The devices array is provided in the body so the blueprint can reference the freshly
+  // created device IDs when building per-phase DeviceConfig rows.
   async createGrowCycle(body: {
     name: string;
     controllerId: string;
     isActive?: boolean;
+    devices: GrowDeviceItem[];
   }) {
-    // 1. Fetch the physical hardware channels already assigned to this Pi
-    const controllerDevices = await this.prisma.device.findMany({
-      where: { controllerId: body.controllerId, isActive: true },
+    const isActive = body.isActive ?? false;
+
+    // Enforce one-active-grow-per-controller at the application layer for a clean 409.
+    // The DB partial unique index is the structural backstop.
+    if (isActive) {
+      await this.assertControllerAvailable(body.controllerId);
+    }
+
+    // 1. Persist the GrowCycle (no phases/devices yet) so we have a stable id.
+    const createdCycle = await this.prisma.growCycle.create({
+      data: {
+        name: body.name,
+        controllerId: body.controllerId,
+        isActive,
+      },
     });
 
-    // Helper to find a specific device type on this controller
-    const findDevice = (type: string) =>
-      controllerDevices.find((d) => d.type === type);
+    // 2. Create the per-grow devices linked to the new cycle.
+    let createdDevices: Array<{ id: string; type: string }> = [];
+    if (body.devices.length > 0) {
+      const result = await this.prisma.$transaction(
+        body.devices.map((device) =>
+          this.prisma.device.create({
+            data: {
+              growCycleId: createdCycle.id,
+              name: device.name,
+              type: device.type,
+              pinNumber: device.pinNumber,
+              mqttTopic: device.mqttTopic,
+              isActive: device.isActive ?? true,
+            },
+            select: { id: true, type: true },
+          }),
+        ),
+      );
+      createdDevices = result;
+    }
 
+    // 3. Resolve devices by type for blueprint wiring.
+    const findDevice = (type: string) => createdDevices.find((d) => d.type === type);
     const lightDevice = findDevice("LIGHT");
     const exhaustFan = findDevice("EXHAUST_FAN");
     const pumpDevice = findDevice("WATER_PUMP");
 
-    // 2. Build the phase structures inline, embedding dynamic device config targets
-    const defaultPhasesBlueprint = [
+    // 4. Build the 4-phase structural blueprint with per-phase DeviceConfigs.
+    const phaseBlueprints = [
       {
         name: "Seedling / Clone",
         order: 1,
@@ -173,7 +251,7 @@ export class GrowCyclesController {
                     configData: { onTime: "06:00", durationHours: 12 },
                   },
                 ]
-              : []), // Drops to 12/12 cycle
+              : []),
             ...(exhaustFan
               ? [
                   {
@@ -210,35 +288,29 @@ export class GrowCyclesController {
                     configData: {},
                   },
                 ]
-              : []), // Kill pumps for final flush dry-down
+              : []),
           ],
         },
       },
     ];
 
-    // 3. Execute the single unified atomic transaction in Postgres
-    const created = await this.prisma.growCycle.create({
-      data: {
-        name: body.name,
-        controllerId: body.controllerId,
-        isActive: body.isActive ?? false,
-        phases: {
-          create: defaultPhasesBlueprint,
-        },
-      },
-      include: {
-        phases: {
-          orderBy: { order: "asc" },
-          include: {
-            deviceConfigs: {
-              include: { device: true },
-            },
+    // 5. Create the 4 phases in order with their per-phase DeviceConfigs.
+    await this.prisma.$transaction(
+      phaseBlueprints.map((phase) =>
+        this.prisma.growPhase.create({
+          data: {
+            growCycleId: createdCycle.id,
+            name: phase.name,
+            order: phase.order,
+            durationDays: phase.durationDays,
+            isActive: phase.isActive,
+            deviceConfigs: phase.deviceConfigs,
           },
-        },
-      },
-    });
-    created.phases = this.serializePhaseDates(created.phases);
-    return this.serializeStartAt(created);
+        }),
+      ),
+    );
+
+    return this.getGrowCycleById(createdCycle.id);
   }
 
   // 4. UPDATE
@@ -246,17 +318,25 @@ export class GrowCyclesController {
     id: string,
     body: {
       name?: string;
-      controllerId?: string;
       isActive?: boolean;
       startAt?: string;
     },
   ) {
-    const { startAt, ...rest } = body;
+    const { startAt, isActive, ...rest } = body;
+
+    if (isActive === true) {
+      const cycle = await this.prisma.growCycle.findUniqueOrThrow({
+        where: { id },
+        select: { controllerId: true },
+      });
+      await this.assertControllerAvailable(cycle.controllerId, id);
+    }
 
     const updated = await this.prisma.growCycle.update({
       where: { id },
       data: {
         ...rest,
+        isActive: isActive,
         startAt: startAt ? new Date(startAt) : undefined,
       },
     });
@@ -401,7 +481,7 @@ export class GrowCyclesController {
         where: { growCycleId: id },
         data: { isActive: false },
       }),
-      // Mark the grow cycle as inactive
+      // Mark the grow cycle as inactive — this frees the controller for the next grow.
       this.prisma.growCycle.update({
         where: { id },
         data: { isActive: false },

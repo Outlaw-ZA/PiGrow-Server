@@ -30,13 +30,13 @@ export class ControllersController {
     return await this.prisma.controller.findUniqueOrThrow({
       where: { id },
       include: {
-        devices: true, // Pulls the physical relay pin assignments
         growCycles: {
           where: { isActive: true }, // Instantly displays what's currently cultivation-active
           include: {
             phases: {
               where: { isActive: true }, // Pulls the currently running step
             },
+            devices: true, // Per-grow device inventory (devices are now scoped to grow cycles)
           },
         },
       },

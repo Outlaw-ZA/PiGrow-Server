@@ -198,7 +198,6 @@ export type ControllerWhereInput = {
   status?: Prisma.StringFilter<"Controller"> | string
   createdAt?: Prisma.DateTimeFilter<"Controller"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Controller"> | Date | string
-  devices?: Prisma.DeviceListRelationFilter
   growCycles?: Prisma.GrowCycleListRelationFilter
 }
 
@@ -210,7 +209,6 @@ export type ControllerOrderByWithRelationInput = {
   status?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  devices?: Prisma.DeviceOrderByRelationAggregateInput
   growCycles?: Prisma.GrowCycleOrderByRelationAggregateInput
 }
 
@@ -225,7 +223,6 @@ export type ControllerWhereUniqueInput = Prisma.AtLeast<{
   status?: Prisma.StringFilter<"Controller"> | string
   createdAt?: Prisma.DateTimeFilter<"Controller"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Controller"> | Date | string
-  devices?: Prisma.DeviceListRelationFilter
   growCycles?: Prisma.GrowCycleListRelationFilter
 }, "id" | "macAddress">
 
@@ -263,7 +260,6 @@ export type ControllerCreateInput = {
   status?: string
   createdAt?: Date | string
   updatedAt?: Date | string
-  devices?: Prisma.DeviceCreateNestedManyWithoutControllerInput
   growCycles?: Prisma.GrowCycleCreateNestedManyWithoutControllerInput
 }
 
@@ -275,7 +271,6 @@ export type ControllerUncheckedCreateInput = {
   status?: string
   createdAt?: Date | string
   updatedAt?: Date | string
-  devices?: Prisma.DeviceUncheckedCreateNestedManyWithoutControllerInput
   growCycles?: Prisma.GrowCycleUncheckedCreateNestedManyWithoutControllerInput
 }
 
@@ -287,7 +282,6 @@ export type ControllerUpdateInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  devices?: Prisma.DeviceUpdateManyWithoutControllerNestedInput
   growCycles?: Prisma.GrowCycleUpdateManyWithoutControllerNestedInput
 }
 
@@ -299,7 +293,6 @@ export type ControllerUncheckedUpdateInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  devices?: Prisma.DeviceUncheckedUpdateManyWithoutControllerNestedInput
   growCycles?: Prisma.GrowCycleUncheckedUpdateManyWithoutControllerNestedInput
 }
 
@@ -376,20 +369,6 @@ export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
 }
 
-export type ControllerCreateNestedOneWithoutDevicesInput = {
-  create?: Prisma.XOR<Prisma.ControllerCreateWithoutDevicesInput, Prisma.ControllerUncheckedCreateWithoutDevicesInput>
-  connectOrCreate?: Prisma.ControllerCreateOrConnectWithoutDevicesInput
-  connect?: Prisma.ControllerWhereUniqueInput
-}
-
-export type ControllerUpdateOneRequiredWithoutDevicesNestedInput = {
-  create?: Prisma.XOR<Prisma.ControllerCreateWithoutDevicesInput, Prisma.ControllerUncheckedCreateWithoutDevicesInput>
-  connectOrCreate?: Prisma.ControllerCreateOrConnectWithoutDevicesInput
-  upsert?: Prisma.ControllerUpsertWithoutDevicesInput
-  connect?: Prisma.ControllerWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.ControllerUpdateToOneWithWhereWithoutDevicesInput, Prisma.ControllerUpdateWithoutDevicesInput>, Prisma.ControllerUncheckedUpdateWithoutDevicesInput>
-}
-
 export type ControllerCreateNestedOneWithoutGrowCyclesInput = {
   create?: Prisma.XOR<Prisma.ControllerCreateWithoutGrowCyclesInput, Prisma.ControllerUncheckedCreateWithoutGrowCyclesInput>
   connectOrCreate?: Prisma.ControllerCreateOrConnectWithoutGrowCyclesInput
@@ -404,66 +383,6 @@ export type ControllerUpdateOneRequiredWithoutGrowCyclesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.ControllerUpdateToOneWithWhereWithoutGrowCyclesInput, Prisma.ControllerUpdateWithoutGrowCyclesInput>, Prisma.ControllerUncheckedUpdateWithoutGrowCyclesInput>
 }
 
-export type ControllerCreateWithoutDevicesInput = {
-  id?: string
-  macAddress: string
-  ipAddress: string
-  name: string
-  status?: string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  growCycles?: Prisma.GrowCycleCreateNestedManyWithoutControllerInput
-}
-
-export type ControllerUncheckedCreateWithoutDevicesInput = {
-  id?: string
-  macAddress: string
-  ipAddress: string
-  name: string
-  status?: string
-  createdAt?: Date | string
-  updatedAt?: Date | string
-  growCycles?: Prisma.GrowCycleUncheckedCreateNestedManyWithoutControllerInput
-}
-
-export type ControllerCreateOrConnectWithoutDevicesInput = {
-  where: Prisma.ControllerWhereUniqueInput
-  create: Prisma.XOR<Prisma.ControllerCreateWithoutDevicesInput, Prisma.ControllerUncheckedCreateWithoutDevicesInput>
-}
-
-export type ControllerUpsertWithoutDevicesInput = {
-  update: Prisma.XOR<Prisma.ControllerUpdateWithoutDevicesInput, Prisma.ControllerUncheckedUpdateWithoutDevicesInput>
-  create: Prisma.XOR<Prisma.ControllerCreateWithoutDevicesInput, Prisma.ControllerUncheckedCreateWithoutDevicesInput>
-  where?: Prisma.ControllerWhereInput
-}
-
-export type ControllerUpdateToOneWithWhereWithoutDevicesInput = {
-  where?: Prisma.ControllerWhereInput
-  data: Prisma.XOR<Prisma.ControllerUpdateWithoutDevicesInput, Prisma.ControllerUncheckedUpdateWithoutDevicesInput>
-}
-
-export type ControllerUpdateWithoutDevicesInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  macAddress?: Prisma.StringFieldUpdateOperationsInput | string
-  ipAddress?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  growCycles?: Prisma.GrowCycleUpdateManyWithoutControllerNestedInput
-}
-
-export type ControllerUncheckedUpdateWithoutDevicesInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  macAddress?: Prisma.StringFieldUpdateOperationsInput | string
-  ipAddress?: Prisma.StringFieldUpdateOperationsInput | string
-  name?: Prisma.StringFieldUpdateOperationsInput | string
-  status?: Prisma.StringFieldUpdateOperationsInput | string
-  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  growCycles?: Prisma.GrowCycleUncheckedUpdateManyWithoutControllerNestedInput
-}
-
 export type ControllerCreateWithoutGrowCyclesInput = {
   id?: string
   macAddress: string
@@ -472,7 +391,6 @@ export type ControllerCreateWithoutGrowCyclesInput = {
   status?: string
   createdAt?: Date | string
   updatedAt?: Date | string
-  devices?: Prisma.DeviceCreateNestedManyWithoutControllerInput
 }
 
 export type ControllerUncheckedCreateWithoutGrowCyclesInput = {
@@ -483,7 +401,6 @@ export type ControllerUncheckedCreateWithoutGrowCyclesInput = {
   status?: string
   createdAt?: Date | string
   updatedAt?: Date | string
-  devices?: Prisma.DeviceUncheckedCreateNestedManyWithoutControllerInput
 }
 
 export type ControllerCreateOrConnectWithoutGrowCyclesInput = {
@@ -510,7 +427,6 @@ export type ControllerUpdateWithoutGrowCyclesInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  devices?: Prisma.DeviceUpdateManyWithoutControllerNestedInput
 }
 
 export type ControllerUncheckedUpdateWithoutGrowCyclesInput = {
@@ -521,7 +437,6 @@ export type ControllerUncheckedUpdateWithoutGrowCyclesInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  devices?: Prisma.DeviceUncheckedUpdateManyWithoutControllerNestedInput
 }
 
 
@@ -530,12 +445,10 @@ export type ControllerUncheckedUpdateWithoutGrowCyclesInput = {
  */
 
 export type ControllerCountOutputType = {
-  devices: number
   growCycles: number
 }
 
 export type ControllerCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  devices?: boolean | ControllerCountOutputTypeCountDevicesArgs
   growCycles?: boolean | ControllerCountOutputTypeCountGrowCyclesArgs
 }
 
@@ -547,13 +460,6 @@ export type ControllerCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.E
    * Select specific fields to fetch from the ControllerCountOutputType
    */
   select?: Prisma.ControllerCountOutputTypeSelect<ExtArgs> | null
-}
-
-/**
- * ControllerCountOutputType without action
- */
-export type ControllerCountOutputTypeCountDevicesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.DeviceWhereInput
 }
 
 /**
@@ -572,7 +478,6 @@ export type ControllerSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   status?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  devices?: boolean | Prisma.Controller$devicesArgs<ExtArgs>
   growCycles?: boolean | Prisma.Controller$growCyclesArgs<ExtArgs>
   _count?: boolean | Prisma.ControllerCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["controller"]>
@@ -609,7 +514,6 @@ export type ControllerSelectScalar = {
 
 export type ControllerOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "macAddress" | "ipAddress" | "name" | "status" | "createdAt" | "updatedAt", ExtArgs["result"]["controller"]>
 export type ControllerInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  devices?: boolean | Prisma.Controller$devicesArgs<ExtArgs>
   growCycles?: boolean | Prisma.Controller$growCyclesArgs<ExtArgs>
   _count?: boolean | Prisma.ControllerCountOutputTypeDefaultArgs<ExtArgs>
 }
@@ -619,7 +523,6 @@ export type ControllerIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.E
 export type $ControllerPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Controller"
   objects: {
-    devices: Prisma.$DevicePayload<ExtArgs>[]
     growCycles: Prisma.$GrowCyclePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -1024,7 +927,6 @@ readonly fields: ControllerFieldRefs;
  */
 export interface Prisma__ControllerClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  devices<T extends Prisma.Controller$devicesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Controller$devicesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DevicePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   growCycles<T extends Prisma.Controller$growCyclesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Controller$growCyclesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GrowCyclePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1452,30 +1354,6 @@ export type ControllerDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.In
    * Limit how many Controllers to delete.
    */
   limit?: number
-}
-
-/**
- * Controller.devices
- */
-export type Controller$devicesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  /**
-   * Select specific fields to fetch from the Device
-   */
-  select?: Prisma.DeviceSelect<ExtArgs> | null
-  /**
-   * Omit specific fields from the Device
-   */
-  omit?: Prisma.DeviceOmit<ExtArgs> | null
-  /**
-   * Choose, which related nodes to fetch as well
-   */
-  include?: Prisma.DeviceInclude<ExtArgs> | null
-  where?: Prisma.DeviceWhereInput
-  orderBy?: Prisma.DeviceOrderByWithRelationInput | Prisma.DeviceOrderByWithRelationInput[]
-  cursor?: Prisma.DeviceWhereUniqueInput
-  take?: number
-  skip?: number
-  distinct?: Prisma.DeviceScalarFieldEnum | Prisma.DeviceScalarFieldEnum[]
 }
 
 /**

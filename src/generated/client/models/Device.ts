@@ -36,7 +36,7 @@ export type DeviceSumAggregateOutputType = {
 
 export type DeviceMinAggregateOutputType = {
   id: string | null
-  controllerId: string | null
+  growCycleId: string | null
   name: string | null
   type: $Enums.DeviceType | null
   pinNumber: number | null
@@ -48,7 +48,7 @@ export type DeviceMinAggregateOutputType = {
 
 export type DeviceMaxAggregateOutputType = {
   id: string | null
-  controllerId: string | null
+  growCycleId: string | null
   name: string | null
   type: $Enums.DeviceType | null
   pinNumber: number | null
@@ -60,7 +60,7 @@ export type DeviceMaxAggregateOutputType = {
 
 export type DeviceCountAggregateOutputType = {
   id: number
-  controllerId: number
+  growCycleId: number
   name: number
   type: number
   pinNumber: number
@@ -82,7 +82,7 @@ export type DeviceSumAggregateInputType = {
 
 export type DeviceMinAggregateInputType = {
   id?: true
-  controllerId?: true
+  growCycleId?: true
   name?: true
   type?: true
   pinNumber?: true
@@ -94,7 +94,7 @@ export type DeviceMinAggregateInputType = {
 
 export type DeviceMaxAggregateInputType = {
   id?: true
-  controllerId?: true
+  growCycleId?: true
   name?: true
   type?: true
   pinNumber?: true
@@ -106,7 +106,7 @@ export type DeviceMaxAggregateInputType = {
 
 export type DeviceCountAggregateInputType = {
   id?: true
-  controllerId?: true
+  growCycleId?: true
   name?: true
   type?: true
   pinNumber?: true
@@ -205,7 +205,7 @@ export type DeviceGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalA
 
 export type DeviceGroupByOutputType = {
   id: string
-  controllerId: string
+  growCycleId: string
   name: string
   type: $Enums.DeviceType
   pinNumber: number
@@ -240,7 +240,7 @@ export type DeviceWhereInput = {
   OR?: Prisma.DeviceWhereInput[]
   NOT?: Prisma.DeviceWhereInput | Prisma.DeviceWhereInput[]
   id?: Prisma.StringFilter<"Device"> | string
-  controllerId?: Prisma.StringFilter<"Device"> | string
+  growCycleId?: Prisma.StringFilter<"Device"> | string
   name?: Prisma.StringFilter<"Device"> | string
   type?: Prisma.EnumDeviceTypeFilter<"Device"> | $Enums.DeviceType
   pinNumber?: Prisma.IntFilter<"Device"> | number
@@ -248,13 +248,13 @@ export type DeviceWhereInput = {
   isActive?: Prisma.BoolFilter<"Device"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Device"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Device"> | Date | string
-  controller?: Prisma.XOR<Prisma.ControllerScalarRelationFilter, Prisma.ControllerWhereInput>
+  growCycle?: Prisma.XOR<Prisma.GrowCycleScalarRelationFilter, Prisma.GrowCycleWhereInput>
   deviceConfigs?: Prisma.DeviceConfigListRelationFilter
 }
 
 export type DeviceOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  controllerId?: Prisma.SortOrder
+  growCycleId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   type?: Prisma.SortOrder
   pinNumber?: Prisma.SortOrder
@@ -262,7 +262,7 @@ export type DeviceOrderByWithRelationInput = {
   isActive?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
-  controller?: Prisma.ControllerOrderByWithRelationInput
+  growCycle?: Prisma.GrowCycleOrderByWithRelationInput
   deviceConfigs?: Prisma.DeviceConfigOrderByRelationAggregateInput
 }
 
@@ -271,7 +271,7 @@ export type DeviceWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.DeviceWhereInput | Prisma.DeviceWhereInput[]
   OR?: Prisma.DeviceWhereInput[]
   NOT?: Prisma.DeviceWhereInput | Prisma.DeviceWhereInput[]
-  controllerId?: Prisma.StringFilter<"Device"> | string
+  growCycleId?: Prisma.StringFilter<"Device"> | string
   name?: Prisma.StringFilter<"Device"> | string
   type?: Prisma.EnumDeviceTypeFilter<"Device"> | $Enums.DeviceType
   pinNumber?: Prisma.IntFilter<"Device"> | number
@@ -279,13 +279,13 @@ export type DeviceWhereUniqueInput = Prisma.AtLeast<{
   isActive?: Prisma.BoolFilter<"Device"> | boolean
   createdAt?: Prisma.DateTimeFilter<"Device"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Device"> | Date | string
-  controller?: Prisma.XOR<Prisma.ControllerScalarRelationFilter, Prisma.ControllerWhereInput>
+  growCycle?: Prisma.XOR<Prisma.GrowCycleScalarRelationFilter, Prisma.GrowCycleWhereInput>
   deviceConfigs?: Prisma.DeviceConfigListRelationFilter
 }, "id">
 
 export type DeviceOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  controllerId?: Prisma.SortOrder
+  growCycleId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   type?: Prisma.SortOrder
   pinNumber?: Prisma.SortOrder
@@ -305,7 +305,7 @@ export type DeviceScalarWhereWithAggregatesInput = {
   OR?: Prisma.DeviceScalarWhereWithAggregatesInput[]
   NOT?: Prisma.DeviceScalarWhereWithAggregatesInput | Prisma.DeviceScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Device"> | string
-  controllerId?: Prisma.StringWithAggregatesFilter<"Device"> | string
+  growCycleId?: Prisma.StringWithAggregatesFilter<"Device"> | string
   name?: Prisma.StringWithAggregatesFilter<"Device"> | string
   type?: Prisma.EnumDeviceTypeWithAggregatesFilter<"Device"> | $Enums.DeviceType
   pinNumber?: Prisma.IntWithAggregatesFilter<"Device"> | number
@@ -324,13 +324,13 @@ export type DeviceCreateInput = {
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
-  controller: Prisma.ControllerCreateNestedOneWithoutDevicesInput
+  growCycle: Prisma.GrowCycleCreateNestedOneWithoutDevicesInput
   deviceConfigs?: Prisma.DeviceConfigCreateNestedManyWithoutDeviceInput
 }
 
 export type DeviceUncheckedCreateInput = {
   id?: string
-  controllerId: string
+  growCycleId: string
   name: string
   type: $Enums.DeviceType
   pinNumber: number
@@ -350,13 +350,13 @@ export type DeviceUpdateInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  controller?: Prisma.ControllerUpdateOneRequiredWithoutDevicesNestedInput
+  growCycle?: Prisma.GrowCycleUpdateOneRequiredWithoutDevicesNestedInput
   deviceConfigs?: Prisma.DeviceConfigUpdateManyWithoutDeviceNestedInput
 }
 
 export type DeviceUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  controllerId?: Prisma.StringFieldUpdateOperationsInput | string
+  growCycleId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumDeviceTypeFieldUpdateOperationsInput | $Enums.DeviceType
   pinNumber?: Prisma.IntFieldUpdateOperationsInput | number
@@ -369,7 +369,7 @@ export type DeviceUncheckedUpdateInput = {
 
 export type DeviceCreateManyInput = {
   id?: string
-  controllerId: string
+  growCycleId: string
   name: string
   type: $Enums.DeviceType
   pinNumber: number
@@ -392,7 +392,7 @@ export type DeviceUpdateManyMutationInput = {
 
 export type DeviceUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  controllerId?: Prisma.StringFieldUpdateOperationsInput | string
+  growCycleId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumDeviceTypeFieldUpdateOperationsInput | $Enums.DeviceType
   pinNumber?: Prisma.IntFieldUpdateOperationsInput | number
@@ -402,19 +402,9 @@ export type DeviceUncheckedUpdateManyInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type DeviceListRelationFilter = {
-  every?: Prisma.DeviceWhereInput
-  some?: Prisma.DeviceWhereInput
-  none?: Prisma.DeviceWhereInput
-}
-
-export type DeviceOrderByRelationAggregateInput = {
-  _count?: Prisma.SortOrder
-}
-
 export type DeviceCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  controllerId?: Prisma.SortOrder
+  growCycleId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   type?: Prisma.SortOrder
   pinNumber?: Prisma.SortOrder
@@ -430,7 +420,7 @@ export type DeviceAvgOrderByAggregateInput = {
 
 export type DeviceMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  controllerId?: Prisma.SortOrder
+  growCycleId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   type?: Prisma.SortOrder
   pinNumber?: Prisma.SortOrder
@@ -442,7 +432,7 @@ export type DeviceMaxOrderByAggregateInput = {
 
 export type DeviceMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
-  controllerId?: Prisma.SortOrder
+  growCycleId?: Prisma.SortOrder
   name?: Prisma.SortOrder
   type?: Prisma.SortOrder
   pinNumber?: Prisma.SortOrder
@@ -456,51 +446,19 @@ export type DeviceSumOrderByAggregateInput = {
   pinNumber?: Prisma.SortOrder
 }
 
+export type DeviceListRelationFilter = {
+  every?: Prisma.DeviceWhereInput
+  some?: Prisma.DeviceWhereInput
+  none?: Prisma.DeviceWhereInput
+}
+
+export type DeviceOrderByRelationAggregateInput = {
+  _count?: Prisma.SortOrder
+}
+
 export type DeviceScalarRelationFilter = {
   is?: Prisma.DeviceWhereInput
   isNot?: Prisma.DeviceWhereInput
-}
-
-export type DeviceCreateNestedManyWithoutControllerInput = {
-  create?: Prisma.XOR<Prisma.DeviceCreateWithoutControllerInput, Prisma.DeviceUncheckedCreateWithoutControllerInput> | Prisma.DeviceCreateWithoutControllerInput[] | Prisma.DeviceUncheckedCreateWithoutControllerInput[]
-  connectOrCreate?: Prisma.DeviceCreateOrConnectWithoutControllerInput | Prisma.DeviceCreateOrConnectWithoutControllerInput[]
-  createMany?: Prisma.DeviceCreateManyControllerInputEnvelope
-  connect?: Prisma.DeviceWhereUniqueInput | Prisma.DeviceWhereUniqueInput[]
-}
-
-export type DeviceUncheckedCreateNestedManyWithoutControllerInput = {
-  create?: Prisma.XOR<Prisma.DeviceCreateWithoutControllerInput, Prisma.DeviceUncheckedCreateWithoutControllerInput> | Prisma.DeviceCreateWithoutControllerInput[] | Prisma.DeviceUncheckedCreateWithoutControllerInput[]
-  connectOrCreate?: Prisma.DeviceCreateOrConnectWithoutControllerInput | Prisma.DeviceCreateOrConnectWithoutControllerInput[]
-  createMany?: Prisma.DeviceCreateManyControllerInputEnvelope
-  connect?: Prisma.DeviceWhereUniqueInput | Prisma.DeviceWhereUniqueInput[]
-}
-
-export type DeviceUpdateManyWithoutControllerNestedInput = {
-  create?: Prisma.XOR<Prisma.DeviceCreateWithoutControllerInput, Prisma.DeviceUncheckedCreateWithoutControllerInput> | Prisma.DeviceCreateWithoutControllerInput[] | Prisma.DeviceUncheckedCreateWithoutControllerInput[]
-  connectOrCreate?: Prisma.DeviceCreateOrConnectWithoutControllerInput | Prisma.DeviceCreateOrConnectWithoutControllerInput[]
-  upsert?: Prisma.DeviceUpsertWithWhereUniqueWithoutControllerInput | Prisma.DeviceUpsertWithWhereUniqueWithoutControllerInput[]
-  createMany?: Prisma.DeviceCreateManyControllerInputEnvelope
-  set?: Prisma.DeviceWhereUniqueInput | Prisma.DeviceWhereUniqueInput[]
-  disconnect?: Prisma.DeviceWhereUniqueInput | Prisma.DeviceWhereUniqueInput[]
-  delete?: Prisma.DeviceWhereUniqueInput | Prisma.DeviceWhereUniqueInput[]
-  connect?: Prisma.DeviceWhereUniqueInput | Prisma.DeviceWhereUniqueInput[]
-  update?: Prisma.DeviceUpdateWithWhereUniqueWithoutControllerInput | Prisma.DeviceUpdateWithWhereUniqueWithoutControllerInput[]
-  updateMany?: Prisma.DeviceUpdateManyWithWhereWithoutControllerInput | Prisma.DeviceUpdateManyWithWhereWithoutControllerInput[]
-  deleteMany?: Prisma.DeviceScalarWhereInput | Prisma.DeviceScalarWhereInput[]
-}
-
-export type DeviceUncheckedUpdateManyWithoutControllerNestedInput = {
-  create?: Prisma.XOR<Prisma.DeviceCreateWithoutControllerInput, Prisma.DeviceUncheckedCreateWithoutControllerInput> | Prisma.DeviceCreateWithoutControllerInput[] | Prisma.DeviceUncheckedCreateWithoutControllerInput[]
-  connectOrCreate?: Prisma.DeviceCreateOrConnectWithoutControllerInput | Prisma.DeviceCreateOrConnectWithoutControllerInput[]
-  upsert?: Prisma.DeviceUpsertWithWhereUniqueWithoutControllerInput | Prisma.DeviceUpsertWithWhereUniqueWithoutControllerInput[]
-  createMany?: Prisma.DeviceCreateManyControllerInputEnvelope
-  set?: Prisma.DeviceWhereUniqueInput | Prisma.DeviceWhereUniqueInput[]
-  disconnect?: Prisma.DeviceWhereUniqueInput | Prisma.DeviceWhereUniqueInput[]
-  delete?: Prisma.DeviceWhereUniqueInput | Prisma.DeviceWhereUniqueInput[]
-  connect?: Prisma.DeviceWhereUniqueInput | Prisma.DeviceWhereUniqueInput[]
-  update?: Prisma.DeviceUpdateWithWhereUniqueWithoutControllerInput | Prisma.DeviceUpdateWithWhereUniqueWithoutControllerInput[]
-  updateMany?: Prisma.DeviceUpdateManyWithWhereWithoutControllerInput | Prisma.DeviceUpdateManyWithWhereWithoutControllerInput[]
-  deleteMany?: Prisma.DeviceScalarWhereInput | Prisma.DeviceScalarWhereInput[]
 }
 
 export type EnumDeviceTypeFieldUpdateOperationsInput = {
@@ -519,6 +477,48 @@ export type BoolFieldUpdateOperationsInput = {
   set?: boolean
 }
 
+export type DeviceCreateNestedManyWithoutGrowCycleInput = {
+  create?: Prisma.XOR<Prisma.DeviceCreateWithoutGrowCycleInput, Prisma.DeviceUncheckedCreateWithoutGrowCycleInput> | Prisma.DeviceCreateWithoutGrowCycleInput[] | Prisma.DeviceUncheckedCreateWithoutGrowCycleInput[]
+  connectOrCreate?: Prisma.DeviceCreateOrConnectWithoutGrowCycleInput | Prisma.DeviceCreateOrConnectWithoutGrowCycleInput[]
+  createMany?: Prisma.DeviceCreateManyGrowCycleInputEnvelope
+  connect?: Prisma.DeviceWhereUniqueInput | Prisma.DeviceWhereUniqueInput[]
+}
+
+export type DeviceUncheckedCreateNestedManyWithoutGrowCycleInput = {
+  create?: Prisma.XOR<Prisma.DeviceCreateWithoutGrowCycleInput, Prisma.DeviceUncheckedCreateWithoutGrowCycleInput> | Prisma.DeviceCreateWithoutGrowCycleInput[] | Prisma.DeviceUncheckedCreateWithoutGrowCycleInput[]
+  connectOrCreate?: Prisma.DeviceCreateOrConnectWithoutGrowCycleInput | Prisma.DeviceCreateOrConnectWithoutGrowCycleInput[]
+  createMany?: Prisma.DeviceCreateManyGrowCycleInputEnvelope
+  connect?: Prisma.DeviceWhereUniqueInput | Prisma.DeviceWhereUniqueInput[]
+}
+
+export type DeviceUpdateManyWithoutGrowCycleNestedInput = {
+  create?: Prisma.XOR<Prisma.DeviceCreateWithoutGrowCycleInput, Prisma.DeviceUncheckedCreateWithoutGrowCycleInput> | Prisma.DeviceCreateWithoutGrowCycleInput[] | Prisma.DeviceUncheckedCreateWithoutGrowCycleInput[]
+  connectOrCreate?: Prisma.DeviceCreateOrConnectWithoutGrowCycleInput | Prisma.DeviceCreateOrConnectWithoutGrowCycleInput[]
+  upsert?: Prisma.DeviceUpsertWithWhereUniqueWithoutGrowCycleInput | Prisma.DeviceUpsertWithWhereUniqueWithoutGrowCycleInput[]
+  createMany?: Prisma.DeviceCreateManyGrowCycleInputEnvelope
+  set?: Prisma.DeviceWhereUniqueInput | Prisma.DeviceWhereUniqueInput[]
+  disconnect?: Prisma.DeviceWhereUniqueInput | Prisma.DeviceWhereUniqueInput[]
+  delete?: Prisma.DeviceWhereUniqueInput | Prisma.DeviceWhereUniqueInput[]
+  connect?: Prisma.DeviceWhereUniqueInput | Prisma.DeviceWhereUniqueInput[]
+  update?: Prisma.DeviceUpdateWithWhereUniqueWithoutGrowCycleInput | Prisma.DeviceUpdateWithWhereUniqueWithoutGrowCycleInput[]
+  updateMany?: Prisma.DeviceUpdateManyWithWhereWithoutGrowCycleInput | Prisma.DeviceUpdateManyWithWhereWithoutGrowCycleInput[]
+  deleteMany?: Prisma.DeviceScalarWhereInput | Prisma.DeviceScalarWhereInput[]
+}
+
+export type DeviceUncheckedUpdateManyWithoutGrowCycleNestedInput = {
+  create?: Prisma.XOR<Prisma.DeviceCreateWithoutGrowCycleInput, Prisma.DeviceUncheckedCreateWithoutGrowCycleInput> | Prisma.DeviceCreateWithoutGrowCycleInput[] | Prisma.DeviceUncheckedCreateWithoutGrowCycleInput[]
+  connectOrCreate?: Prisma.DeviceCreateOrConnectWithoutGrowCycleInput | Prisma.DeviceCreateOrConnectWithoutGrowCycleInput[]
+  upsert?: Prisma.DeviceUpsertWithWhereUniqueWithoutGrowCycleInput | Prisma.DeviceUpsertWithWhereUniqueWithoutGrowCycleInput[]
+  createMany?: Prisma.DeviceCreateManyGrowCycleInputEnvelope
+  set?: Prisma.DeviceWhereUniqueInput | Prisma.DeviceWhereUniqueInput[]
+  disconnect?: Prisma.DeviceWhereUniqueInput | Prisma.DeviceWhereUniqueInput[]
+  delete?: Prisma.DeviceWhereUniqueInput | Prisma.DeviceWhereUniqueInput[]
+  connect?: Prisma.DeviceWhereUniqueInput | Prisma.DeviceWhereUniqueInput[]
+  update?: Prisma.DeviceUpdateWithWhereUniqueWithoutGrowCycleInput | Prisma.DeviceUpdateWithWhereUniqueWithoutGrowCycleInput[]
+  updateMany?: Prisma.DeviceUpdateManyWithWhereWithoutGrowCycleInput | Prisma.DeviceUpdateManyWithWhereWithoutGrowCycleInput[]
+  deleteMany?: Prisma.DeviceScalarWhereInput | Prisma.DeviceScalarWhereInput[]
+}
+
 export type DeviceCreateNestedOneWithoutDeviceConfigsInput = {
   create?: Prisma.XOR<Prisma.DeviceCreateWithoutDeviceConfigsInput, Prisma.DeviceUncheckedCreateWithoutDeviceConfigsInput>
   connectOrCreate?: Prisma.DeviceCreateOrConnectWithoutDeviceConfigsInput
@@ -533,7 +533,7 @@ export type DeviceUpdateOneRequiredWithoutDeviceConfigsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.DeviceUpdateToOneWithWhereWithoutDeviceConfigsInput, Prisma.DeviceUpdateWithoutDeviceConfigsInput>, Prisma.DeviceUncheckedUpdateWithoutDeviceConfigsInput>
 }
 
-export type DeviceCreateWithoutControllerInput = {
+export type DeviceCreateWithoutGrowCycleInput = {
   id?: string
   name: string
   type: $Enums.DeviceType
@@ -545,7 +545,7 @@ export type DeviceCreateWithoutControllerInput = {
   deviceConfigs?: Prisma.DeviceConfigCreateNestedManyWithoutDeviceInput
 }
 
-export type DeviceUncheckedCreateWithoutControllerInput = {
+export type DeviceUncheckedCreateWithoutGrowCycleInput = {
   id?: string
   name: string
   type: $Enums.DeviceType
@@ -557,30 +557,30 @@ export type DeviceUncheckedCreateWithoutControllerInput = {
   deviceConfigs?: Prisma.DeviceConfigUncheckedCreateNestedManyWithoutDeviceInput
 }
 
-export type DeviceCreateOrConnectWithoutControllerInput = {
+export type DeviceCreateOrConnectWithoutGrowCycleInput = {
   where: Prisma.DeviceWhereUniqueInput
-  create: Prisma.XOR<Prisma.DeviceCreateWithoutControllerInput, Prisma.DeviceUncheckedCreateWithoutControllerInput>
+  create: Prisma.XOR<Prisma.DeviceCreateWithoutGrowCycleInput, Prisma.DeviceUncheckedCreateWithoutGrowCycleInput>
 }
 
-export type DeviceCreateManyControllerInputEnvelope = {
-  data: Prisma.DeviceCreateManyControllerInput | Prisma.DeviceCreateManyControllerInput[]
+export type DeviceCreateManyGrowCycleInputEnvelope = {
+  data: Prisma.DeviceCreateManyGrowCycleInput | Prisma.DeviceCreateManyGrowCycleInput[]
   skipDuplicates?: boolean
 }
 
-export type DeviceUpsertWithWhereUniqueWithoutControllerInput = {
+export type DeviceUpsertWithWhereUniqueWithoutGrowCycleInput = {
   where: Prisma.DeviceWhereUniqueInput
-  update: Prisma.XOR<Prisma.DeviceUpdateWithoutControllerInput, Prisma.DeviceUncheckedUpdateWithoutControllerInput>
-  create: Prisma.XOR<Prisma.DeviceCreateWithoutControllerInput, Prisma.DeviceUncheckedCreateWithoutControllerInput>
+  update: Prisma.XOR<Prisma.DeviceUpdateWithoutGrowCycleInput, Prisma.DeviceUncheckedUpdateWithoutGrowCycleInput>
+  create: Prisma.XOR<Prisma.DeviceCreateWithoutGrowCycleInput, Prisma.DeviceUncheckedCreateWithoutGrowCycleInput>
 }
 
-export type DeviceUpdateWithWhereUniqueWithoutControllerInput = {
+export type DeviceUpdateWithWhereUniqueWithoutGrowCycleInput = {
   where: Prisma.DeviceWhereUniqueInput
-  data: Prisma.XOR<Prisma.DeviceUpdateWithoutControllerInput, Prisma.DeviceUncheckedUpdateWithoutControllerInput>
+  data: Prisma.XOR<Prisma.DeviceUpdateWithoutGrowCycleInput, Prisma.DeviceUncheckedUpdateWithoutGrowCycleInput>
 }
 
-export type DeviceUpdateManyWithWhereWithoutControllerInput = {
+export type DeviceUpdateManyWithWhereWithoutGrowCycleInput = {
   where: Prisma.DeviceScalarWhereInput
-  data: Prisma.XOR<Prisma.DeviceUpdateManyMutationInput, Prisma.DeviceUncheckedUpdateManyWithoutControllerInput>
+  data: Prisma.XOR<Prisma.DeviceUpdateManyMutationInput, Prisma.DeviceUncheckedUpdateManyWithoutGrowCycleInput>
 }
 
 export type DeviceScalarWhereInput = {
@@ -588,7 +588,7 @@ export type DeviceScalarWhereInput = {
   OR?: Prisma.DeviceScalarWhereInput[]
   NOT?: Prisma.DeviceScalarWhereInput | Prisma.DeviceScalarWhereInput[]
   id?: Prisma.StringFilter<"Device"> | string
-  controllerId?: Prisma.StringFilter<"Device"> | string
+  growCycleId?: Prisma.StringFilter<"Device"> | string
   name?: Prisma.StringFilter<"Device"> | string
   type?: Prisma.EnumDeviceTypeFilter<"Device"> | $Enums.DeviceType
   pinNumber?: Prisma.IntFilter<"Device"> | number
@@ -607,12 +607,12 @@ export type DeviceCreateWithoutDeviceConfigsInput = {
   isActive?: boolean
   createdAt?: Date | string
   updatedAt?: Date | string
-  controller: Prisma.ControllerCreateNestedOneWithoutDevicesInput
+  growCycle: Prisma.GrowCycleCreateNestedOneWithoutDevicesInput
 }
 
 export type DeviceUncheckedCreateWithoutDeviceConfigsInput = {
   id?: string
-  controllerId: string
+  growCycleId: string
   name: string
   type: $Enums.DeviceType
   pinNumber: number
@@ -647,12 +647,12 @@ export type DeviceUpdateWithoutDeviceConfigsInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  controller?: Prisma.ControllerUpdateOneRequiredWithoutDevicesNestedInput
+  growCycle?: Prisma.GrowCycleUpdateOneRequiredWithoutDevicesNestedInput
 }
 
 export type DeviceUncheckedUpdateWithoutDeviceConfigsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  controllerId?: Prisma.StringFieldUpdateOperationsInput | string
+  growCycleId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumDeviceTypeFieldUpdateOperationsInput | $Enums.DeviceType
   pinNumber?: Prisma.IntFieldUpdateOperationsInput | number
@@ -662,7 +662,7 @@ export type DeviceUncheckedUpdateWithoutDeviceConfigsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
-export type DeviceCreateManyControllerInput = {
+export type DeviceCreateManyGrowCycleInput = {
   id?: string
   name: string
   type: $Enums.DeviceType
@@ -673,7 +673,7 @@ export type DeviceCreateManyControllerInput = {
   updatedAt?: Date | string
 }
 
-export type DeviceUpdateWithoutControllerInput = {
+export type DeviceUpdateWithoutGrowCycleInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumDeviceTypeFieldUpdateOperationsInput | $Enums.DeviceType
@@ -685,7 +685,7 @@ export type DeviceUpdateWithoutControllerInput = {
   deviceConfigs?: Prisma.DeviceConfigUpdateManyWithoutDeviceNestedInput
 }
 
-export type DeviceUncheckedUpdateWithoutControllerInput = {
+export type DeviceUncheckedUpdateWithoutGrowCycleInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumDeviceTypeFieldUpdateOperationsInput | $Enums.DeviceType
@@ -697,7 +697,7 @@ export type DeviceUncheckedUpdateWithoutControllerInput = {
   deviceConfigs?: Prisma.DeviceConfigUncheckedUpdateManyWithoutDeviceNestedInput
 }
 
-export type DeviceUncheckedUpdateManyWithoutControllerInput = {
+export type DeviceUncheckedUpdateManyWithoutGrowCycleInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   type?: Prisma.EnumDeviceTypeFieldUpdateOperationsInput | $Enums.DeviceType
@@ -741,7 +741,7 @@ export type DeviceCountOutputTypeCountDeviceConfigsArgs<ExtArgs extends runtime.
 
 export type DeviceSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  controllerId?: boolean
+  growCycleId?: boolean
   name?: boolean
   type?: boolean
   pinNumber?: boolean
@@ -749,14 +749,14 @@ export type DeviceSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   isActive?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  controller?: boolean | Prisma.ControllerDefaultArgs<ExtArgs>
+  growCycle?: boolean | Prisma.GrowCycleDefaultArgs<ExtArgs>
   deviceConfigs?: boolean | Prisma.Device$deviceConfigsArgs<ExtArgs>
   _count?: boolean | Prisma.DeviceCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["device"]>
 
 export type DeviceSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  controllerId?: boolean
+  growCycleId?: boolean
   name?: boolean
   type?: boolean
   pinNumber?: boolean
@@ -764,12 +764,12 @@ export type DeviceSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   isActive?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  controller?: boolean | Prisma.ControllerDefaultArgs<ExtArgs>
+  growCycle?: boolean | Prisma.GrowCycleDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["device"]>
 
 export type DeviceSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
-  controllerId?: boolean
+  growCycleId?: boolean
   name?: boolean
   type?: boolean
   pinNumber?: boolean
@@ -777,12 +777,12 @@ export type DeviceSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   isActive?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  controller?: boolean | Prisma.ControllerDefaultArgs<ExtArgs>
+  growCycle?: boolean | Prisma.GrowCycleDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["device"]>
 
 export type DeviceSelectScalar = {
   id?: boolean
-  controllerId?: boolean
+  growCycleId?: boolean
   name?: boolean
   type?: boolean
   pinNumber?: boolean
@@ -792,28 +792,28 @@ export type DeviceSelectScalar = {
   updatedAt?: boolean
 }
 
-export type DeviceOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "controllerId" | "name" | "type" | "pinNumber" | "mqttTopic" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["device"]>
+export type DeviceOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "growCycleId" | "name" | "type" | "pinNumber" | "mqttTopic" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["device"]>
 export type DeviceInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  controller?: boolean | Prisma.ControllerDefaultArgs<ExtArgs>
+  growCycle?: boolean | Prisma.GrowCycleDefaultArgs<ExtArgs>
   deviceConfigs?: boolean | Prisma.Device$deviceConfigsArgs<ExtArgs>
   _count?: boolean | Prisma.DeviceCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type DeviceIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  controller?: boolean | Prisma.ControllerDefaultArgs<ExtArgs>
+  growCycle?: boolean | Prisma.GrowCycleDefaultArgs<ExtArgs>
 }
 export type DeviceIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  controller?: boolean | Prisma.ControllerDefaultArgs<ExtArgs>
+  growCycle?: boolean | Prisma.GrowCycleDefaultArgs<ExtArgs>
 }
 
 export type $DevicePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Device"
   objects: {
-    controller: Prisma.$ControllerPayload<ExtArgs>
+    growCycle: Prisma.$GrowCyclePayload<ExtArgs>
     deviceConfigs: Prisma.$DeviceConfigPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
-    controllerId: string
+    growCycleId: string
     name: string
     type: $Enums.DeviceType
     pinNumber: number
@@ -1215,7 +1215,7 @@ readonly fields: DeviceFieldRefs;
  */
 export interface Prisma__DeviceClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  controller<T extends Prisma.ControllerDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ControllerDefaultArgs<ExtArgs>>): Prisma.Prisma__ControllerClient<runtime.Types.Result.GetResult<Prisma.$ControllerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  growCycle<T extends Prisma.GrowCycleDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.GrowCycleDefaultArgs<ExtArgs>>): Prisma.Prisma__GrowCycleClient<runtime.Types.Result.GetResult<Prisma.$GrowCyclePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   deviceConfigs<T extends Prisma.Device$deviceConfigsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Device$deviceConfigsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DeviceConfigPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1247,7 +1247,7 @@ export interface Prisma__DeviceClient<T, Null = never, ExtArgs extends runtime.T
  */
 export interface DeviceFieldRefs {
   readonly id: Prisma.FieldRef<"Device", 'String'>
-  readonly controllerId: Prisma.FieldRef<"Device", 'String'>
+  readonly growCycleId: Prisma.FieldRef<"Device", 'String'>
   readonly name: Prisma.FieldRef<"Device", 'String'>
   readonly type: Prisma.FieldRef<"Device", 'DeviceType'>
   readonly pinNumber: Prisma.FieldRef<"Device", 'Int'>

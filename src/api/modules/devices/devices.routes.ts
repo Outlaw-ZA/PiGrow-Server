@@ -2,7 +2,7 @@ import { FastifyInstance } from "fastify";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import { DevicesController } from "./devices.controller.js";
 import {
-  DeviceParamsControllerIdSchema,
+  DeviceParamsGrowCycleIdSchema,
   DeviceParamsIdSchema,
   CreateDeviceSchema,
   BatchCreateDeviceSchema,
@@ -14,14 +14,14 @@ export default async function deviceRoutes(server: FastifyInstance) {
   const router = server.withTypeProvider<TypeBoxTypeProvider>();
   const controller = new DevicesController(server);
 
-  // 1. GET ALL HARDWARE ASSIGNED TO A SPECIFIC PI
+  // 1. GET ALL DEVICES ASSIGNED TO A SPECIFIC GROW
   router.get(
-    "/api/devices/controller/:controllerId",
-    { schema: { params: DeviceParamsControllerIdSchema } },
+    "/api/devices/grow-cycle/:growCycleId",
+    { schema: { params: DeviceParamsGrowCycleIdSchema } },
     async (request, reply) => {
       try {
-        return await controller.getDevicesByControllerId(
-          request.params.controllerId,
+        return await controller.getDevicesByGrowCycleId(
+          request.params.growCycleId,
         );
       } catch (error) {
         return reply
@@ -46,7 +46,7 @@ export default async function deviceRoutes(server: FastifyInstance) {
     },
   );
 
-  // 3. PROVISION A NEW DEVICE ONTO A PI
+  // 3. PROVISION A NEW DEVICE ONTO A GROW
   router.post(
     "/api/devices",
     { schema: { body: CreateDeviceSchema } },
@@ -63,7 +63,7 @@ export default async function deviceRoutes(server: FastifyInstance) {
     },
   );
 
-  // 4. BULK PROVISION MULTIPLE DEVICES ONTO A PI
+  // 4. BULK PROVISION MULTIPLE DEVICES ONTO A GROW
   router.post(
     "/api/devices/batch",
     { schema: { body: BatchCreateDeviceSchema } },
@@ -105,9 +105,7 @@ export default async function deviceRoutes(server: FastifyInstance) {
         await controller.deleteDevice(request.params.id);
         return reply.code(204).send();
       } catch (error) {
-        return reply
-          .code(404)
-          .send({ error: "Hardware profile deletion failed" });
+        return reply.code(404).send({ error: "Hardware profile deletion failed" });
       }
     },
   );
@@ -128,7 +126,6 @@ export default async function deviceRoutes(server: FastifyInstance) {
           request.body.action,
         );
       } catch (error) {
-        server.log.error(error);
         return reply
           .code(404)
           .send({ error: "Device command dispatch failed" });

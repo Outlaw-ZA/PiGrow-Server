@@ -45,6 +45,10 @@ describe("Grow Phases API Feature Module", () => {
   });
 
   after(async () => {
+    // Delete in FK-safe order: grow cycles first, then the controller.
+    await prismaClient.growCycle.deleteMany({
+      where: { controller: { macAddress: "11:22:33:44:55:66" } },
+    });
     await prismaClient.controller.delete({
       where: { macAddress: "11:22:33:44:55:66" },
     });

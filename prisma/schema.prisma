@@ -1,6 +1,7 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/client"
+  provider        = "prisma-client"
+  output          = "../src/generated/client"
+  previewFeatures = ["partialIndexes"]
 }
 
 datasource db {
@@ -20,8 +21,7 @@ model Controller {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   
-  devices     Device[]
-  growCycles  GrowCycle[] // A Pi can run multiple cycles over its lifetime
+  growCycles  GrowCycle[] // A Pi can run sequential cycles over its lifetime
 }
 
 enum DeviceType {
@@ -39,7 +39,7 @@ enum DeviceType {
 
 model Device {
   id            String          @id @default(uuid())
-  controllerId  String
+  growCycleId   String
   name          String          // e.g., "SpiderFarmer SF2000", "AC Infinity T6"
   type          DeviceType
   pinNumber     Int             // GPIO pin or Relay channel on the Pi
@@ -48,7 +48,7 @@ model Device {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
-  controller    Controller      @relation(fields: [controllerId], references: [id], onDelete: Cascade)
+  growCycle     GrowCycle       @relation(fields: [growCycleId], references: [id], onDelete: Cascade)
   deviceConfigs DeviceConfig[]  // The specific settings for this device per phase
 }
 
@@ -66,8 +66,14 @@ model GrowCycle {
   updatedAt    DateTime    @updatedAt
 
   controller   Controller  @relation(fields: [controllerId], references: [id])
+  devices      Device[]    // Devices are scoped per-grow for full isolation
   phases       GrowPhase[]
-  telemetry   Telemetry[]
+  telemetry    Telemetry[]
+
+  // Enforce at most ONE active grow per controller at any moment.
+  // Finished/ended grows (isActive=false) do not participate in the constraint,
+  // so the same physical Pi can run sequential grows over its lifetime.
+  @@unique([controllerId], where: { isActive: true }, map: "one_active_grow_per_controller")
 }
 
 model GrowPhase {

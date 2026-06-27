@@ -4,10 +4,17 @@ import { createTestApp } from "../test-helper.js";
 import { mqttClient } from "../../../mqtt/client.js";
 
 async function cleanUpControllers(prisma: any, macAddresses: string[]) {
-  await prisma.growCycle.deleteMany({
-    where: { controller: { macAddress: { in: macAddresses } } },
+  // Devices now live under grow cycles. Delete via the growCycle→controller chain.
+  await prisma.deviceConfig.deleteMany({
+    where: { growPhase: { growCycle: { controller: { macAddress: { in: macAddresses } } } } },
+  });
+  await prisma.growPhase.deleteMany({
+    where: { growCycle: { controller: { macAddress: { in: macAddresses } } } },
   });
   await prisma.device.deleteMany({
+    where: { growCycle: { controller: { macAddress: { in: macAddresses } } } },
+  });
+  await prisma.growCycle.deleteMany({
     where: { controller: { macAddress: { in: macAddresses } } },
   });
   await prisma.controller.deleteMany({
@@ -37,14 +44,6 @@ describe("Device Configs API Feature Module", () => {
         macAddress: "dc:cf:cf:cf:cf:cf",
         name: "Config Test Pi",
         ipAddress: "192.168.1.100",
-        devices: {
-          create: {
-            name: "Test Light",
-            type: "LIGHT",
-            pinNumber: 7,
-            mqttTopic: "test/config-light",
-          },
-        },
         growCycles: {
           create: {
             name: "Config Test Cycle",
@@ -56,16 +55,26 @@ describe("Device Configs API Feature Module", () => {
                 durationDays: 14,
               },
             },
+            // Devices are now nested under the grow cycle.
+            devices: {
+              create: {
+                name: "Test Light",
+                type: "LIGHT",
+                pinNumber: 7,
+                mqttTopic: "test/config-light",
+              },
+            },
           },
         },
       },
       include: {
-        devices: true,
-        growCycles: { include: { phases: true } },
+        growCycles: {
+          include: { phases: true, devices: true },
+        },
       },
     });
 
-    testDeviceId = controller.devices[0].id;
+    testDeviceId = controller.growCycles[0].devices[0].id;
     testPhaseId = controller.growCycles[0].phases[0].id;
   });
 
@@ -144,14 +153,6 @@ describe("Device Configs - configData validation", () => {
         macAddress: "dc:dc:dc:dc:dc:dc",
         name: "Validation Test Pi",
         ipAddress: "192.168.1.101",
-        devices: {
-          create: {
-            name: "Validation Light",
-            type: "LIGHT",
-            pinNumber: 8,
-            mqttTopic: "test/validation-light",
-          },
-        },
         growCycles: {
           create: {
             name: "Validation Test Cycle",
@@ -163,16 +164,25 @@ describe("Device Configs - configData validation", () => {
                 durationDays: 14,
               },
             },
+            devices: {
+              create: {
+                name: "Validation Light",
+                type: "LIGHT",
+                pinNumber: 8,
+                mqttTopic: "test/validation-light",
+              },
+            },
           },
         },
       },
       include: {
-        devices: true,
-        growCycles: { include: { phases: true } },
+        growCycles: {
+          include: { phases: true, devices: true },
+        },
       },
     });
 
-    deviceId = controller.devices[0].id;
+    deviceId = controller.growCycles[0].devices[0].id;
     phaseId = controller.growCycles[0].phases[0].id;
   });
 

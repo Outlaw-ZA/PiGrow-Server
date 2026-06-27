@@ -1,6 +1,10 @@
 import { FastifyInstance } from "fastify";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
-import { GrowCyclesController, SkipPhaseError } from "./grow-cycles.controller.js";
+import {
+  GrowCyclesController,
+  SkipPhaseError,
+  ControllerBusyError,
+} from "./grow-cycles.controller.js";
 import {
   CreateGrowCycleSchema,
   UpdateGrowCycleSchema,
@@ -41,6 +45,19 @@ export default async function growCycleRoutes(server: FastifyInstance) {
         const newGrowCycle = await controller.createGrowCycle(request.body);
         return reply.code(201).send(newGrowCycle);
       } catch (error) {
+        if (error instanceof ControllerBusyError) {
+          return reply.code(409).send({ error: error.message });
+        }
+        if (
+          typeof error === "object" &&
+          error !== null &&
+          "code" in error &&
+          (error as { code: string }).code === "P2002"
+        ) {
+          return reply
+            .code(409)
+            .send({ error: "Controller already has an active grow cycle" });
+        }
         router.log.error(error);
         return reply
           .code(400)
@@ -62,6 +79,19 @@ export default async function growCycleRoutes(server: FastifyInstance) {
           request.body,
         );
       } catch (error) {
+        if (error instanceof ControllerBusyError) {
+          return reply.code(409).send({ error: error.message });
+        }
+        if (
+          typeof error === "object" &&
+          error !== null &&
+          "code" in error &&
+          (error as { code: string }).code === "P2002"
+        ) {
+          return reply
+            .code(409)
+            .send({ error: "Controller already has an active grow cycle" });
+        }
         router.log.error(error);
         return reply
           .code(400)

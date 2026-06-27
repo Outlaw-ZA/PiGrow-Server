@@ -32,6 +32,10 @@ describe("Telemetry API Feature Module", () => {
   });
 
   after(async () => {
+    // Delete in FK-safe order: grow cycles first, then the controller.
+    await prismaClient.growCycle.deleteMany({
+      where: { controller: { macAddress: testControllerMac } },
+    });
     await prismaClient.controller.deleteMany({
       where: { macAddress: testControllerMac },
     });

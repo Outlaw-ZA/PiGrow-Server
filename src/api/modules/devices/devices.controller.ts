@@ -14,7 +14,7 @@ type DeviceTypeLiteral =
   | "CO2_INJECTOR";
 
 interface CreateDeviceInput {
-  controllerId: string;
+  growCycleId: string;
   name: string;
   type: DeviceTypeLiteral;
   pinNumber: number;
@@ -39,7 +39,7 @@ interface BatchDeviceInput {
 }
 
 interface BatchCreateInput {
-  controllerId: string;
+  growCycleId: string;
   devices: BatchDeviceInput[];
 }
 
@@ -50,10 +50,10 @@ export class DevicesController {
     this.prisma = server.prisma;
   }
 
-  // 1. READ ALL (Fetch inventory assigned to a specific Raspberry Pi)
-  async getDevicesByControllerId(controllerId: string) {
+  // 1. READ ALL (Fetch inventory assigned to a specific grow)
+  async getDevicesByGrowCycleId(growCycleId: string) {
     return await this.prisma.device.findMany({
-      where: { controllerId },
+      where: { growCycleId },
       orderBy: { pinNumber: "asc" },
     });
   }
@@ -63,7 +63,7 @@ export class DevicesController {
     return await this.prisma.device.findUniqueOrThrow({
       where: { id },
       include: {
-        controller: true,
+        growCycle: true,
         deviceConfigs: true,
       },
     });
@@ -73,7 +73,7 @@ export class DevicesController {
   async createDevice(body: CreateDeviceInput) {
     return await this.prisma.device.create({
       data: {
-        controllerId: body.controllerId,
+        growCycleId: body.growCycleId,
         name: body.name,
         type: body.type,
         pinNumber: body.pinNumber,
@@ -104,7 +104,7 @@ export class DevicesController {
       body.devices.map((device) =>
         this.prisma.device.create({
           data: {
-            controllerId: body.controllerId,
+            growCycleId: body.growCycleId,
             name: device.name,
             type: device.type,
             pinNumber: device.pinNumber,

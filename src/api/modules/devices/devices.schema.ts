@@ -23,9 +23,9 @@ const DeviceBody = Type.Object({
   isActive: Type.Optional(Type.Boolean({ default: true })),
 });
 
-// Schema for provisioning a new physical device on a Pi
+// Schema for provisioning a new device on a grow
 export const CreateDeviceSchema = Type.Object({
-  controllerId: Type.String({ format: "uuid" }),
+  growCycleId: Type.String({ format: "uuid" }),
   name: Type.String({ maxLength: 100 }),
   type: DeviceTypeEnum,
   pinNumber: Type.Integer({ minimum: 0, maximum: 40 }),
@@ -33,9 +33,9 @@ export const CreateDeviceSchema = Type.Object({
   isActive: Type.Optional(Type.Boolean({ default: true })),
 });
 
-// Schema for bulk provisioning multiple devices on a single Pi
+// Schema for bulk provisioning multiple devices on a single grow
 export const BatchCreateDeviceSchema = Type.Object({
-  controllerId: Type.String({ format: "uuid" }),
+  growCycleId: Type.String({ format: "uuid" }),
   devices: Type.Array(DeviceBody, { minItems: 1 }),
 });
 
@@ -57,6 +57,6 @@ export const DeviceParamsIdSchema = Type.Object({
   id: Type.String({ format: "uuid" }),
 });
 
-export const DeviceParamsControllerIdSchema = Type.Object({
-  controllerId: Type.String({ format: "uuid" }),
+export const DeviceParamsGrowCycleIdSchema = Type.Object({
+  growCycleId: Type.String({ format: "uuid" }),
 });
