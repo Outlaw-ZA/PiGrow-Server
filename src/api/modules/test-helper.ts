@@ -7,6 +7,7 @@ import deviceRoutes from "./devices/devices.routes.js";
 import growPhaseRoutes from "./grow-phases/grow-phases.routes.js";
 import growCycleRoutes from "./grow-cycles/grow-cycles.routes.js";
 import deviceConfigRoutes from "./device-configs/device-configs.routes.js";
+import sensorRoutes from "./sensors/sensors.routes.js";
 import telemetryRoutes from "./telemetry/telemetry.routes.js";
 import { prisma } from "../../prisma.js";
 
@@ -22,6 +23,7 @@ export async function createTestApp() {
   await server.register(growCycleRoutes);
   await server.register(growPhaseRoutes);
   await server.register(deviceConfigRoutes);
+  await server.register(sensorRoutes);
   await server.register(telemetryRoutes);
 
   await server.ready();

@@ -52,6 +52,7 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   Controller: 'Controller',
+  Sensor: 'Sensor',
   Device: 'Device',
   GrowCycle: 'GrowCycle',
   GrowPhase: 'GrowPhase',
@@ -86,6 +87,22 @@ export const ControllerScalarFieldEnum = {
 } as const
 
 export type ControllerScalarFieldEnum = (typeof ControllerScalarFieldEnum)[keyof typeof ControllerScalarFieldEnum]
+
+
+export const SensorScalarFieldEnum = {
+  id: 'id',
+  controllerId: 'controllerId',
+  name: 'name',
+  type: 'type',
+  mqttTopic: 'mqttTopic',
+  pinNumbers: 'pinNumbers',
+  protocol: 'protocol',
+  lastActive: 'lastActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SensorScalarFieldEnum = (typeof SensorScalarFieldEnum)[keyof typeof SensorScalarFieldEnum]
 
 
 export const DeviceScalarFieldEnum = {
@@ -148,6 +165,7 @@ export type DeviceConfigScalarFieldEnum = (typeof DeviceConfigScalarFieldEnum)[k
 export const TelemetryScalarFieldEnum = {
   id: 'id',
   growCycleId: 'growCycleId',
+  sensorId: 'sensorId',
   sensorType: 'sensorType',
   value: 'value',
   createdAt: 'createdAt'

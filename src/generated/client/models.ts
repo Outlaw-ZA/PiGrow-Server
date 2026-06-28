@@ -9,6 +9,7 @@
  * 🟢 You can import this file directly.
  */
 export type * from './models/Controller.js'
+export type * from './models/Sensor.js'
 export type * from './models/Device.js'
 export type * from './models/GrowCycle.js'
 export type * from './models/GrowPhase.js'

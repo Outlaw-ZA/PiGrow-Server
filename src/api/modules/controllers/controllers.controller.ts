@@ -1,9 +1,22 @@
 import { FastifyInstance } from "fastify";
+import { SensorType, SensorProtocol } from "../../../generated/client/enums.js";
+
+export type SensorProtocolType = (typeof SensorProtocol)[keyof typeof SensorProtocol];
+export type SensorTypeValue = (typeof SensorType)[keyof typeof SensorType];
+
+export interface SeedSensorInput {
+  name: string;
+  type: SensorTypeValue;
+  mqttTopic: string;
+  pinNumbers: number[];
+  protocol: SensorProtocolType;
+}
 
 interface CreateControllerInput {
   macAddress: string;
   name: string;
   ipAddress: string;
+  sensors?: SeedSensorInput[];
 }
 
 interface UpdateControllerInput {
@@ -39,22 +52,51 @@ export class ControllersController {
             devices: true, // Per-grow device inventory (devices are now scoped to grow cycles)
           },
         },
+        sensors: {
+          orderBy: { createdAt: "asc" },
+        },
       },
     });
   }
 
   // 3. CREATE / REGISTER
+  // Preserves the existing upsert-by-macAddress contract so a Pi re-registering
+  // its network profile doesn't crash the app. Sensor seeding only happens on a
+  // fresh create; re-registrations never silently mutate the sensor inventory.
   async createController(body: CreateControllerInput) {
-    // Uses upsert so if a Pi re-registers its network profile, it avoids crashing the app
-    return await this.prisma.controller.upsert({
-      where: { macAddress: body.macAddress },
-      update: { name: body.name },
-      create: {
-        macAddress: body.macAddress,
-        name: body.name,
-        ipAddress: body.ipAddress,
-        status: "OFFLINE",
-      },
+    const sensors = body.sensors ?? [];
+
+    return await this.prisma.$transaction(async (tx) => {
+      const existing = await tx.controller.findUnique({
+        where: { macAddress: body.macAddress },
+        select: { id: true },
+      });
+
+      if (existing) {
+        return tx.controller.update({
+          where: { macAddress: body.macAddress },
+          data: { name: body.name },
+        });
+      }
+
+      return tx.controller.create({
+        data: {
+          macAddress: body.macAddress,
+          name: body.name,
+          ipAddress: body.ipAddress,
+          status: "OFFLINE",
+          sensors: {
+            create: sensors.map((s) => ({
+              name: s.name,
+              type: s.type,
+              mqttTopic: s.mqttTopic,
+              pinNumbers: s.pinNumbers,
+              protocol: s.protocol,
+            })),
+          },
+        },
+        include: { sensors: true },
+      });
     });
   }
 

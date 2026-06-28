@@ -443,10 +443,6 @@ export type GrowCycleUpdateOneRequiredWithoutDevicesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.GrowCycleUpdateToOneWithWhereWithoutDevicesInput, Prisma.GrowCycleUpdateWithoutDevicesInput>, Prisma.GrowCycleUncheckedUpdateWithoutDevicesInput>
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type GrowCycleCreateNestedOneWithoutPhasesInput = {
   create?: Prisma.XOR<Prisma.GrowCycleCreateWithoutPhasesInput, Prisma.GrowCycleUncheckedCreateWithoutPhasesInput>
   connectOrCreate?: Prisma.GrowCycleCreateOrConnectWithoutPhasesInput

@@ -39,10 +39,9 @@ Each API module has exactly 4 files in `src/api/modules/<name>/`:
 
 ## Known issues
 
-1. **Missing `src/types.ts`** — `src/mqtt-handlers/telemetry-handler.ts` imports `SensorData` from `'../types.js'`, but no `types.ts` exists. Compiles only because it's a type-only import.
-2. **MQTT telemetry handler broken** — calls `prisma.telemetryLog.create(...)` but Prisma schema has model `Telemetry` (not `TelemetryLog`) with fields `growCycleId`, `sensorType`, `value` (not `deviceId`, `temp`, `humidity`). Will crash at runtime.
-3. **Docker port mismatch** — Dockerfile `EXPOSE 3000`, server listens on `4000`.
-4. **`import "dotenv/config"` in `prisma.config.ts`** but `dotenv` is not a dependency (relies on `--env-file=.env` flag or `tsx` behavior).
+1. **Docker port mismatch** — Dockerfile `EXPOSE 3000`, server listens on `4000`.
+2. **`import "dotenv/config"` in `prisma.config.ts`** but `dotenv` is not a dependency (relies on `--env-file=.env` flag or `tsx` behavior).
+3. **Node test runner "Promise resolution is still pending" warnings** — every test file logs this when run with `node:test`; it's a pre-existing quirk of `app.close()` + Prisma's pg adapter pool. All actual test assertions pass.
 
 ## Entrypoint
 
@@ -50,4 +49,12 @@ Each API module has exactly 4 files in `src/api/modules/<name>/`:
 
 ## Routes
 
-All under `/api`: controllers, devices, grow-cycles, grow-phases, device-configs, telemetry. Full reference in `API.md`.
+All under `/api`: controllers, devices, sensors, grow-cycles, grow-phases, device-configs, telemetry. Full reference in `API.md`.
+
+## Sensors
+
+- `Sensor` model: physical probe attached to a `Controller`. Fields: `id, name, type (SensorType), controllerId, mqttTopic, pinNumbers (Int[]), protocol (SensorProtocol), lastActive, createdAt, updatedAt`.
+- `SensorType` enum: `HUMIDITY | TEMPERATURE | TEMP_HUMIDITY | CO2 | PH | EC` (also used by `Telemetry.sensorType`).
+- `SensorProtocol` enum: `I2C | SPI | UART | RS485`.
+- Sensors are seeded on controller **create** via the optional `sensors` array in `POST /api/controllers`. All other sensor CRUD goes through `/api/sensors/*`.
+- MQTT topic for telemetry is `sensors/<sensorId>/telemetry` with payload `{ readings: [{ sensorType, value }] }`. The handler resolves the sensor's controller's active grow cycle and writes one `Telemetry` row per reading; if no active grow cycle exists, the reading is dropped (with a warning).

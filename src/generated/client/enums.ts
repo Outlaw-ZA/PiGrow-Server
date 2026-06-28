@@ -9,6 +9,28 @@
 * 🟢 You can import this file directly.
 */
 
+export const SensorType = {
+  HUMIDITY: 'HUMIDITY',
+  TEMPERATURE: 'TEMPERATURE',
+  TEMP_HUMIDITY: 'TEMP_HUMIDITY',
+  CO2: 'CO2',
+  PH: 'PH',
+  EC: 'EC'
+} as const
+
+export type SensorType = (typeof SensorType)[keyof typeof SensorType]
+
+
+export const SensorProtocol = {
+  I2C: 'I2C',
+  SPI: 'SPI',
+  UART: 'UART',
+  RS485: 'RS485'
+} as const
+
+export type SensorProtocol = (typeof SensorProtocol)[keyof typeof SensorProtocol]
+
+
 export const DeviceType = {
   LIGHT: 'LIGHT',
   EXHAUST_FAN: 'EXHAUST_FAN',

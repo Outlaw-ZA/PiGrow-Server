@@ -9,6 +9,7 @@ import growPhaseRoutes from "./api/modules/grow-phases/grow-phases.routes.js";
 import controllerRoutes from "./api/modules/controllers/controllers.route.js";
 import deviceRoutes from "./api/modules/devices/devices.routes.js";
 import deviceConfigRoutes from "./api/modules/device-configs/device-configs.routes.js";
+import sensorRoutes from "./api/modules/sensors/sensors.routes.js";
 import telemetryRoutes from "./api/modules/telemetry/telemetry.routes.js";
 import { mqttClient, MQTT_BROKER_URL } from "./mqtt/client.js";
 
@@ -53,7 +54,7 @@ io.on("connection", (socket) => {
 // Dynamic Topic Registry Map
 const topicRegistry: Record<string, (topic: string, message: Buffer) => void> =
   {
-    "devices/+/telemetry": handleTelemetry,
+    "sensors/+/telemetry": handleTelemetry,
   };
 
 mqttClient.on("connect", () => {
@@ -92,6 +93,7 @@ await fastify.register(growPhaseRoutes);
 await fastify.register(controllerRoutes);
 await fastify.register(deviceRoutes);
 await fastify.register(deviceConfigRoutes);
+await fastify.register(sensorRoutes);
 await fastify.register(telemetryRoutes);
 
 // 5. Start Fastify (Listen on Port 4000 for both REST and Socket.io traffic)

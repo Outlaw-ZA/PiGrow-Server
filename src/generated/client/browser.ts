@@ -23,6 +23,11 @@ export * from './enums.js';
  */
 export type Controller = Prisma.ControllerModel
 /**
+ * Model Sensor
+ * 
+ */
+export type Sensor = Prisma.SensorModel
+/**
  * Model Device
  * 
  */

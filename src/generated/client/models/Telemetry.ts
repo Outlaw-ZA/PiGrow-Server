@@ -37,7 +37,8 @@ export type TelemetrySumAggregateOutputType = {
 export type TelemetryMinAggregateOutputType = {
   id: string | null
   growCycleId: string | null
-  sensorType: string | null
+  sensorId: string | null
+  sensorType: $Enums.SensorType | null
   value: number | null
   createdAt: Date | null
 }
@@ -45,7 +46,8 @@ export type TelemetryMinAggregateOutputType = {
 export type TelemetryMaxAggregateOutputType = {
   id: string | null
   growCycleId: string | null
-  sensorType: string | null
+  sensorId: string | null
+  sensorType: $Enums.SensorType | null
   value: number | null
   createdAt: Date | null
 }
@@ -53,6 +55,7 @@ export type TelemetryMaxAggregateOutputType = {
 export type TelemetryCountAggregateOutputType = {
   id: number
   growCycleId: number
+  sensorId: number
   sensorType: number
   value: number
   createdAt: number
@@ -71,6 +74,7 @@ export type TelemetrySumAggregateInputType = {
 export type TelemetryMinAggregateInputType = {
   id?: true
   growCycleId?: true
+  sensorId?: true
   sensorType?: true
   value?: true
   createdAt?: true
@@ -79,6 +83,7 @@ export type TelemetryMinAggregateInputType = {
 export type TelemetryMaxAggregateInputType = {
   id?: true
   growCycleId?: true
+  sensorId?: true
   sensorType?: true
   value?: true
   createdAt?: true
@@ -87,6 +92,7 @@ export type TelemetryMaxAggregateInputType = {
 export type TelemetryCountAggregateInputType = {
   id?: true
   growCycleId?: true
+  sensorId?: true
   sensorType?: true
   value?: true
   createdAt?: true
@@ -182,7 +188,8 @@ export type TelemetryGroupByArgs<ExtArgs extends runtime.Types.Extensions.Intern
 export type TelemetryGroupByOutputType = {
   id: string
   growCycleId: string
-  sensorType: string
+  sensorId: string
+  sensorType: $Enums.SensorType
   value: number
   createdAt: Date
   _count: TelemetryCountAggregateOutputType | null
@@ -213,19 +220,23 @@ export type TelemetryWhereInput = {
   NOT?: Prisma.TelemetryWhereInput | Prisma.TelemetryWhereInput[]
   id?: Prisma.StringFilter<"Telemetry"> | string
   growCycleId?: Prisma.StringFilter<"Telemetry"> | string
-  sensorType?: Prisma.StringFilter<"Telemetry"> | string
+  sensorId?: Prisma.StringFilter<"Telemetry"> | string
+  sensorType?: Prisma.EnumSensorTypeFilter<"Telemetry"> | $Enums.SensorType
   value?: Prisma.FloatFilter<"Telemetry"> | number
   createdAt?: Prisma.DateTimeFilter<"Telemetry"> | Date | string
   growCycle?: Prisma.XOR<Prisma.GrowCycleScalarRelationFilter, Prisma.GrowCycleWhereInput>
+  sensor?: Prisma.XOR<Prisma.SensorScalarRelationFilter, Prisma.SensorWhereInput>
 }
 
 export type TelemetryOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   growCycleId?: Prisma.SortOrder
+  sensorId?: Prisma.SortOrder
   sensorType?: Prisma.SortOrder
   value?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   growCycle?: Prisma.GrowCycleOrderByWithRelationInput
+  sensor?: Prisma.SensorOrderByWithRelationInput
 }
 
 export type TelemetryWhereUniqueInput = Prisma.AtLeast<{
@@ -234,15 +245,18 @@ export type TelemetryWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.TelemetryWhereInput[]
   NOT?: Prisma.TelemetryWhereInput | Prisma.TelemetryWhereInput[]
   growCycleId?: Prisma.StringFilter<"Telemetry"> | string
-  sensorType?: Prisma.StringFilter<"Telemetry"> | string
+  sensorId?: Prisma.StringFilter<"Telemetry"> | string
+  sensorType?: Prisma.EnumSensorTypeFilter<"Telemetry"> | $Enums.SensorType
   value?: Prisma.FloatFilter<"Telemetry"> | number
   createdAt?: Prisma.DateTimeFilter<"Telemetry"> | Date | string
   growCycle?: Prisma.XOR<Prisma.GrowCycleScalarRelationFilter, Prisma.GrowCycleWhereInput>
+  sensor?: Prisma.XOR<Prisma.SensorScalarRelationFilter, Prisma.SensorWhereInput>
 }, "id">
 
 export type TelemetryOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   growCycleId?: Prisma.SortOrder
+  sensorId?: Prisma.SortOrder
   sensorType?: Prisma.SortOrder
   value?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -259,39 +273,44 @@ export type TelemetryScalarWhereWithAggregatesInput = {
   NOT?: Prisma.TelemetryScalarWhereWithAggregatesInput | Prisma.TelemetryScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Telemetry"> | string
   growCycleId?: Prisma.StringWithAggregatesFilter<"Telemetry"> | string
-  sensorType?: Prisma.StringWithAggregatesFilter<"Telemetry"> | string
+  sensorId?: Prisma.StringWithAggregatesFilter<"Telemetry"> | string
+  sensorType?: Prisma.EnumSensorTypeWithAggregatesFilter<"Telemetry"> | $Enums.SensorType
   value?: Prisma.FloatWithAggregatesFilter<"Telemetry"> | number
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Telemetry"> | Date | string
 }
 
 export type TelemetryCreateInput = {
   id?: string
-  sensorType: string
+  sensorType: $Enums.SensorType
   value: number
   createdAt?: Date | string
   growCycle: Prisma.GrowCycleCreateNestedOneWithoutTelemetryInput
+  sensor: Prisma.SensorCreateNestedOneWithoutTelemetryInput
 }
 
 export type TelemetryUncheckedCreateInput = {
   id?: string
   growCycleId: string
-  sensorType: string
+  sensorId: string
+  sensorType: $Enums.SensorType
   value: number
   createdAt?: Date | string
 }
 
 export type TelemetryUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  sensorType?: Prisma.StringFieldUpdateOperationsInput | string
+  sensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
   value?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   growCycle?: Prisma.GrowCycleUpdateOneRequiredWithoutTelemetryNestedInput
+  sensor?: Prisma.SensorUpdateOneRequiredWithoutTelemetryNestedInput
 }
 
 export type TelemetryUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   growCycleId?: Prisma.StringFieldUpdateOperationsInput | string
-  sensorType?: Prisma.StringFieldUpdateOperationsInput | string
+  sensorId?: Prisma.StringFieldUpdateOperationsInput | string
+  sensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
   value?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -299,14 +318,15 @@ export type TelemetryUncheckedUpdateInput = {
 export type TelemetryCreateManyInput = {
   id?: string
   growCycleId: string
-  sensorType: string
+  sensorId: string
+  sensorType: $Enums.SensorType
   value: number
   createdAt?: Date | string
 }
 
 export type TelemetryUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  sensorType?: Prisma.StringFieldUpdateOperationsInput | string
+  sensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
   value?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -314,7 +334,8 @@ export type TelemetryUpdateManyMutationInput = {
 export type TelemetryUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   growCycleId?: Prisma.StringFieldUpdateOperationsInput | string
-  sensorType?: Prisma.StringFieldUpdateOperationsInput | string
+  sensorId?: Prisma.StringFieldUpdateOperationsInput | string
+  sensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
   value?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -332,6 +353,7 @@ export type TelemetryOrderByRelationAggregateInput = {
 export type TelemetryCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   growCycleId?: Prisma.SortOrder
+  sensorId?: Prisma.SortOrder
   sensorType?: Prisma.SortOrder
   value?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -344,6 +366,7 @@ export type TelemetryAvgOrderByAggregateInput = {
 export type TelemetryMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   growCycleId?: Prisma.SortOrder
+  sensorId?: Prisma.SortOrder
   sensorType?: Prisma.SortOrder
   value?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -352,6 +375,7 @@ export type TelemetryMaxOrderByAggregateInput = {
 export type TelemetryMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   growCycleId?: Prisma.SortOrder
+  sensorId?: Prisma.SortOrder
   sensorType?: Prisma.SortOrder
   value?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -359,6 +383,48 @@ export type TelemetryMinOrderByAggregateInput = {
 
 export type TelemetrySumOrderByAggregateInput = {
   value?: Prisma.SortOrder
+}
+
+export type TelemetryCreateNestedManyWithoutSensorInput = {
+  create?: Prisma.XOR<Prisma.TelemetryCreateWithoutSensorInput, Prisma.TelemetryUncheckedCreateWithoutSensorInput> | Prisma.TelemetryCreateWithoutSensorInput[] | Prisma.TelemetryUncheckedCreateWithoutSensorInput[]
+  connectOrCreate?: Prisma.TelemetryCreateOrConnectWithoutSensorInput | Prisma.TelemetryCreateOrConnectWithoutSensorInput[]
+  createMany?: Prisma.TelemetryCreateManySensorInputEnvelope
+  connect?: Prisma.TelemetryWhereUniqueInput | Prisma.TelemetryWhereUniqueInput[]
+}
+
+export type TelemetryUncheckedCreateNestedManyWithoutSensorInput = {
+  create?: Prisma.XOR<Prisma.TelemetryCreateWithoutSensorInput, Prisma.TelemetryUncheckedCreateWithoutSensorInput> | Prisma.TelemetryCreateWithoutSensorInput[] | Prisma.TelemetryUncheckedCreateWithoutSensorInput[]
+  connectOrCreate?: Prisma.TelemetryCreateOrConnectWithoutSensorInput | Prisma.TelemetryCreateOrConnectWithoutSensorInput[]
+  createMany?: Prisma.TelemetryCreateManySensorInputEnvelope
+  connect?: Prisma.TelemetryWhereUniqueInput | Prisma.TelemetryWhereUniqueInput[]
+}
+
+export type TelemetryUpdateManyWithoutSensorNestedInput = {
+  create?: Prisma.XOR<Prisma.TelemetryCreateWithoutSensorInput, Prisma.TelemetryUncheckedCreateWithoutSensorInput> | Prisma.TelemetryCreateWithoutSensorInput[] | Prisma.TelemetryUncheckedCreateWithoutSensorInput[]
+  connectOrCreate?: Prisma.TelemetryCreateOrConnectWithoutSensorInput | Prisma.TelemetryCreateOrConnectWithoutSensorInput[]
+  upsert?: Prisma.TelemetryUpsertWithWhereUniqueWithoutSensorInput | Prisma.TelemetryUpsertWithWhereUniqueWithoutSensorInput[]
+  createMany?: Prisma.TelemetryCreateManySensorInputEnvelope
+  set?: Prisma.TelemetryWhereUniqueInput | Prisma.TelemetryWhereUniqueInput[]
+  disconnect?: Prisma.TelemetryWhereUniqueInput | Prisma.TelemetryWhereUniqueInput[]
+  delete?: Prisma.TelemetryWhereUniqueInput | Prisma.TelemetryWhereUniqueInput[]
+  connect?: Prisma.TelemetryWhereUniqueInput | Prisma.TelemetryWhereUniqueInput[]
+  update?: Prisma.TelemetryUpdateWithWhereUniqueWithoutSensorInput | Prisma.TelemetryUpdateWithWhereUniqueWithoutSensorInput[]
+  updateMany?: Prisma.TelemetryUpdateManyWithWhereWithoutSensorInput | Prisma.TelemetryUpdateManyWithWhereWithoutSensorInput[]
+  deleteMany?: Prisma.TelemetryScalarWhereInput | Prisma.TelemetryScalarWhereInput[]
+}
+
+export type TelemetryUncheckedUpdateManyWithoutSensorNestedInput = {
+  create?: Prisma.XOR<Prisma.TelemetryCreateWithoutSensorInput, Prisma.TelemetryUncheckedCreateWithoutSensorInput> | Prisma.TelemetryCreateWithoutSensorInput[] | Prisma.TelemetryUncheckedCreateWithoutSensorInput[]
+  connectOrCreate?: Prisma.TelemetryCreateOrConnectWithoutSensorInput | Prisma.TelemetryCreateOrConnectWithoutSensorInput[]
+  upsert?: Prisma.TelemetryUpsertWithWhereUniqueWithoutSensorInput | Prisma.TelemetryUpsertWithWhereUniqueWithoutSensorInput[]
+  createMany?: Prisma.TelemetryCreateManySensorInputEnvelope
+  set?: Prisma.TelemetryWhereUniqueInput | Prisma.TelemetryWhereUniqueInput[]
+  disconnect?: Prisma.TelemetryWhereUniqueInput | Prisma.TelemetryWhereUniqueInput[]
+  delete?: Prisma.TelemetryWhereUniqueInput | Prisma.TelemetryWhereUniqueInput[]
+  connect?: Prisma.TelemetryWhereUniqueInput | Prisma.TelemetryWhereUniqueInput[]
+  update?: Prisma.TelemetryUpdateWithWhereUniqueWithoutSensorInput | Prisma.TelemetryUpdateWithWhereUniqueWithoutSensorInput[]
+  updateMany?: Prisma.TelemetryUpdateManyWithWhereWithoutSensorInput | Prisma.TelemetryUpdateManyWithWhereWithoutSensorInput[]
+  deleteMany?: Prisma.TelemetryScalarWhereInput | Prisma.TelemetryScalarWhereInput[]
 }
 
 export type TelemetryCreateNestedManyWithoutGrowCycleInput = {
@@ -411,16 +477,72 @@ export type FloatFieldUpdateOperationsInput = {
   divide?: number
 }
 
-export type TelemetryCreateWithoutGrowCycleInput = {
+export type TelemetryCreateWithoutSensorInput = {
   id?: string
-  sensorType: string
+  sensorType: $Enums.SensorType
+  value: number
+  createdAt?: Date | string
+  growCycle: Prisma.GrowCycleCreateNestedOneWithoutTelemetryInput
+}
+
+export type TelemetryUncheckedCreateWithoutSensorInput = {
+  id?: string
+  growCycleId: string
+  sensorType: $Enums.SensorType
   value: number
   createdAt?: Date | string
 }
 
+export type TelemetryCreateOrConnectWithoutSensorInput = {
+  where: Prisma.TelemetryWhereUniqueInput
+  create: Prisma.XOR<Prisma.TelemetryCreateWithoutSensorInput, Prisma.TelemetryUncheckedCreateWithoutSensorInput>
+}
+
+export type TelemetryCreateManySensorInputEnvelope = {
+  data: Prisma.TelemetryCreateManySensorInput | Prisma.TelemetryCreateManySensorInput[]
+  skipDuplicates?: boolean
+}
+
+export type TelemetryUpsertWithWhereUniqueWithoutSensorInput = {
+  where: Prisma.TelemetryWhereUniqueInput
+  update: Prisma.XOR<Prisma.TelemetryUpdateWithoutSensorInput, Prisma.TelemetryUncheckedUpdateWithoutSensorInput>
+  create: Prisma.XOR<Prisma.TelemetryCreateWithoutSensorInput, Prisma.TelemetryUncheckedCreateWithoutSensorInput>
+}
+
+export type TelemetryUpdateWithWhereUniqueWithoutSensorInput = {
+  where: Prisma.TelemetryWhereUniqueInput
+  data: Prisma.XOR<Prisma.TelemetryUpdateWithoutSensorInput, Prisma.TelemetryUncheckedUpdateWithoutSensorInput>
+}
+
+export type TelemetryUpdateManyWithWhereWithoutSensorInput = {
+  where: Prisma.TelemetryScalarWhereInput
+  data: Prisma.XOR<Prisma.TelemetryUpdateManyMutationInput, Prisma.TelemetryUncheckedUpdateManyWithoutSensorInput>
+}
+
+export type TelemetryScalarWhereInput = {
+  AND?: Prisma.TelemetryScalarWhereInput | Prisma.TelemetryScalarWhereInput[]
+  OR?: Prisma.TelemetryScalarWhereInput[]
+  NOT?: Prisma.TelemetryScalarWhereInput | Prisma.TelemetryScalarWhereInput[]
+  id?: Prisma.StringFilter<"Telemetry"> | string
+  growCycleId?: Prisma.StringFilter<"Telemetry"> | string
+  sensorId?: Prisma.StringFilter<"Telemetry"> | string
+  sensorType?: Prisma.EnumSensorTypeFilter<"Telemetry"> | $Enums.SensorType
+  value?: Prisma.FloatFilter<"Telemetry"> | number
+  createdAt?: Prisma.DateTimeFilter<"Telemetry"> | Date | string
+}
+
+export type TelemetryCreateWithoutGrowCycleInput = {
+  id?: string
+  sensorType: $Enums.SensorType
+  value: number
+  createdAt?: Date | string
+  sensor: Prisma.SensorCreateNestedOneWithoutTelemetryInput
+}
+
 export type TelemetryUncheckedCreateWithoutGrowCycleInput = {
   id?: string
-  sensorType: string
+  sensorId: string
+  sensorType: $Enums.SensorType
   value: number
   createdAt?: Date | string
 }
@@ -451,41 +573,66 @@ export type TelemetryUpdateManyWithWhereWithoutGrowCycleInput = {
   data: Prisma.XOR<Prisma.TelemetryUpdateManyMutationInput, Prisma.TelemetryUncheckedUpdateManyWithoutGrowCycleInput>
 }
 
-export type TelemetryScalarWhereInput = {
-  AND?: Prisma.TelemetryScalarWhereInput | Prisma.TelemetryScalarWhereInput[]
-  OR?: Prisma.TelemetryScalarWhereInput[]
-  NOT?: Prisma.TelemetryScalarWhereInput | Prisma.TelemetryScalarWhereInput[]
-  id?: Prisma.StringFilter<"Telemetry"> | string
-  growCycleId?: Prisma.StringFilter<"Telemetry"> | string
-  sensorType?: Prisma.StringFilter<"Telemetry"> | string
-  value?: Prisma.FloatFilter<"Telemetry"> | number
-  createdAt?: Prisma.DateTimeFilter<"Telemetry"> | Date | string
+export type TelemetryCreateManySensorInput = {
+  id?: string
+  growCycleId: string
+  sensorType: $Enums.SensorType
+  value: number
+  createdAt?: Date | string
+}
+
+export type TelemetryUpdateWithoutSensorInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  sensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
+  value?: Prisma.FloatFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  growCycle?: Prisma.GrowCycleUpdateOneRequiredWithoutTelemetryNestedInput
+}
+
+export type TelemetryUncheckedUpdateWithoutSensorInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  growCycleId?: Prisma.StringFieldUpdateOperationsInput | string
+  sensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
+  value?: Prisma.FloatFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type TelemetryUncheckedUpdateManyWithoutSensorInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  growCycleId?: Prisma.StringFieldUpdateOperationsInput | string
+  sensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
+  value?: Prisma.FloatFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type TelemetryCreateManyGrowCycleInput = {
   id?: string
-  sensorType: string
+  sensorId: string
+  sensorType: $Enums.SensorType
   value: number
   createdAt?: Date | string
 }
 
 export type TelemetryUpdateWithoutGrowCycleInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  sensorType?: Prisma.StringFieldUpdateOperationsInput | string
+  sensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
   value?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  sensor?: Prisma.SensorUpdateOneRequiredWithoutTelemetryNestedInput
 }
 
 export type TelemetryUncheckedUpdateWithoutGrowCycleInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  sensorType?: Prisma.StringFieldUpdateOperationsInput | string
+  sensorId?: Prisma.StringFieldUpdateOperationsInput | string
+  sensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
   value?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type TelemetryUncheckedUpdateManyWithoutGrowCycleInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  sensorType?: Prisma.StringFieldUpdateOperationsInput | string
+  sensorId?: Prisma.StringFieldUpdateOperationsInput | string
+  sensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
   value?: Prisma.FloatFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -495,58 +642,70 @@ export type TelemetryUncheckedUpdateManyWithoutGrowCycleInput = {
 export type TelemetrySelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   growCycleId?: boolean
+  sensorId?: boolean
   sensorType?: boolean
   value?: boolean
   createdAt?: boolean
   growCycle?: boolean | Prisma.GrowCycleDefaultArgs<ExtArgs>
+  sensor?: boolean | Prisma.SensorDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["telemetry"]>
 
 export type TelemetrySelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   growCycleId?: boolean
+  sensorId?: boolean
   sensorType?: boolean
   value?: boolean
   createdAt?: boolean
   growCycle?: boolean | Prisma.GrowCycleDefaultArgs<ExtArgs>
+  sensor?: boolean | Prisma.SensorDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["telemetry"]>
 
 export type TelemetrySelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   growCycleId?: boolean
+  sensorId?: boolean
   sensorType?: boolean
   value?: boolean
   createdAt?: boolean
   growCycle?: boolean | Prisma.GrowCycleDefaultArgs<ExtArgs>
+  sensor?: boolean | Prisma.SensorDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["telemetry"]>
 
 export type TelemetrySelectScalar = {
   id?: boolean
   growCycleId?: boolean
+  sensorId?: boolean
   sensorType?: boolean
   value?: boolean
   createdAt?: boolean
 }
 
-export type TelemetryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "growCycleId" | "sensorType" | "value" | "createdAt", ExtArgs["result"]["telemetry"]>
+export type TelemetryOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "growCycleId" | "sensorId" | "sensorType" | "value" | "createdAt", ExtArgs["result"]["telemetry"]>
 export type TelemetryInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   growCycle?: boolean | Prisma.GrowCycleDefaultArgs<ExtArgs>
+  sensor?: boolean | Prisma.SensorDefaultArgs<ExtArgs>
 }
 export type TelemetryIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   growCycle?: boolean | Prisma.GrowCycleDefaultArgs<ExtArgs>
+  sensor?: boolean | Prisma.SensorDefaultArgs<ExtArgs>
 }
 export type TelemetryIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   growCycle?: boolean | Prisma.GrowCycleDefaultArgs<ExtArgs>
+  sensor?: boolean | Prisma.SensorDefaultArgs<ExtArgs>
 }
 
 export type $TelemetryPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Telemetry"
   objects: {
     growCycle: Prisma.$GrowCyclePayload<ExtArgs>
+    sensor: Prisma.$SensorPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     growCycleId: string
-    sensorType: string
+    sensorId: string
+    sensorType: $Enums.SensorType
     value: number
     createdAt: Date
   }, ExtArgs["result"]["telemetry"]>
@@ -944,6 +1103,7 @@ readonly fields: TelemetryFieldRefs;
 export interface Prisma__TelemetryClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   growCycle<T extends Prisma.GrowCycleDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.GrowCycleDefaultArgs<ExtArgs>>): Prisma.Prisma__GrowCycleClient<runtime.Types.Result.GetResult<Prisma.$GrowCyclePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  sensor<T extends Prisma.SensorDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.SensorDefaultArgs<ExtArgs>>): Prisma.Prisma__SensorClient<runtime.Types.Result.GetResult<Prisma.$SensorPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -975,7 +1135,8 @@ export interface Prisma__TelemetryClient<T, Null = never, ExtArgs extends runtim
 export interface TelemetryFieldRefs {
   readonly id: Prisma.FieldRef<"Telemetry", 'String'>
   readonly growCycleId: Prisma.FieldRef<"Telemetry", 'String'>
-  readonly sensorType: Prisma.FieldRef<"Telemetry", 'String'>
+  readonly sensorId: Prisma.FieldRef<"Telemetry", 'String'>
+  readonly sensorType: Prisma.FieldRef<"Telemetry", 'SensorType'>
   readonly value: Prisma.FieldRef<"Telemetry", 'Float'>
   readonly createdAt: Prisma.FieldRef<"Telemetry", 'DateTime'>
 }

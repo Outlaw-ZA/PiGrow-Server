@@ -47,6 +47,11 @@ export { Prisma }
  */
 export type Controller = Prisma.ControllerModel
 /**
+ * Model Sensor
+ * 
+ */
+export type Sensor = Prisma.SensorModel
+/**
  * Model Device
  * 
  */

@@ -25,7 +25,7 @@ List all registered controllers.
 ```
 
 ### `GET /api/controllers/:id`
-Get a controller with its devices and active grow cycles.
+Get a controller with its active grow cycles, devices, and **sensor inventory**.
 
 **Response `200`** — Controller plus:
 ```ts
@@ -34,12 +34,13 @@ Get a controller with its devices and active grow cycles.
   devices: Device[];               // Full Device objects (see Device section)
   growCycles: GrowCycle[];         // Only cycles where isActive === true
   // Each growCycle includes: phases (only phases where isActive === true)
+  sensors: Sensor[];               // Physical sensors wired to this Pi (see Sensors section)
 }
 ```
 **`404`** — `{ error: "Raspberry Pi configuration profile not found" }`
 
 ### `POST /api/controllers`
-Register a new controller (upserts by macAddress).
+Register a new controller. Upserts by `macAddress` (re-registering an existing hub updates only the `name`; sensor inventory is never mutated by re-registration). When a new controller is created, you may seed an initial set of sensors in the same call.
 
 **Request body:**
 ```ts
@@ -47,10 +48,17 @@ Register a new controller (upserts by macAddress).
   macAddress: string;  // Pattern: ^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$
   name: string;        // max 100 chars
   ipAddress: string;   // IPv4 format
+  sensors?: {          // optional — only applied on a fresh create
+    name: string;
+    type: SensorType;
+    mqttTopic: string;       // max 200 chars
+    pinNumbers: number[];     // 0-40 per entry
+    protocol: SensorProtocol;
+  }[];
 }
 ```
 
-**Response `201`** — Full Controller object (with `status: "OFFLINE"` default).
+**Response `201`** — Full Controller object (with `status: "OFFLINE"` default). On a fresh create, the response **includes the nested `sensors` array**.
 **`400`** — `{ error: "Failed to map controller network identity" }`
 
 ### `PUT /api/controllers/:id`
@@ -152,6 +160,95 @@ Remove a device.
 
 **Response `204`** — No body.
 **`404`** — `{ error: "Hardware profile deletion failed" }`
+
+---
+
+## Sensors
+
+A `Sensor` is a physical probe wired to a specific Raspberry Pi (`Controller`). Each reading produced by a probe is persisted as a `Telemetry` row linked to that sensor.
+
+### Model
+
+```ts
+{
+  id: string;
+  controllerId: string;          // UUID of the parent Pi
+  name: string;                  // e.g. "DHT22 Ambient"
+  type: SensorType;              // see below
+  mqttTopic: string;             // e.g. "tent1/sensor/ambient"  (max 200 chars)
+  pinNumbers: number[];          // GPIO / bus pins used (0-40)
+  protocol: SensorProtocol;      // I2C | SPI | UART | RS485
+  lastActive: string | null;     // ISO 8601; updated on every MQTT reading
+  createdAt: string;             // ISO 8601
+  updatedAt: string;             // ISO 8601
+}
+```
+
+`SensorType` is one of:
+`"HUMIDITY" | "TEMPERATURE" | "TEMP_HUMIDITY" | "CO2" | "PH" | "EC"`
+
+`SensorProtocol` is one of:
+`"I2C" | "SPI" | "UART" | "RS485"`
+
+### `GET /api/sensors/controller/:controllerId`
+List all sensors attached to a specific controller, ordered by `createdAt` ascending.
+
+**Response `200`** — Array of `Sensor`.
+
+**`400`** — `{ error: "Failed to load sensor inventory" }`
+
+### `GET /api/sensors/:id`
+Fetch a single sensor with a slim parent-controller summary.
+
+**Response `200`** — `Sensor` plus:
+```ts
+{
+  controller: { id: string; name: string; status: "ONLINE" | "OFFLINE" | "ERROR" };
+}
+```
+**`404`** — `{ error: "Sensor not found" }`
+
+### `POST /api/sensors`
+Provision a new sensor on an existing controller.
+
+**Request body:**
+```ts
+{
+  controllerId: string;          // UUID of the parent Controller
+  name: string;                  // max 100 chars
+  type: SensorType;
+  mqttTopic: string;             // max 200 chars
+  pinNumbers: number[];          // 0-40 per entry; empty array allowed
+  protocol: SensorProtocol;
+}
+```
+
+**Response `201`** — Full `Sensor` object (`lastActive` is `null` until the first MQTT reading arrives).
+**`400`** — `{ error: "Failed to register sensor" }`
+
+### `PUT /api/sensors/:id`
+Update a sensor. All fields are optional; only provided fields are updated. `controllerId` is **immutable** (delete + recreate to move a sensor to a different Pi).
+
+**Request body:**
+```ts
+{
+  name?: string;
+  type?: SensorType;
+  mqttTopic?: string;
+  pinNumbers?: number[];
+  protocol?: SensorProtocol;
+  lastActive?: string;           // ISO 8601; normally server-managed
+}
+```
+
+**Response `200`** — Updated `Sensor` object.
+**`400`** — `{ error: "Failed to update sensor configuration" }`
+
+### `DELETE /api/sensors/:id`
+Remove a sensor. **Cascades** to all telemetry rows associated with the sensor (historical data for that probe is lost).
+
+**Response `204`** — No body.
+**`404`** — `{ error: "Sensor deletion failed" }`
 
 ---
 
@@ -451,20 +548,84 @@ Remove a device config.
 
 ## Telemetry
 
-> **Note:** Telemetry has no REST endpoints. Data flows from Raspberry Pi → MQTT → Server → Socket.IO broadcast to frontend.
+Telemetry readings are produced by physical `Sensor`s. Each reading is a single numeric value (`value`) tagged with the sensor that produced it (`sensorId`) and the type of measurement (`sensorType`). Readings are written to the database and broadcast live to the frontend via Socket.IO.
+
+### Model
+
+```ts
+{
+  id: string;
+  growCycleId: string;   // Active grow cycle of the sensor's controller
+  sensorId: string;      // Sensor that produced the reading
+  sensorType: SensorType;
+  value: number;
+  createdAt: string;     // ISO 8601
+  sensor: {              // Slim summary of the source sensor (always included in responses)
+    id: string;
+    name: string;
+    type: SensorType;
+    protocol: SensorProtocol;
+  };
+}
+```
+
+### `GET /api/telemetry/grow-cycle/:growCycleId`
+List every telemetry reading for a grow cycle, newest first. Includes a slim `sensor` summary on each row.
+
+**Response `200`** — Array of `Telemetry` (with nested `sensor`).
+**`400`** — `{ error: "Failed to load telemetry readings" }`
+
+### `GET /api/telemetry/grow-cycle/:growCycleId/latest`
+Return the most-recent reading **per physical sensor** (not per `sensorType`) for the grow cycle. A `TEMP_HUMIDITY` sensor therefore contributes up to two rows (one temp, one humidity), each representing its own latest sample.
+
+**Response `200`** — Array of `Telemetry` (with nested `sensor`).
+**`400`** — `{ error: "Failed to load latest telemetry" }`
+
+### `GET /api/telemetry/grow-cycle/:growCycleId/range?from=...&to=...`
+Return telemetry rows for a grow cycle whose `createdAt` falls within the given ISO 8601 window. Ordered by `createdAt` ascending (good for chart plotting).
+
+**Response `200`** — Array of `Telemetry` (with nested `sensor`).
+**`400`** — `{ error: "Failed to load telemetry range" }`
+
+### `POST /api/telemetry`
+Ingest a single telemetry reading manually. In production, MQTT is the canonical ingestion path; this endpoint is for tests and admin tooling.
+
+**Request body:**
+```ts
+{
+  growCycleId: string;  // UUID
+  sensorId: string;     // UUID — must reference a Sensor owned by a Controller that owns this grow cycle
+  sensorType: SensorType;
+  value: number;
+}
+```
+
+**Response `201`** — Created `Telemetry` (with nested `sensor`).
+**`400`** — `{ error: "Failed to ingest telemetry reading" }`
 
 ### MQTT Ingestion
 
-- Pi publishes to: `devices/<deviceId>/telemetry`
-- Backend subscribed to: `devices/+/telemetry`
-- Payload fields: `temperature` (float), `humidity` (float)
+- Pi publishes to: **`sensors/<sensorId>/telemetry`**
+- Backend subscribed to: **`sensors/+/telemetry`**
+- Payload (JSON):
+  ```ts
+  {
+    readings: [
+      { sensorType: "TEMPERATURE", value: 24.7 },
+      { sensorType: "HUMIDITY",    value: 58.1 }
+    ]
+  }
+  ```
+  - `sensorType` must match the receiving sensor's registered type. For `TEMP_HUMIDITY` probes, both readings may be sent in a single payload.
+- The server resolves the sensor's controller's **currently active** grow cycle and writes one `Telemetry` row per reading against it. The sensor's `lastActive` is updated.
+- If the sensor's controller has no active grow cycle, the payload is dropped and a warning is logged (the `growCycleId` column is non-null by design).
 
 ### Socket.IO Events
 
 | Event | Direction | Payload |
 |---|---|---|
 | `ui_command` | Frontend → Server | `{ deviceId: string, action: string, pin: number }` |
-| `frontend_telemetry` | Server → Frontend | Broadcasts parsed telemetry to all connected UI clients |
+| `frontend_telemetry` | Server → Frontend | `{ sensorId, sensorName, sensorType, value, growCycleId, timestamp }` (one event per persisted reading) |
 
 ---
 
@@ -489,6 +650,10 @@ type DeviceType = "LIGHT" | "EXHAUST_FAN" | "INTAKE_FAN" | "CIRCULATION_FAN"
 
 type TriggerType = "SCHEDULE" | "THRESHOLD" | "ALWAYS_ON" | "ALWAYS_OFF";
 
+type SensorType = "HUMIDITY" | "TEMPERATURE" | "TEMP_HUMIDITY" | "CO2" | "PH" | "EC";
+
+type SensorProtocol = "I2C" | "SPI" | "UART" | "RS485";
+
 // Models
 interface Controller {
   id: string;
@@ -502,7 +667,7 @@ interface Controller {
 
 interface Device {
   id: string;
-  controllerId: string;
+  growCycleId: string;          // Devices are now scoped per-grow (not per-controller)
   name: string;
   type: DeviceType;
   pinNumber: number;
@@ -555,11 +720,86 @@ type ConfigData =
 // Helper to access the typed configData given a triggerType
 type ConfigDataFor<T extends TriggerType> = Extract<ConfigData, { triggerType: T }>["configData"];
 
+interface Sensor {
+  id: string;
+  controllerId: string;
+  name: string;
+  type: SensorType;
+  mqttTopic: string;
+  pinNumbers: number[];
+  protocol: SensorProtocol;
+  lastActive: string | null;     // ISO 8601 or null
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface Telemetry {
   id: string;
   growCycleId: string;
-  sensorType: string;     // "TEMPERATURE" | "HUMIDITY" | "CO2" | "PH" | "EC"
+  sensorId: string;              // Non-null FK to the producing Sensor
+  sensorType: SensorType;        // Enum (TEMP_HUMIDITY now included)
   value: number;
   createdAt: string;
+  sensor: {                      // Slim summary — always returned
+    id: string;
+    name: string;
+    type: SensorType;
+    protocol: SensorProtocol;
+  };
 }
 ```
+
+---
+
+## Frontend Integration Notes
+
+This section highlights the changes the FE must implement to align with the new Sensor model.
+
+### 1. New `Sensor` resource
+
+- New REST module: `GET / POST / PUT / DELETE /api/sensors[/:id]`, plus `GET /api/sensors/controller/:controllerId`.
+- The existing controller create screen **must** now allow attaching zero or more sensors in the same call (see the updated `POST /api/controllers` request body). On a re-registration (`upsert` by `macAddress`), the `sensors` array in the payload is **ignored** — sensors are managed exclusively via `/api/sensors` after the initial seed.
+- New sensor registration screen / dialog with fields: `name`, `type` (one of `SensorType`), `mqttTopic`, `pinNumbers` (multi-select of GPIO pins 0-40), `protocol` (one of `SensorProtocol`).
+- Sensor edit screen: same fields, plus an `lastActive` badge (read-only, server-managed; updated on every MQTT reading).
+
+### 2. Telemetry shape changes
+
+- `Telemetry.sensorType` is now an **enum** (was a free string). The new member `TEMP_HUMIDITY` must be handled in any UI that lists/charts sensor types.
+- Every telemetry row now carries a non-null `sensorId` and a nested `sensor` summary (`{ id, name, type, protocol }`). Charts and list views should display the **sensor name** (e.g. "DHT22 Ambient") rather than a generic type label, since the same `sensorType` may originate from multiple physical probes.
+- `GET /api/telemetry/grow-cycle/:id/latest` now returns one row **per physical sensor** (not per sensor type). A `TEMP_HUMIDITY` sensor will appear in this list with its most recent reading — which may be temperature OR humidity depending on which arrived last.
+
+### 3. MQTT topic (firmware change)
+
+The Pi firmware must publish telemetry to the new topic:
+
+```
+sensors/<sensorId>/telemetry
+```
+
+with the new payload shape:
+
+```ts
+{
+  readings: [
+    { sensorType: "TEMPERATURE", value: 24.7 },
+    { sensorType: "HUMIDITY",    value: 58.1 }
+  ]
+}
+```
+
+The server rejects payloads whose `sensorType` doesn't match the sensor's registered type and drops the entire payload if the sensor's controller has no active grow cycle. The firmware should still retry — the server will pick up the readings once a grow cycle is started.
+
+### 4. Live telemetry
+
+- The `frontend_telemetry` Socket.IO event now carries `{ sensorId, sensorName, sensorType, value, growCycleId, timestamp }`. Existing handlers should switch from `deviceId` to `sensorId` for any state mapping.
+
+### 5. Migration checklist for the FE
+
+| Area | Action |
+|---|---|
+| Types | Replace `Telemetry.sensorType: string` with `SensorType`; add `sensorId` and nested `sensor`. Add new `Sensor`, `SensorType`, `SensorProtocol` types. |
+| Controller create form | Add a sensor-list sub-form (name, type, mqttTopic, pinNumbers, protocol) submitted in the same `POST /api/controllers` call. |
+| Controller edit form | No sensor editing here — direct the user to the sensors page. |
+| Sensor inventory | New page/section listing `/api/sensors/controller/:id` with create/edit/delete actions. |
+| Telemetry UI | Group by `sensorId` rather than by `sensorType`; show sensor name; handle `TEMP_HUMIDITY` as a single sensor that emits two reading kinds. |
+| Live socket handler | Update `frontend_telemetry` payload shape (`sensorId`, `sensorName`, `sensorType`, `value`, `growCycleId`, `timestamp`). |

@@ -13,15 +13,48 @@ datasource db {
 // ==========================================
 
 model Controller {
-  id          String      @id @default(uuid())
-  macAddress  String      @unique // Unique identifier for the Raspberry Pi
-  ipAddress   String      
-  name        String      // e.g., "Tent 1 Pi", "Clone Rack Pi"
-  status      String      @default("OFFLINE") // ONLINE, OFFLINE, ERROR
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  
-  growCycles  GrowCycle[] // A Pi can run sequential cycles over its lifetime
+  id         String   @id @default(uuid())
+  macAddress String   @unique // Unique identifier for the Raspberry Pi
+  ipAddress  String
+  name       String // e.g., "Tent 1 Pi", "Clone Rack Pi"
+  status     String   @default("OFFLINE") // ONLINE, OFFLINE, ERROR
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  growCycles GrowCycle[] // A Pi can run sequential cycles over its lifetime
+  sensors    Sensor[] // Sensors wired to this physical Pi hub
+}
+
+enum SensorType {
+  HUMIDITY
+  TEMPERATURE
+  TEMP_HUMIDITY
+  CO2
+  PH
+  EC
+}
+
+enum SensorProtocol {
+  I2C
+  SPI
+  UART
+  RS485
+}
+
+model Sensor {
+  id           String         @id @default(uuid())
+  controllerId String
+  name         String
+  type         SensorType
+  mqttTopic    String
+  pinNumbers   Int[]
+  protocol     SensorProtocol
+  lastActive   DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  controller Controller  @relation(fields: [controllerId], references: [id], onDelete: Cascade)
+  telemetry  Telemetry[]
 }
 
 enum DeviceType {
@@ -38,18 +71,18 @@ enum DeviceType {
 }
 
 model Device {
-  id            String          @id @default(uuid())
-  growCycleId   String
-  name          String          // e.g., "SpiderFarmer SF2000", "AC Infinity T6"
-  type          DeviceType
-  pinNumber     Int             // GPIO pin or Relay channel on the Pi
-  mqttTopic     String          // e.g., "tent1/device/light/cmd"
-  isActive      Boolean         @default(true)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id          String     @id @default(uuid())
+  growCycleId String
+  name        String // e.g., "SpiderFarmer SF2000", "AC Infinity T6"
+  type        DeviceType
+  pinNumber   Int // GPIO pin or Relay channel on the Pi
+  mqttTopic   String // e.g., "tent1/device/light/cmd"
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
-  growCycle     GrowCycle       @relation(fields: [growCycleId], references: [id], onDelete: Cascade)
-  deviceConfigs DeviceConfig[]  // The specific settings for this device per phase
+  growCycle     GrowCycle      @relation(fields: [growCycleId], references: [id], onDelete: Cascade)
+  deviceConfigs DeviceConfig[] // The specific settings for this device per phase
 }
 
 // ==========================================
@@ -57,18 +90,18 @@ model Device {
 // ==========================================
 
 model GrowCycle {
-  id           String      @id @default(uuid())
-  controllerId String      // Links this specific grow cycle to a physical Pi
+  id           String    @id @default(uuid())
+  controllerId String // Links this specific grow cycle to a physical Pi
   name         String
-  isActive     Boolean     @default(false)
-  startAt      DateTime?   @db.Date // Optional cycle-level start date (date only, no timestamp)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  isActive     Boolean   @default(false)
+  startAt      DateTime? @db.Date // Optional cycle-level start date (date only, no timestamp)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  controller   Controller  @relation(fields: [controllerId], references: [id])
-  devices      Device[]    // Devices are scoped per-grow for full isolation
-  phases       GrowPhase[]
-  telemetry    Telemetry[]
+  controller Controller  @relation(fields: [controllerId], references: [id])
+  devices    Device[] // Devices are scoped per-grow for full isolation
+  phases     GrowPhase[]
+  telemetry  Telemetry[]
 
   // Enforce at most ONE active grow per controller at any moment.
   // Finished/ended grows (isActive=false) do not participate in the constraint,
@@ -77,18 +110,18 @@ model GrowCycle {
 }
 
 model GrowPhase {
-  id          String         @id @default(uuid())
-  growCycleId String
-  name        String         // e.g., "Vegetative", "Flower"
-  order       Int            // Execution order sequence
-  durationDays Int           // Target days for this phase
-  isActive    Boolean        @default(false)
-  startAt     DateTime?        @db.Date
-  endAt       DateTime?        @db.Date
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id           String    @id @default(uuid())
+  growCycleId  String
+  name         String // e.g., "Vegetative", "Flower"
+  order        Int // Execution order sequence
+  durationDays Int // Target days for this phase
+  isActive     Boolean   @default(false)
+  startAt      DateTime? @db.Date
+  endAt        DateTime? @db.Date
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  growCycle   GrowCycle      @relation(fields: [growCycleId], references: [id], onDelete: Cascade)
+  growCycle     GrowCycle      @relation(fields: [growCycleId], references: [id], onDelete: Cascade)
   deviceConfigs DeviceConfig[] // Specific device rules for this phase
 }
 
@@ -97,28 +130,28 @@ model GrowPhase {
 // ==========================================
 
 enum TriggerType {
-  SCHEDULE    // Time-based (e.g., Lights on 18/6)
-  THRESHOLD   // Environment-based (e.g., Turn on AC if Temp > 26°C)
-  ALWAYS_ON   // Continuous devices (e.g., Circulation fans)
-  ALWAYS_OFF  // Safety overrides
+  SCHEDULE // Time-based (e.g., Lights on 18/6)
+  THRESHOLD // Environment-based (e.g., Turn on AC if Temp > 26°C)
+  ALWAYS_ON // Continuous devices (e.g., Circulation fans)
+  ALWAYS_OFF // Safety overrides
 }
 
 model DeviceConfig {
   id          String      @id @default(uuid())
   growPhaseId String
-  deviceId    String      // Which physical device this config rules over
+  deviceId    String // Which physical device this config rules over
   triggerType TriggerType
-  
+
   // JSON payload stores specific parameters depending on TriggerType
   // Schedule Example:  {"onTime": "06:00", "offTime": "00:00"}
   // Threshold Example: {"sensor": "TEMPERATURE", "condition": "GREATER_THAN", "value": 26.5, "action": "ON"}
-  configData  Json        
-  
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  configData Json
 
-  growPhase   GrowPhase   @relation(fields: [growPhaseId], references: [id], onDelete: Cascade)
-  device      Device      @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  growPhase GrowPhase @relation(fields: [growPhaseId], references: [id], onDelete: Cascade)
+  device    Device    @relation(fields: [deviceId], references: [id], onDelete: Cascade)
 }
 
 // ==========================================
@@ -126,11 +159,13 @@ model DeviceConfig {
 // ==========================================
 
 model Telemetry {
-  id          String    @id @default(uuid())
+  id          String     @id @default(uuid())
   growCycleId String
-  sensorType  String    // TEMPERATURE, HUMIDITY, CO2, PH, EC
+  sensorId    String
+  sensorType  SensorType
   value       Float
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime   @default(now())
 
-  growCycle   GrowCycle @relation(fields: [growCycleId], references: [id], onDelete: Cascade)
+  growCycle GrowCycle @relation(fields: [growCycleId], references: [id], onDelete: Cascade)
+  sensor    Sensor    @relation(fields: [sensorId], references: [id], onDelete: Cascade)
 }

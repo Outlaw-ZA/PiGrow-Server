@@ -385,6 +385,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   Controller: 'Controller',
+  Sensor: 'Sensor',
   Device: 'Device',
   GrowCycle: 'GrowCycle',
   GrowPhase: 'GrowPhase',
@@ -405,7 +406,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "controller" | "device" | "growCycle" | "growPhase" | "deviceConfig" | "telemetry"
+    modelProps: "controller" | "sensor" | "device" | "growCycle" | "growPhase" | "deviceConfig" | "telemetry"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -480,6 +481,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.ControllerCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.ControllerCountAggregateOutputType> | number
+        }
+      }
+    }
+    Sensor: {
+      payload: Prisma.$SensorPayload<ExtArgs>
+      fields: Prisma.SensorFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.SensorFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.SensorFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorPayload>
+        }
+        findFirst: {
+          args: Prisma.SensorFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.SensorFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorPayload>
+        }
+        findMany: {
+          args: Prisma.SensorFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorPayload>[]
+        }
+        create: {
+          args: Prisma.SensorCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorPayload>
+        }
+        createMany: {
+          args: Prisma.SensorCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.SensorCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorPayload>[]
+        }
+        delete: {
+          args: Prisma.SensorDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorPayload>
+        }
+        update: {
+          args: Prisma.SensorUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorPayload>
+        }
+        deleteMany: {
+          args: Prisma.SensorDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.SensorUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.SensorUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorPayload>[]
+        }
+        upsert: {
+          args: Prisma.SensorUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorPayload>
+        }
+        aggregate: {
+          args: Prisma.SensorAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSensor>
+        }
+        groupBy: {
+          args: Prisma.SensorGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SensorGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.SensorCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SensorCountAggregateOutputType> | number
         }
       }
     }
@@ -905,6 +980,22 @@ export const ControllerScalarFieldEnum = {
 export type ControllerScalarFieldEnum = (typeof ControllerScalarFieldEnum)[keyof typeof ControllerScalarFieldEnum]
 
 
+export const SensorScalarFieldEnum = {
+  id: 'id',
+  controllerId: 'controllerId',
+  name: 'name',
+  type: 'type',
+  mqttTopic: 'mqttTopic',
+  pinNumbers: 'pinNumbers',
+  protocol: 'protocol',
+  lastActive: 'lastActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type SensorScalarFieldEnum = (typeof SensorScalarFieldEnum)[keyof typeof SensorScalarFieldEnum]
+
+
 export const DeviceScalarFieldEnum = {
   id: 'id',
   growCycleId: 'growCycleId',
@@ -965,6 +1056,7 @@ export type DeviceConfigScalarFieldEnum = (typeof DeviceConfigScalarFieldEnum)[k
 export const TelemetryScalarFieldEnum = {
   id: 'id',
   growCycleId: 'growCycleId',
+  sensorId: 'sensorId',
   sensorType: 'sensorType',
   value: 'value',
   createdAt: 'createdAt'
@@ -1048,16 +1140,23 @@ export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaM
 
 
 /**
- * Reference to a field of type 'DeviceType'
+ * Reference to a field of type 'SensorType'
  */
-export type EnumDeviceTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DeviceType'>
+export type EnumSensorTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SensorType'>
     
 
 
 /**
- * Reference to a field of type 'DeviceType[]'
+ * Reference to a field of type 'SensorType[]'
  */
-export type ListEnumDeviceTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DeviceType[]'>
+export type ListEnumSensorTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SensorType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Int[]'
+ */
+export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
     
 
 
@@ -1069,9 +1168,30 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
 
 
 /**
- * Reference to a field of type 'Int[]'
+ * Reference to a field of type 'SensorProtocol'
  */
-export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+export type EnumSensorProtocolFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SensorProtocol'>
+    
+
+
+/**
+ * Reference to a field of type 'SensorProtocol[]'
+ */
+export type ListEnumSensorProtocolFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SensorProtocol[]'>
+    
+
+
+/**
+ * Reference to a field of type 'DeviceType'
+ */
+export type EnumDeviceTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DeviceType'>
+    
+
+
+/**
+ * Reference to a field of type 'DeviceType[]'
+ */
+export type ListEnumDeviceTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DeviceType[]'>
     
 
 
@@ -1234,6 +1354,7 @@ export type PrismaClientOptions = ({
 }
 export type GlobalOmitConfig = {
   controller?: Prisma.ControllerOmit
+  sensor?: Prisma.SensorOmit
   device?: Prisma.DeviceOmit
   growCycle?: Prisma.GrowCycleOmit
   growPhase?: Prisma.GrowPhaseOmit

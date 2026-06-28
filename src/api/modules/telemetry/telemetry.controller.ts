@@ -1,8 +1,12 @@
 import { FastifyInstance } from "fastify";
+import { SensorType } from "../../../generated/client/enums.js";
+
+export type SensorTypeValue = (typeof SensorType)[keyof typeof SensorType];
 
 interface CreateTelemetryInput {
   growCycleId: string;
-  sensorType: string;
+  sensorId: string;
+  sensorType: SensorTypeValue;
   value: number;
 }
 
@@ -18,24 +22,44 @@ export class TelemetryController {
     return await this.prisma.telemetry.findMany({
       where: { growCycleId },
       orderBy: { createdAt: "desc" },
+      include: {
+        sensor: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            protocol: true,
+          },
+        },
+      },
     });
   }
 
-  // 2. READ LATEST READING PER SENSOR TYPE
+  // 2. READ LATEST READING PER SENSOR (newest reading per physical sensor)
   async getLatestByGrowCycleId(growCycleId: string) {
     const allReadings = await this.prisma.telemetry.findMany({
       where: { growCycleId },
       orderBy: { createdAt: "desc" },
+      include: {
+        sensor: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            protocol: true,
+          },
+        },
+      },
     });
 
-    const latestByType = new Map<string, (typeof allReadings)[number]>();
+    const latestBySensor = new Map<string, (typeof allReadings)[number]>();
     for (const reading of allReadings) {
-      if (!latestByType.has(reading.sensorType)) {
-        latestByType.set(reading.sensorType, reading);
+      if (!latestBySensor.has(reading.sensorId)) {
+        latestBySensor.set(reading.sensorId, reading);
       }
     }
 
-    return Array.from(latestByType.values());
+    return Array.from(latestBySensor.values());
   }
 
   // 3. READ TELEMETRY IN A DATE RANGE
@@ -53,6 +77,16 @@ export class TelemetryController {
         },
       },
       orderBy: { createdAt: "asc" },
+      include: {
+        sensor: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            protocol: true,
+          },
+        },
+      },
     });
   }
 
@@ -61,8 +95,19 @@ export class TelemetryController {
     return await this.prisma.telemetry.create({
       data: {
         growCycleId: body.growCycleId,
+        sensorId: body.sensorId,
         sensorType: body.sensorType,
         value: body.value,
+      },
+      include: {
+        sensor: {
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            protocol: true,
+          },
+        },
       },
     });
   }

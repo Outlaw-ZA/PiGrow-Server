@@ -1,14 +1,24 @@
 import { Type } from "@sinclair/typebox";
 
+export const TelemetrySensorTypeSchema = Type.Union([
+  Type.Literal("HUMIDITY"),
+  Type.Literal("TEMPERATURE"),
+  Type.Literal("TEMP_HUMIDITY"),
+  Type.Literal("CO2"),
+  Type.Literal("PH"),
+  Type.Literal("EC"),
+]);
+
 export const CreateTelemetrySchema = Type.Object({
   growCycleId: Type.String({
     format: "uuid",
     description: "The grow cycle this telemetry reading belongs to",
   }),
-  sensorType: Type.String({
-    maxLength: 50,
-    description: "e.g., TEMPERATURE, HUMIDITY, CO2, PH, EC",
+  sensorId: Type.String({
+    format: "uuid",
+    description: "The physical sensor that produced this reading",
   }),
+  sensorType: TelemetrySensorTypeSchema,
   value: Type.Number({
     description: "The sensor reading value",
   }),
