@@ -232,7 +232,7 @@ export type AutomationRuleGroupByOutputType = {
   growCycleId: string | null
   growPhaseId: string | null
   deviceId: string
-  watchedSensorType: $Enums.SensorType
+  watchedSensorType: $Enums.SensorType | null
   period: $Enums.DayNightPeriod | null
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
@@ -271,7 +271,7 @@ export type AutomationRuleWhereInput = {
   growCycleId?: Prisma.StringNullableFilter<"AutomationRule"> | string | null
   growPhaseId?: Prisma.StringNullableFilter<"AutomationRule"> | string | null
   deviceId?: Prisma.StringFilter<"AutomationRule"> | string
-  watchedSensorType?: Prisma.EnumSensorTypeFilter<"AutomationRule"> | $Enums.SensorType
+  watchedSensorType?: Prisma.EnumSensorTypeNullableFilter<"AutomationRule"> | $Enums.SensorType | null
   period?: Prisma.EnumDayNightPeriodNullableFilter<"AutomationRule"> | $Enums.DayNightPeriod | null
   condition?: Prisma.EnumRuleConditionFilter<"AutomationRule"> | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFilter<"AutomationRule"> | $Enums.DeviceAction
@@ -290,7 +290,7 @@ export type AutomationRuleOrderByWithRelationInput = {
   growCycleId?: Prisma.SortOrderInput | Prisma.SortOrder
   growPhaseId?: Prisma.SortOrderInput | Prisma.SortOrder
   deviceId?: Prisma.SortOrder
-  watchedSensorType?: Prisma.SortOrder
+  watchedSensorType?: Prisma.SortOrderInput | Prisma.SortOrder
   period?: Prisma.SortOrderInput | Prisma.SortOrder
   condition?: Prisma.SortOrder
   action?: Prisma.SortOrder
@@ -312,7 +312,7 @@ export type AutomationRuleWhereUniqueInput = Prisma.AtLeast<{
   growCycleId?: Prisma.StringNullableFilter<"AutomationRule"> | string | null
   growPhaseId?: Prisma.StringNullableFilter<"AutomationRule"> | string | null
   deviceId?: Prisma.StringFilter<"AutomationRule"> | string
-  watchedSensorType?: Prisma.EnumSensorTypeFilter<"AutomationRule"> | $Enums.SensorType
+  watchedSensorType?: Prisma.EnumSensorTypeNullableFilter<"AutomationRule"> | $Enums.SensorType | null
   period?: Prisma.EnumDayNightPeriodNullableFilter<"AutomationRule"> | $Enums.DayNightPeriod | null
   condition?: Prisma.EnumRuleConditionFilter<"AutomationRule"> | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFilter<"AutomationRule"> | $Enums.DeviceAction
@@ -331,7 +331,7 @@ export type AutomationRuleOrderByWithAggregationInput = {
   growCycleId?: Prisma.SortOrderInput | Prisma.SortOrder
   growPhaseId?: Prisma.SortOrderInput | Prisma.SortOrder
   deviceId?: Prisma.SortOrder
-  watchedSensorType?: Prisma.SortOrder
+  watchedSensorType?: Prisma.SortOrderInput | Prisma.SortOrder
   period?: Prisma.SortOrderInput | Prisma.SortOrder
   condition?: Prisma.SortOrder
   action?: Prisma.SortOrder
@@ -355,7 +355,7 @@ export type AutomationRuleScalarWhereWithAggregatesInput = {
   growCycleId?: Prisma.StringNullableWithAggregatesFilter<"AutomationRule"> | string | null
   growPhaseId?: Prisma.StringNullableWithAggregatesFilter<"AutomationRule"> | string | null
   deviceId?: Prisma.StringWithAggregatesFilter<"AutomationRule"> | string
-  watchedSensorType?: Prisma.EnumSensorTypeWithAggregatesFilter<"AutomationRule"> | $Enums.SensorType
+  watchedSensorType?: Prisma.EnumSensorTypeNullableWithAggregatesFilter<"AutomationRule"> | $Enums.SensorType | null
   period?: Prisma.EnumDayNightPeriodNullableWithAggregatesFilter<"AutomationRule"> | $Enums.DayNightPeriod | null
   condition?: Prisma.EnumRuleConditionWithAggregatesFilter<"AutomationRule"> | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionWithAggregatesFilter<"AutomationRule"> | $Enums.DeviceAction
@@ -368,7 +368,7 @@ export type AutomationRuleScalarWhereWithAggregatesInput = {
 
 export type AutomationRuleCreateInput = {
   id?: string
-  watchedSensorType: $Enums.SensorType
+  watchedSensorType?: $Enums.SensorType | null
   period?: $Enums.DayNightPeriod | null
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
@@ -387,7 +387,7 @@ export type AutomationRuleUncheckedCreateInput = {
   growCycleId?: string | null
   growPhaseId?: string | null
   deviceId: string
-  watchedSensorType: $Enums.SensorType
+  watchedSensorType?: $Enums.SensorType | null
   period?: $Enums.DayNightPeriod | null
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
@@ -400,7 +400,7 @@ export type AutomationRuleUncheckedCreateInput = {
 
 export type AutomationRuleUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  watchedSensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
+  watchedSensorType?: Prisma.NullableEnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType | null
   period?: Prisma.NullableEnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod | null
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
@@ -419,7 +419,7 @@ export type AutomationRuleUncheckedUpdateInput = {
   growCycleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   growPhaseId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deviceId?: Prisma.StringFieldUpdateOperationsInput | string
-  watchedSensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
+  watchedSensorType?: Prisma.NullableEnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType | null
   period?: Prisma.NullableEnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod | null
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
@@ -435,7 +435,7 @@ export type AutomationRuleCreateManyInput = {
   growCycleId?: string | null
   growPhaseId?: string | null
   deviceId: string
-  watchedSensorType: $Enums.SensorType
+  watchedSensorType?: $Enums.SensorType | null
   period?: $Enums.DayNightPeriod | null
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
@@ -448,7 +448,7 @@ export type AutomationRuleCreateManyInput = {
 
 export type AutomationRuleUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  watchedSensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
+  watchedSensorType?: Prisma.NullableEnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType | null
   period?: Prisma.NullableEnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod | null
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
@@ -464,7 +464,7 @@ export type AutomationRuleUncheckedUpdateManyInput = {
   growCycleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   growPhaseId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deviceId?: Prisma.StringFieldUpdateOperationsInput | string
-  watchedSensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
+  watchedSensorType?: Prisma.NullableEnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType | null
   period?: Prisma.NullableEnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod | null
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
@@ -667,6 +667,10 @@ export type AutomationRuleUncheckedUpdateManyWithoutGrowPhaseNestedInput = {
   deleteMany?: Prisma.AutomationRuleScalarWhereInput | Prisma.AutomationRuleScalarWhereInput[]
 }
 
+export type NullableEnumSensorTypeFieldUpdateOperationsInput = {
+  set?: $Enums.SensorType | null
+}
+
 export type NullableEnumDayNightPeriodFieldUpdateOperationsInput = {
   set?: $Enums.DayNightPeriod | null
 }
@@ -685,7 +689,7 @@ export type NullableStringFieldUpdateOperationsInput = {
 
 export type AutomationRuleCreateWithoutDeviceInput = {
   id?: string
-  watchedSensorType: $Enums.SensorType
+  watchedSensorType?: $Enums.SensorType | null
   period?: $Enums.DayNightPeriod | null
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
@@ -702,7 +706,7 @@ export type AutomationRuleUncheckedCreateWithoutDeviceInput = {
   id?: string
   growCycleId?: string | null
   growPhaseId?: string | null
-  watchedSensorType: $Enums.SensorType
+  watchedSensorType?: $Enums.SensorType | null
   period?: $Enums.DayNightPeriod | null
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
@@ -747,7 +751,7 @@ export type AutomationRuleScalarWhereInput = {
   growCycleId?: Prisma.StringNullableFilter<"AutomationRule"> | string | null
   growPhaseId?: Prisma.StringNullableFilter<"AutomationRule"> | string | null
   deviceId?: Prisma.StringFilter<"AutomationRule"> | string
-  watchedSensorType?: Prisma.EnumSensorTypeFilter<"AutomationRule"> | $Enums.SensorType
+  watchedSensorType?: Prisma.EnumSensorTypeNullableFilter<"AutomationRule"> | $Enums.SensorType | null
   period?: Prisma.EnumDayNightPeriodNullableFilter<"AutomationRule"> | $Enums.DayNightPeriod | null
   condition?: Prisma.EnumRuleConditionFilter<"AutomationRule"> | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFilter<"AutomationRule"> | $Enums.DeviceAction
@@ -760,7 +764,7 @@ export type AutomationRuleScalarWhereInput = {
 
 export type AutomationRuleCreateWithoutGrowCycleInput = {
   id?: string
-  watchedSensorType: $Enums.SensorType
+  watchedSensorType?: $Enums.SensorType | null
   period?: $Enums.DayNightPeriod | null
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
@@ -777,7 +781,7 @@ export type AutomationRuleUncheckedCreateWithoutGrowCycleInput = {
   id?: string
   growPhaseId?: string | null
   deviceId: string
-  watchedSensorType: $Enums.SensorType
+  watchedSensorType?: $Enums.SensorType | null
   period?: $Enums.DayNightPeriod | null
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
@@ -816,7 +820,7 @@ export type AutomationRuleUpdateManyWithWhereWithoutGrowCycleInput = {
 
 export type AutomationRuleCreateWithoutGrowPhaseInput = {
   id?: string
-  watchedSensorType: $Enums.SensorType
+  watchedSensorType?: $Enums.SensorType | null
   period?: $Enums.DayNightPeriod | null
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
@@ -833,7 +837,7 @@ export type AutomationRuleUncheckedCreateWithoutGrowPhaseInput = {
   id?: string
   growCycleId?: string | null
   deviceId: string
-  watchedSensorType: $Enums.SensorType
+  watchedSensorType?: $Enums.SensorType | null
   period?: $Enums.DayNightPeriod | null
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
@@ -874,7 +878,7 @@ export type AutomationRuleCreateManyDeviceInput = {
   id?: string
   growCycleId?: string | null
   growPhaseId?: string | null
-  watchedSensorType: $Enums.SensorType
+  watchedSensorType?: $Enums.SensorType | null
   period?: $Enums.DayNightPeriod | null
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
@@ -887,7 +891,7 @@ export type AutomationRuleCreateManyDeviceInput = {
 
 export type AutomationRuleUpdateWithoutDeviceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  watchedSensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
+  watchedSensorType?: Prisma.NullableEnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType | null
   period?: Prisma.NullableEnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod | null
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
@@ -904,7 +908,7 @@ export type AutomationRuleUncheckedUpdateWithoutDeviceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   growCycleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   growPhaseId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  watchedSensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
+  watchedSensorType?: Prisma.NullableEnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType | null
   period?: Prisma.NullableEnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod | null
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
@@ -919,7 +923,7 @@ export type AutomationRuleUncheckedUpdateManyWithoutDeviceInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   growCycleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   growPhaseId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  watchedSensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
+  watchedSensorType?: Prisma.NullableEnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType | null
   period?: Prisma.NullableEnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod | null
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
@@ -934,7 +938,7 @@ export type AutomationRuleCreateManyGrowCycleInput = {
   id?: string
   growPhaseId?: string | null
   deviceId: string
-  watchedSensorType: $Enums.SensorType
+  watchedSensorType?: $Enums.SensorType | null
   period?: $Enums.DayNightPeriod | null
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
@@ -947,7 +951,7 @@ export type AutomationRuleCreateManyGrowCycleInput = {
 
 export type AutomationRuleUpdateWithoutGrowCycleInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  watchedSensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
+  watchedSensorType?: Prisma.NullableEnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType | null
   period?: Prisma.NullableEnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod | null
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
@@ -964,7 +968,7 @@ export type AutomationRuleUncheckedUpdateWithoutGrowCycleInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   growPhaseId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deviceId?: Prisma.StringFieldUpdateOperationsInput | string
-  watchedSensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
+  watchedSensorType?: Prisma.NullableEnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType | null
   period?: Prisma.NullableEnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod | null
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
@@ -979,7 +983,7 @@ export type AutomationRuleUncheckedUpdateManyWithoutGrowCycleInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   growPhaseId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deviceId?: Prisma.StringFieldUpdateOperationsInput | string
-  watchedSensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
+  watchedSensorType?: Prisma.NullableEnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType | null
   period?: Prisma.NullableEnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod | null
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
@@ -994,7 +998,7 @@ export type AutomationRuleCreateManyGrowPhaseInput = {
   id?: string
   growCycleId?: string | null
   deviceId: string
-  watchedSensorType: $Enums.SensorType
+  watchedSensorType?: $Enums.SensorType | null
   period?: $Enums.DayNightPeriod | null
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
@@ -1007,7 +1011,7 @@ export type AutomationRuleCreateManyGrowPhaseInput = {
 
 export type AutomationRuleUpdateWithoutGrowPhaseInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  watchedSensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
+  watchedSensorType?: Prisma.NullableEnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType | null
   period?: Prisma.NullableEnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod | null
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
@@ -1024,7 +1028,7 @@ export type AutomationRuleUncheckedUpdateWithoutGrowPhaseInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   growCycleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deviceId?: Prisma.StringFieldUpdateOperationsInput | string
-  watchedSensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
+  watchedSensorType?: Prisma.NullableEnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType | null
   period?: Prisma.NullableEnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod | null
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
@@ -1039,7 +1043,7 @@ export type AutomationRuleUncheckedUpdateManyWithoutGrowPhaseInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   growCycleId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   deviceId?: Prisma.StringFieldUpdateOperationsInput | string
-  watchedSensorType?: Prisma.EnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType
+  watchedSensorType?: Prisma.NullableEnumSensorTypeFieldUpdateOperationsInput | $Enums.SensorType | null
   period?: Prisma.NullableEnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod | null
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
@@ -1154,7 +1158,7 @@ export type $AutomationRulePayload<ExtArgs extends runtime.Types.Extensions.Inte
     growCycleId: string | null
     growPhaseId: string | null
     deviceId: string
-    watchedSensorType: $Enums.SensorType
+    watchedSensorType: $Enums.SensorType | null
     period: $Enums.DayNightPeriod | null
     condition: $Enums.RuleCondition
     action: $Enums.DeviceAction

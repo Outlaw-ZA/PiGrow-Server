@@ -100,15 +100,19 @@ Full reference in `API.md`.
 
 - `AutomationRule` — explicit per-device trigger rule.
   - Scoped to exactly one of: a `GrowPhase` (preferred) or a `GrowCycle` (rare cycle-wide rules). Enforced in the controller.
-  - Fields: `deviceId, watchedSensorType, period (DAY|NIGHT|null=both), condition, action, cooldownSeconds, enabled, lastTriggeredAt`.
-  - `RuleCondition` enum:
-    - `ABOVE_MAX` — fires when the latest telemetry value for `watchedSensorType` exceeds the active phase's environment `*Max`. Common use: exhaust fan on temp.
-    - `BELOW_MIN` — fires when the latest value falls below `*Min`. Common use: heater on temp, humidifier on humidity, CO2 injector on CO2.
-    - `SCHEDULE_ON` — fires at `dayStartMinutes` (start of DAY). Common use: light on.
-    - `SCHEDULE_OFF` — fires at `dayStartMinutes + dayDurationMinutes` (start of NIGHT). Common use: light off.
+  - Fields: `deviceId, watchedSensorType (nullable), period (DAY|NIGHT|null=both), condition, action, cooldownSeconds, enabled, lastTriggeredAt`.
+  - **LIGHT devices are not eligible for automation rules.** Light scheduling is driven directly by the grow-phase clock — there is no automation rule representation of "light on at day start" anymore.
+  - `RuleCondition` enum (only `ABOVE_MAX` / `BELOW_MIN` / `ALWAYS_ON` / `ALWAYS_OFF` are accepted at the API layer):
+    - `ABOVE_MAX` — fires when the latest telemetry value for `watchedSensorType` exceeds the active phase's environment `*Max`. Common use: exhaust fan on temp. **Requires a non-null `watchedSensorType`.**
+    - `BELOW_MIN` — fires when the latest value falls below `*Min`. Common use: heater on temp, humidifier on humidity, CO2 injector on CO2. **Requires a non-null `watchedSensorType`.**
+    - `ALWAYS_ON` — pins the device to ON within the rule's scope (phase or cycle) and current period (or both, if `period` is null). Enforced by the automation scheduler's 60s tick. `action` must be `ON`; `watchedSensorType` must be null.
+    - `ALWAYS_OFF` — same as `ALWAYS_ON` but for OFF. `action` must be `OFF`; `watchedSensorType` must be null.
+    - `SCHEDULE_ON` / `SCHEDULE_OFF` — remain in the schema for backward compatibility but are rejected at the API layer (`POST`/`PUT` return 400). They have no remaining consumer.
   - `DeviceAction` enum: `ON` | `OFF`.
   - `cooldownSeconds` (default 180) suppresses repeated firings of the same rule. `enabled` lets the user pause without deletion.
-- **Automation engine** (`src/automation/evaluator.ts`): every persisted telemetry row is checked against enabled rules whose `watchedSensorType` matches the reading. Hysteresis is enforced by reading the latest `DeviceStateLog` row for the device — the engine never issues a command that matches the device's already-confirmed state.
-- **Light scheduler** (`src/automation/scheduler.ts`): a 60-second tick. For each controller with an active grow cycle, it resolves the current period from the active phase's `dayStartMinutes` / `dayDurationMinutes`, finds `SCHEDULE_ON` / `SCHEDULE_OFF` rules, compares against the device's latest confirmed state, and issues the command if needed.
-- **Device state handler** (`src/mqtt-handlers/device-state-handler.ts`): the Pi publishes `devices/<id>/state` whenever a relay actually changes. The server reconciles `Device.isActive` and appends a `DeviceStateLog source:"AUTO" reason:"state confirmed"` row, which becomes the source of truth for the evaluator's hysteresis check.
+- **Automation engine** (`src/automation/evaluator.ts`): every persisted telemetry row is checked against enabled rules whose `watchedSensorType` matches the reading. Hysteresis is enforced by reading the latest `DeviceStateLog` row for the device — the engine never issues a command that matches the device's already-confirmed state. The query also filters out `device.type = LIGHT` as a defensive measure against any pre-existing rule rows. **Per-device suppression:** an enabled `ALWAYS_ON` / `ALWAYS_OFF` rule covering `(device, scope, period)` skips evaluation of `ABOVE_MAX` / `BELOW_MIN` rules for that same `(device, scope, period)`. The pin itself is enforced by the scheduler, not the evaluator.
+- **Automation scheduler** (`src/automation/scheduler.ts`): a 60-second tick. Two responsibilities:
+  1. **Light driving** — for each controller with an active grow cycle, resolves the current day/night period from the active phase's `dayStartMinutes` / `dayDurationMinutes`, finds every `LIGHT` device on that controller, respects its `automationMode` (`MANUAL` skipped; `ALWAYS_ON` never turned OFF; `ALWAYS_OFF` never turned ON; otherwise toggled to match the period), and issues the command if it differs from the device's latest confirmed state. No `AutomationRule` rows are consulted for lights.
+  2. **ALWAYS_* enforcement** — for each enabled `ALWAYS_ON` / `ALWAYS_OFF` rule scoped to the active phase or cycle and matching the current period (or `period: null`), issues the rule's action to the target device. Device-level `automationMode` always wins: `MANUAL` is skipped; `ALWAYS_ON` / `ALWAYS_OFF` on the device block the opposite action. LIGHT devices are skipped defensively.
+- **Device state handler** (`src/mqtt-handlers/device-state-handler.ts`): the Pi publishes `devices/<id>/state` whenever a relay actually changes. The server reconciles `Device.isActive` and appends a `DeviceStateLog source:"AUTO" reason:"state confirmed"` row, which becomes the source of truth for the scheduler's and evaluator's hysteresis check.
 - No-op when no active grow cycle exists — telemetry is still persisted, but rules never fire.

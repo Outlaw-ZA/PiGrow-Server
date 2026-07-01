@@ -269,6 +269,13 @@ export type StringNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedStringNullableFilter<$PrismaModel> | string | null
 }
 
+export type EnumSensorTypeNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.SensorType | Prisma.EnumSensorTypeFieldRefInput<$PrismaModel> | null
+  in?: $Enums.SensorType[] | Prisma.ListEnumSensorTypeFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.SensorType[] | Prisma.ListEnumSensorTypeFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumSensorTypeNullableFilter<$PrismaModel> | $Enums.SensorType | null
+}
+
 export type EnumDayNightPeriodNullableFilter<$PrismaModel = never> = {
   equals?: $Enums.DayNightPeriod | Prisma.EnumDayNightPeriodFieldRefInput<$PrismaModel> | null
   in?: $Enums.DayNightPeriod[] | Prisma.ListEnumDayNightPeriodFieldRefInput<$PrismaModel> | null
@@ -306,6 +313,16 @@ export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedStringNullableFilter<$PrismaModel>
   _max?: Prisma.NestedStringNullableFilter<$PrismaModel>
+}
+
+export type EnumSensorTypeNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.SensorType | Prisma.EnumSensorTypeFieldRefInput<$PrismaModel> | null
+  in?: $Enums.SensorType[] | Prisma.ListEnumSensorTypeFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.SensorType[] | Prisma.ListEnumSensorTypeFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumSensorTypeNullableWithAggregatesFilter<$PrismaModel> | $Enums.SensorType | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumSensorTypeNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumSensorTypeNullableFilter<$PrismaModel>
 }
 
 export type EnumDayNightPeriodNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -634,6 +651,13 @@ export type NestedStringNullableFilter<$PrismaModel = never> = {
   not?: Prisma.NestedStringNullableFilter<$PrismaModel> | string | null
 }
 
+export type NestedEnumSensorTypeNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.SensorType | Prisma.EnumSensorTypeFieldRefInput<$PrismaModel> | null
+  in?: $Enums.SensorType[] | Prisma.ListEnumSensorTypeFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.SensorType[] | Prisma.ListEnumSensorTypeFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumSensorTypeNullableFilter<$PrismaModel> | $Enums.SensorType | null
+}
+
 export type NestedEnumDayNightPeriodNullableFilter<$PrismaModel = never> = {
   equals?: $Enums.DayNightPeriod | Prisma.EnumDayNightPeriodFieldRefInput<$PrismaModel> | null
   in?: $Enums.DayNightPeriod[] | Prisma.ListEnumDayNightPeriodFieldRefInput<$PrismaModel> | null
@@ -670,6 +694,16 @@ export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
   _min?: Prisma.NestedStringNullableFilter<$PrismaModel>
   _max?: Prisma.NestedStringNullableFilter<$PrismaModel>
+}
+
+export type NestedEnumSensorTypeNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.SensorType | Prisma.EnumSensorTypeFieldRefInput<$PrismaModel> | null
+  in?: $Enums.SensorType[] | Prisma.ListEnumSensorTypeFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.SensorType[] | Prisma.ListEnumSensorTypeFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumSensorTypeNullableWithAggregatesFilter<$PrismaModel> | $Enums.SensorType | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumSensorTypeNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumSensorTypeNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumDayNightPeriodNullableWithAggregatesFilter<$PrismaModel = never> = {

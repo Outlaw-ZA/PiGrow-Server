@@ -16,8 +16,8 @@ PiGrow's automation engine drives a controller's physical relays from three piec
 
 The engine itself is split into two paths:
 
-- **Light scheduler** (`SCHEDULE_ON` / `SCHEDULE_OFF` rules): 60-second tick that compares the current day/night period against a device's latest confirmed state.
-- **Threshold evaluator** (`ABOVE_MAX` / `BELOW_MIN` rules): runs on every persisted telemetry row; for the active phase + current period, reads `PhaseEnvironment.*Max` / `*Min` for the watched sensor type and fires the rule's action if the latest reading crosses the boundary.
+- **Automation scheduler** (60-second tick): resolves the current day/night period from the active grow phase's clock schedule and (a) drives every `LIGHT` device on the controller to match the period, and (b) enforces enabled `ALWAYS_ON` / `ALWAYS_OFF` rules scoped to the active phase or cycle. Device-level `automationMode` (e.g. `MANUAL`, `ALWAYS_ON`) is the global override and always wins.
+- **Threshold evaluator** (`ABOVE_MAX` / `BELOW_MIN` rules): runs on every persisted telemetry row; for the active phase + current period, reads `PhaseEnvironment.*Max` / `*Min` for the watched sensor type and fires the rule's action if the latest reading crosses the boundary. If an enabled `ALWAYS_ON` / `ALWAYS_OFF` rule covers the same `(device, scope, period)`, threshold rules for that device in that scope + period are suppressed.
 
 Both paths consult the latest `DeviceStateLog` row for a device to enforce hysteresis — they never issue a command that matches the device's already-confirmed state. Closed-loop feedback is delivered by the Pi publishing `devices/<id>/state`; that handler reconciles `Device.isActive` and writes a `DeviceStateLog source:"AUTO"` row that becomes the source of truth for the next evaluation.
 
@@ -618,16 +618,25 @@ A rule watches one sensor type and fires one device action when its condition is
 }
 ```
 
-`RuleCondition` is one of:
+`RuleCondition` is one of the following accepted values:
 
 | Value | When it fires | Engine consults |
 |---|---|---|
-| `"ABOVE_MAX"` | Latest telemetry value for `watchedSensorType` exceeds the active phase's `PhaseEnvironment.*Max` for the current period. | `PhaseEnvironment.tempMax / humidityMax / co2Max` (matching sensor type). |
-| `"BELOW_MIN"` | Latest telemetry value for `watchedSensorType` falls below the active phase's `PhaseEnvironment.*Min` for the current period. | `PhaseEnvironment.tempMin / humidityMin / co2Min`. |
-| `"SCHEDULE_ON"` | At `dayStartMinutes` (start of `DAY`). | Active phase's clock schedule. |
-| `"SCHEDULE_OFF"` | At `dayStartMinutes + dayDurationMinutes` (start of `NIGHT`). | Active phase's clock schedule. |
+| `"ABOVE_MAX"` | Latest telemetry value for `watchedSensorType` exceeds the active phase's `PhaseEnvironment.*Max` for the current period. | `PhaseEnvironment.tempMax / humidityMax / co2Max` (matching sensor type). Requires `watchedSensorType`. |
+| `"BELOW_MIN"` | Latest telemetry value for `watchedSensorType` falls below the active phase's `PhaseEnvironment.*Min` for the current period. | `PhaseEnvironment.tempMin / humidityMin / co2Min`. Requires `watchedSensorType`. |
+| `"ALWAYS_ON"` | Pins the device to `ON` within the rule's scope (phase or cycle) and current period (or both, if `period` is null). Enforced by the automation scheduler on its 60s tick. | None (no threshold consulted). Requires `action: "ON"`; requires `watchedSensorType: null`. |
+| `"ALWAYS_OFF"` | Pins the device to `OFF` within the rule's scope and current period (or both, if `period` is null). Enforced by the automation scheduler on its 60s tick. | None. Requires `action: "OFF"`; requires `watchedSensorType: null`. |
 
-Cooldown is checked against `now - lastTriggeredAt` for the same rule (default 180s). A `null` period is treated as "applies in both `DAY` and `NIGHT`". For `SCHEDULE_ON` / `SCHEDULE_OFF` the server's evaluation period is `period` itself (must be `DAY` or `NIGHT` — using `null` for schedule rules is invalid and rejected with `400`).
+`"SCHEDULE_ON"` and `"SCHEDULE_OFF"` exist in the schema for backward compatibility but are rejected at the API layer (`400`). Light scheduling is driven directly by the grow-phase clock — there is no automation rule representation of "light on at day start" anymore, and LIGHT devices are not eligible for automation rules.
+
+**Suppression:** an enabled `ALWAYS_ON` / `ALWAYS_OFF` rule covering `(device, scope, period)` suppresses any `ABOVE_MAX` / `BELOW_MIN` rule for that same `(device, scope, period)` on the threshold evaluator path. The pin itself is enforced by the scheduler.
+
+**Precedence:** device-level `Device.automationMode` is the global override and always wins over rule-level behavior:
+- `MANUAL` — rules never drive the device (neither threshold nor ALWAYS_*).
+- `ALWAYS_ON` — never issues `OFF`, even if a rule says `ALWAYS_OFF`.
+- `ALWAYS_OFF` — never issues `ON`, even if a rule says `ALWAYS_ON`.
+
+Cooldown is checked against `now - lastTriggeredAt` for the same rule (default 180s). A `null` period is treated as "applies in both `DAY` and `NIGHT`".
 
 ### `GET /api/automation-rules/grow-cycle/:growCycleId`
 List all rules scoped to a grow cycle (cycle-level rules only — does not include rules scoped to a phase within that cycle).
@@ -656,9 +665,9 @@ Create a rule.
   growCycleId?: string;            // exactly one of these must be set
   growPhaseId?: string;
   deviceId: string;
-  watchedSensorType: SensorType;   // TEMPERATURE | HUMIDITY | CO2 | PH | EC
-  period?: "DAY" | "NIGHT";        // null = both. Required for SCHEDULE_ON / SCHEDULE_OFF.
-  condition: RuleCondition;        // ABOVE_MAX | BELOW_MIN | SCHEDULE_ON | SCHEDULE_OFF
+  watchedSensorType?: SensorType | null; // required for ABOVE_MAX/BELOW_MIN; null for ALWAYS_*
+  period?: "DAY" | "NIGHT" | null;        // null = both
+  condition: RuleCondition;        // ABOVE_MAX | BELOW_MIN | ALWAYS_ON | ALWAYS_OFF
   action: "ON" | "OFF";
   cooldownSeconds?: number;        // default 180
   enabled?: boolean;               // default true
@@ -675,7 +684,7 @@ Update a rule. All fields except `id` are optional; only provided fields are upd
 ```ts
 {
   deviceId?: string;
-  watchedSensorType?: SensorType;
+  watchedSensorType?: SensorType | null;
   period?: "DAY" | "NIGHT" | null;
   condition?: RuleCondition;
   action?: "ON" | "OFF";
@@ -817,7 +826,7 @@ type SensorProtocol = "I2C" | "SPI" | "UART" | "RS485";
 
 type DayNightPeriod = "DAY" | "NIGHT";
 
-type RuleCondition = "ABOVE_MAX" | "BELOW_MIN" | "SCHEDULE_ON" | "SCHEDULE_OFF";
+type RuleCondition = "ABOVE_MAX" | "BELOW_MIN" | "ALWAYS_ON" | "ALWAYS_OFF"; // SCHEDULE_ON / SCHEDULE_OFF exist in the schema for backward compat but are rejected at the API layer
 
 type DeviceAction = "ON" | "OFF";
 
@@ -892,7 +901,7 @@ interface AutomationRule {
   growCycleId: string | null;     // exactly one of (growCycleId, growPhaseId) is non-null
   growPhaseId: string | null;
   deviceId: string;
-  watchedSensorType: SensorType;
+  watchedSensorType: SensorType | null; // null for ALWAYS_ON / ALWAYS_OFF rules
   period: DayNightPeriod | null;  // null = applies in both
   condition: RuleCondition;
   action: DeviceAction;
@@ -955,7 +964,8 @@ Every ON/OFF command issued to a device is recorded in the `DeviceStateLog` tabl
 |---|---|---|
 | `POST /api/devices/:id/command` | `MANUAL` | Caller invokes the REST command endpoint. State update and log write commit in a single transaction. |
 | Socket.IO `ui_command` event | `UI` | Frontend dashboard sends a toggle. Log is written fire-and-forget (errors are logged but do not affect the MQTT publish). |
-| Light scheduler (60s tick) | `AUTO` | A `SCHEDULE_ON` or `SCHEDULE_OFF` rule fires for the current day/night boundary. `reason` is e.g. `"day cycle start"`. |
+| Light scheduler (60s tick) | `AUTO` | The light scheduler drives a `LIGHT` device to match the current day/night period of the active grow phase. `reason` is e.g. `"day cycle start"`. |
+| Automation scheduler — ALWAYS_* (60s tick) | `AUTO` | An enabled `ALWAYS_ON` / `ALWAYS_OFF` rule is enforced for the active phase/cycle + current period. `reason` is e.g. `"ALWAYS_ON rule (<id>)"`. |
 | Threshold evaluator (telemetry-driven) | `AUTO` | An `ABOVE_MAX` or `BELOW_MIN` rule fires. `reason` is e.g. `"temp 31.2°C > max 28°C (DAY)"`. |
 | Device state feedback handler | `AUTO` | The Pi publishes a `devices/<id>/state` confirmation. `reason` is `"state confirmed"`. This row is the source of truth for the evaluator's hysteresis check on subsequent ticks. |
 
@@ -987,7 +997,7 @@ There is currently no read endpoint for `DeviceStateLog` — query the table dir
   - `HUMIDIFIER` → `BELOW_MIN` on `HUMIDITY` → `ON`.
   - `DEHUMIDIFIER` → `ABOVE_MAX` on `HUMIDITY` → `ON`.
   - `CO2_INJECTOR` → `BELOW_MIN` on `CO2` → `ON` (typically scoped to `period: "DAY"`).
-  - `LIGHT` → `SCHEDULE_ON` at `dayStartMinutes` → `ON`, plus `SCHEDULE_OFF` at `dayStartMinutes + dayDurationMinutes` → `OFF`.
+  - `LIGHT` → **no automation rule needed**. Light scheduling is automatic from the grow-phase clock; configure the phase's `dayStartMinutes` / `dayDurationMinutes` instead.
 
 ### 4. MQTT topics (firmware contract)
 

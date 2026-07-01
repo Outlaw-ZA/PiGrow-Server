@@ -15,7 +15,7 @@ import sensorRoutes from "./api/modules/sensors/sensors.routes.js";
 import telemetryRoutes from "./api/modules/telemetry/telemetry.routes.js";
 import { mqttClient, MQTT_BROKER_URL } from "./mqtt/client.js";
 import { prisma } from "./prisma.js";
-import { lightScheduler } from "./automation/scheduler.js";
+import { automationScheduler } from "./automation/scheduler.js";
 
 // 1. Initialize Fastify and register CORS for the Frontend
 const fastify = Fastify({
@@ -130,8 +130,8 @@ await fastify.register(sensorRoutes);
 await fastify.register(telemetryRoutes);
 
 // 5. Start the automation scheduler (60s tick)
-lightScheduler.start();
-const stopScheduler = () => lightScheduler.stop();
+automationScheduler.start();
+const stopScheduler = () => automationScheduler.stop();
 fastify.addHook("onClose", stopScheduler);
 
 // 6. Start Fastify (Listen on Port 4000 for both REST and Socket.io traffic)

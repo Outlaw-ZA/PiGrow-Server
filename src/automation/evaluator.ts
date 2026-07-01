@@ -120,6 +120,9 @@ export async function evaluateThresholds({
       enabled: true,
       condition: { in: ["ABOVE_MAX", "BELOW_MIN"] },
       watchedSensorType: sensorType,
+      // LIGHT devices are not eligible for automation rules; this filter is
+      // defensive in case a stale row exists from before that constraint.
+      device: { type: { not: "LIGHT" } },
       OR: [
         { growPhaseId: activePhase.id, growCycleId: null },
         { growCycleId: cycle.id, growPhaseId: null },
@@ -133,8 +136,31 @@ export async function evaluateThresholds({
     include: { device: true },
   });
 
+  // Per-device suppression: if an enabled ALWAYS_ON / ALWAYS_OFF rule covers
+  // this device within the active scope + current period, threshold rules for
+  // that same (device, scope, period) are skipped. The ALWAYS_* rule itself
+  // is enforced by the automation scheduler on its 60s tick.
+  const alwaysRules = await prisma.automationRule.findMany({
+    where: {
+      enabled: true,
+      condition: { in: ["ALWAYS_ON", "ALWAYS_OFF"] },
+      OR: [
+        { growPhaseId: activePhase.id, growCycleId: null },
+        { growCycleId: cycle.id, growPhaseId: null },
+      ],
+      AND: [{ OR: [{ period }, { period: null }] }],
+    },
+    select: { deviceId: true, period: true },
+  });
+  const pinnedDeviceIds = new Set(alwaysRules.map((r) => r.deviceId));
+
   for (const rule of rules) {
     if (rule.period !== null && rule.period !== period) continue;
+
+    // Suppression: an enabled ALWAYS_* rule for this device + scope + period
+    // pins the device; threshold rules for that device in that scope + period
+    // are skipped. The pin is enforced by the automation scheduler.
+    if (pinnedDeviceIds.has(rule.deviceId)) continue;
 
     if (!rule.device) continue;
     if (rule.device.automationMode === "MANUAL") continue;

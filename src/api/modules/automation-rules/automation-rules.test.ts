@@ -94,7 +94,7 @@ describe("Automation Rules API Feature Module", () => {
     await teardownTestApp(app);
   });
 
-  test("POST /api/automation-rules - Should create a phase-scoped light-schedule rule", async () => {
+  test("POST /api/automation-rules - Should reject a rule targeting a LIGHT device", async () => {
     const response = await app.inject({
       method: "POST",
       url: "/api/automation-rules",
@@ -103,19 +103,52 @@ describe("Automation Rules API Feature Module", () => {
         deviceId: lightId,
         watchedSensorType: "TEMPERATURE",
         period: "DAY",
+        condition: "ABOVE_MAX",
+        action: "ON",
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 400);
+    assert.match(body.error, /LIGHT devices are not eligible/);
+  });
+
+  test("POST /api/automation-rules - Should reject SCHEDULE_ON condition on any device", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/automation-rules",
+      payload: {
+        growPhaseId,
+        deviceId: fanId,
+        watchedSensorType: "TEMPERATURE",
+        period: "DAY",
         condition: "SCHEDULE_ON",
         action: "ON",
       },
     });
 
     const body = JSON.parse(response.body);
-    assert.equal(response.statusCode, 201);
-    assert.equal(body.growPhaseId, growPhaseId);
-    assert.equal(body.growCycleId, null);
-    assert.equal(body.condition, "SCHEDULE_ON");
-    assert.equal(body.action, "ON");
-    assert.equal(body.cooldownSeconds, 180);
-    assert.equal(body.enabled, true);
+    assert.equal(response.statusCode, 400);
+    assert.match(body.error, /SCHEDULE_ON\/SCHEDULE_OFF conditions are no longer supported/);
+  });
+
+  test("POST /api/automation-rules - Should reject SCHEDULE_OFF condition on any device", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/automation-rules",
+      payload: {
+        growPhaseId,
+        deviceId: fanId,
+        watchedSensorType: "TEMPERATURE",
+        period: "NIGHT",
+        condition: "SCHEDULE_OFF",
+        action: "OFF",
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 400);
+    assert.match(body.error, /SCHEDULE_ON\/SCHEDULE_OFF conditions are no longer supported/);
   });
 
   test("POST /api/automation-rules - Should reject when both growCycleId and growPhaseId are set", async () => {
@@ -152,25 +185,6 @@ describe("Automation Rules API Feature Module", () => {
     const body = JSON.parse(response.body);
     assert.equal(response.statusCode, 400);
     assert.match(body.error, /Exactly one/);
-  });
-
-  test("POST /api/automation-rules - Should reject SCHEDULE_ON with a null period", async () => {
-    const response = await app.inject({
-      method: "POST",
-      url: "/api/automation-rules",
-      payload: {
-        growPhaseId,
-        deviceId: lightId,
-        watchedSensorType: "TEMPERATURE",
-        period: null,
-        condition: "SCHEDULE_ON",
-        action: "ON",
-      },
-    });
-
-    const body = JSON.parse(response.body);
-    assert.equal(response.statusCode, 400);
-    assert.match(body.error, /requires a period/);
   });
 
   test("POST /api/automation-rules - Should create a phase-scoped threshold rule (fan ABOVE_MAX on temp)", async () => {
@@ -216,7 +230,7 @@ describe("Automation Rules API Feature Module", () => {
     });
     const body = JSON.parse(response.body);
     assert.equal(response.statusCode, 200);
-    assert.equal(body.length, 3);
+    assert.equal(body.length, 2);
   });
 
   test("GET /api/automation-rules/grow-cycle/:id - Should list cycle-scoped rules (none in this suite)", async () => {
@@ -278,25 +292,232 @@ describe("Automation Rules API Feature Module", () => {
     assert.equal(body.cooldownSeconds, 600);
   });
 
-  test("PUT /api/automation-rules/:id - Should reject when changing period to null on a SCHEDULE_ON rule", async () => {
+  test("PUT /api/automation-rules/:id - Should reject updating deviceId to a LIGHT device", async () => {
     const list = await prismaClient.automationRule.findFirst({
-      where: { condition: "SCHEDULE_ON" },
+      where: { deviceId: heaterId },
     });
 
     const response = await app.inject({
       method: "PUT",
       url: `/api/automation-rules/${list.id}`,
-      payload: { period: null },
+      payload: { deviceId: lightId },
     });
     const body = JSON.parse(response.body);
     assert.equal(response.statusCode, 400);
-    assert.match(body.error, /requires a period/);
+    assert.match(body.error, /LIGHT devices are not eligible/);
+
+    // Confirm the rule was not mutated.
+    const after = await prismaClient.automationRule.findUnique({
+      where: { id: list.id },
+    });
+    assert.equal(after.deviceId, heaterId);
+  });
+
+  test("PUT /api/automation-rules/:id - Should reject updating condition to SCHEDULE_OFF", async () => {
+    const list = await prismaClient.automationRule.findFirst({
+      where: { deviceId: fanId },
+    });
+
+    const response = await app.inject({
+      method: "PUT",
+      url: `/api/automation-rules/${list.id}`,
+      payload: { condition: "SCHEDULE_OFF" },
+    });
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 400);
+    assert.match(body.error, /SCHEDULE_ON\/SCHEDULE_OFF conditions are no longer supported/);
+
+    // Confirm the rule's condition was not mutated.
+    const after = await prismaClient.automationRule.findUnique({
+      where: { id: list.id },
+    });
+    assert.equal(after.condition, "ABOVE_MAX");
+  });
+
+  // ---------- ALWAYS_ON / ALWAYS_OFF rule conditions ----------
+
+  test("POST /api/automation-rules - Should create an ALWAYS_ON rule (no sensor type, action ON)", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/automation-rules",
+      payload: {
+        growPhaseId,
+        deviceId: heaterId,
+        watchedSensorType: null,
+        period: null,
+        condition: "ALWAYS_ON",
+        action: "ON",
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 201);
+    assert.equal(body.condition, "ALWAYS_ON");
+    assert.equal(body.action, "ON");
+    assert.equal(body.watchedSensorType, null);
+    assert.equal(body.period, null);
+  });
+
+  test("POST /api/automation-rules - Should create an ALWAYS_OFF rule scoped to NIGHT", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/automation-rules",
+      payload: {
+        growPhaseId,
+        deviceId: fanId,
+        watchedSensorType: null,
+        period: "NIGHT",
+        condition: "ALWAYS_OFF",
+        action: "OFF",
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 201);
+    assert.equal(body.condition, "ALWAYS_OFF");
+    assert.equal(body.action, "OFF");
+    assert.equal(body.period, "NIGHT");
+  });
+
+  test("POST /api/automation-rules - Should reject ALWAYS_ON with a mismatched action", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/automation-rules",
+      payload: {
+        growPhaseId,
+        deviceId: fanId,
+        watchedSensorType: null,
+        condition: "ALWAYS_ON",
+        action: "OFF",
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 400);
+    assert.match(body.error, /action must be ON for condition ALWAYS_ON/);
+  });
+
+  test("POST /api/automation-rules - Should reject ALWAYS_OFF with a mismatched action", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/automation-rules",
+      payload: {
+        growPhaseId,
+        deviceId: fanId,
+        watchedSensorType: null,
+        condition: "ALWAYS_OFF",
+        action: "ON",
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 400);
+    assert.match(body.error, /action must be OFF for condition ALWAYS_OFF/);
+  });
+
+  test("POST /api/automation-rules - Should reject ALWAYS_ON with a watchedSensorType set", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/automation-rules",
+      payload: {
+        growPhaseId,
+        deviceId: fanId,
+        watchedSensorType: "TEMPERATURE",
+        condition: "ALWAYS_ON",
+        action: "ON",
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 400);
+    assert.match(body.error, /watchedSensorType must be null for ALWAYS_ON \/ ALWAYS_OFF rules/);
+  });
+
+  test("POST /api/automation-rules - Should reject ABOVE_MAX with a null watchedSensorType", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/automation-rules",
+      payload: {
+        growPhaseId,
+        deviceId: fanId,
+        watchedSensorType: null,
+        condition: "ABOVE_MAX",
+        action: "ON",
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 400);
+    assert.match(body.error, /watchedSensorType is required for ABOVE_MAX \/ BELOW_MIN rules/);
+  });
+
+  test("POST /api/automation-rules - Should reject an ALWAYS_ON rule targeting a LIGHT device", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/automation-rules",
+      payload: {
+        growPhaseId,
+        deviceId: lightId,
+        watchedSensorType: null,
+        condition: "ALWAYS_ON",
+        action: "ON",
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 400);
+    assert.match(body.error, /LIGHT devices are not eligible/);
+  });
+
+  test("PUT /api/automation-rules/:id - Should reject changing a threshold rule to ALWAYS_OFF without clearing watchedSensorType", async () => {
+    const list = await prismaClient.automationRule.findFirst({
+      where: { deviceId: heaterId, condition: "BELOW_MIN" },
+    });
+    assert.ok(list, "heater BELOW_MIN rule should exist from earlier test");
+
+    const response = await app.inject({
+      method: "PUT",
+      url: `/api/automation-rules/${list.id}`,
+      payload: { condition: "ALWAYS_OFF", action: "OFF" },
+    });
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 400);
+    assert.match(body.error, /watchedSensorType must be null for ALWAYS_ON \/ ALWAYS_OFF rules/);
+
+    // Confirm the rule was not mutated.
+    const after = await prismaClient.automationRule.findUnique({
+      where: { id: list.id },
+    });
+    assert.equal(after.condition, "BELOW_MIN");
+  });
+
+  test("PUT /api/automation-rules/:id - Should allow converting a threshold rule to ALWAYS_ON (clearing watchedSensorType)", async () => {
+    const list = await prismaClient.automationRule.findFirst({
+      where: { deviceId: heaterId, condition: "BELOW_MIN" },
+    });
+    assert.ok(list, "heater BELOW_MIN rule should still exist from earlier test");
+
+    const response = await app.inject({
+      method: "PUT",
+      url: `/api/automation-rules/${list.id}`,
+      payload: {
+        condition: "ALWAYS_ON",
+        action: "ON",
+        watchedSensorType: null,
+      },
+    });
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 200);
+    assert.equal(body.condition, "ALWAYS_ON");
+    assert.equal(body.action, "ON");
+    assert.equal(body.watchedSensorType, null);
   });
 
   test("DELETE /api/automation-rules/:id - Should remove a rule", async () => {
     const list = await prismaClient.automationRule.findFirst({
       where: { deviceId: heaterId },
     });
+    assert.ok(list);
 
     const response = await app.inject({
       method: "DELETE",

@@ -69,6 +69,8 @@ export type DayNightPeriod = (typeof DayNightPeriod)[keyof typeof DayNightPeriod
 export const RuleCondition = {
   ABOVE_MAX: 'ABOVE_MAX',
   BELOW_MIN: 'BELOW_MIN',
+  ALWAYS_ON: 'ALWAYS_ON',
+  ALWAYS_OFF: 'ALWAYS_OFF',
   SCHEDULE_ON: 'SCHEDULE_ON',
   SCHEDULE_OFF: 'SCHEDULE_OFF'
 } as const
