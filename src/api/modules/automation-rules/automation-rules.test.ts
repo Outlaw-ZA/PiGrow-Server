@@ -84,8 +84,12 @@ describe("Automation Rules API Feature Module", () => {
   });
 
   after(async () => {
-    await prismaClient.automationRule.deleteMany({});
-    await prismaClient.deviceStateLog.deleteMany({});
+    await prismaClient.automationRule.deleteMany({
+      where: { device: { controllerId } },
+    });
+    await prismaClient.deviceStateLog.deleteMany({
+      where: { device: { controllerId } },
+    });
     await prismaClient.device.deleteMany({ where: { controllerId } });
     await prismaClient.growCycle.deleteMany({
       where: { controller: { macAddress: mac } },
@@ -448,7 +452,7 @@ describe("Automation Rules API Feature Module", () => {
 
     const body = JSON.parse(response.body);
     assert.equal(response.statusCode, 400);
-    assert.match(body.error, /watchedSensorType is required for ABOVE_MAX \/ BELOW_MIN rules/);
+    assert.match(body.error, /watchedSensorType is required for threshold conditions/);
   });
 
   test("POST /api/automation-rules - Should reject an ALWAYS_ON rule targeting a LIGHT device", async () => {
@@ -524,5 +528,84 @@ describe("Automation Rules API Feature Module", () => {
       url: `/api/automation-rules/${list.id}`,
     });
     assert.equal(response.statusCode, 204);
+  });
+
+  // ---------- ABOVE_MIN / BELOW_MAX / ABOVE_TARGET / BELOW_TARGET rule conditions ----------
+
+  test("POST /api/automation-rules - Should create a rule with BELOW_MAX condition", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/automation-rules",
+      payload: {
+        growPhaseId,
+        deviceId: fanId,
+        watchedSensorType: "TEMPERATURE",
+        period: "DAY",
+        condition: "BELOW_MAX",
+        action: "OFF",
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 201);
+    assert.equal(body.condition, "BELOW_MAX");
+    assert.equal(body.action, "OFF");
+  });
+
+  test("POST /api/automation-rules - Should create a rule with ABOVE_MIN condition", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/automation-rules",
+      payload: {
+        growPhaseId,
+        deviceId: heaterId,
+        watchedSensorType: "TEMPERATURE",
+        period: "NIGHT",
+        condition: "ABOVE_MIN",
+        action: "OFF",
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 201);
+    assert.equal(body.condition, "ABOVE_MIN");
+  });
+
+  test("POST /api/automation-rules - Should create a rule with ABOVE_TARGET condition", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/automation-rules",
+      payload: {
+        growPhaseId,
+        deviceId: fanId,
+        watchedSensorType: "TEMPERATURE",
+        period: "DAY",
+        condition: "ABOVE_TARGET",
+        action: "ON",
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 201);
+    assert.equal(body.condition, "ABOVE_TARGET");
+  });
+
+  test("POST /api/automation-rules - Should create a rule with BELOW_TARGET condition", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/automation-rules",
+      payload: {
+        growPhaseId,
+        deviceId: heaterId,
+        watchedSensorType: "TEMPERATURE",
+        period: "NIGHT",
+        condition: "BELOW_TARGET",
+        action: "ON",
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 201);
+    assert.equal(body.condition, "BELOW_TARGET");
   });
 });

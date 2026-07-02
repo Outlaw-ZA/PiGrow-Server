@@ -50,7 +50,8 @@ export class AutomationRulesController {
   //     the grow-phase clock, so schedule conditions can never fire)
   //   - for ALWAYS_ON / ALWAYS_OFF, action must match the condition
   //   - for ALWAYS_ON / ALWAYS_OFF, watchedSensorType must be null
-  //   - for ABOVE_MAX / BELOW_MIN, watchedSensorType must be set
+  //   - for any threshold condition (ABOVE_MAX / BELOW_MIN / ABOVE_MIN /
+  //     BELOW_MAX / ABOVE_TARGET / BELOW_TARGET), watchedSensorType must be set
   private validateScopeAndPeriod(input: {
     growCycleId?: string | null;
     growPhaseId?: string | null;
@@ -93,13 +94,13 @@ export class AutomationRulesController {
         );
       }
     } else {
-      // ABOVE_MAX / BELOW_MIN
+      // ABOVE_MAX / BELOW_MIN / ABOVE_MIN / BELOW_MAX / ABOVE_TARGET / BELOW_TARGET
       if (
         input.watchedSensorType === undefined ||
         input.watchedSensorType === null
       ) {
         throw new AutomationRulesError(
-          "watchedSensorType is required for ABOVE_MAX / BELOW_MIN rules",
+          "watchedSensorType is required for threshold conditions (ABOVE_MAX, BELOW_MIN, ABOVE_MIN, BELOW_MAX, ABOVE_TARGET, BELOW_TARGET)",
         );
       }
     }

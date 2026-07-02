@@ -13,14 +13,20 @@ const PeriodEnum = Type.Union([
   Type.Literal("DAY"),
   Type.Literal("NIGHT"),
 ]);
-// At the API layer ABOVE_MAX / BELOW_MIN / ALWAYS_ON / ALWAYS_OFF are accepted.
-// SCHEDULE_ON / SCHEDULE_OFF still exist in the enum for backward compatibility
-// but are rejected at the controller with a specific 400 message. We list them
-// here so TypeBox passes the request through to the controller (where the
-// application-level rejection is what the FE should see and render).
+// At the API layer all six threshold conditions (ABOVE_MAX / BELOW_MIN /
+// ABOVE_MIN / BELOW_MAX / ABOVE_TARGET / BELOW_TARGET) and ALWAYS_ON /
+// ALWAYS_OFF are accepted. SCHEDULE_ON / SCHEDULE_OFF still exist in the
+// enum for backward compatibility but are rejected at the controller with a
+// specific 400 message. We list them here so TypeBox passes the request
+// through to the controller (where the application-level rejection is what
+// the FE should see and render).
 const AcceptedRuleConditionEnum = Type.Union([
   Type.Literal("ABOVE_MAX"),
   Type.Literal("BELOW_MIN"),
+  Type.Literal("ABOVE_MIN"),
+  Type.Literal("BELOW_MAX"),
+  Type.Literal("ABOVE_TARGET"),
+  Type.Literal("BELOW_TARGET"),
   Type.Literal("ALWAYS_ON"),
   Type.Literal("ALWAYS_OFF"),
   Type.Literal("SCHEDULE_ON"),

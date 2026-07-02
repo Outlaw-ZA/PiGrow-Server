@@ -100,9 +100,15 @@ describe("Automation engine", () => {
   });
 
   after(async () => {
-    await prismaClient.automationRule.deleteMany({});
-    await prismaClient.deviceStateLog.deleteMany({});
-    await prismaClient.phaseEnvironment.deleteMany({});
+    await prismaClient.automationRule.deleteMany({
+      where: { device: { controllerId } },
+    });
+    await prismaClient.deviceStateLog.deleteMany({
+      where: { device: { controllerId } },
+    });
+    await prismaClient.phaseEnvironment.deleteMany({
+      where: { growPhase: { growCycle: { controllerId } } },
+    });
     await prismaClient.device.deleteMany({ where: { controllerId } });
     await prismaClient.telemetry.deleteMany({ where: { growCycleId } });
     await prismaClient.sensor.deleteMany({ where: { controllerId } });
@@ -246,6 +252,166 @@ describe("Automation engine", () => {
     assert.ok(log);
     assert.equal(log.action, "ON");
     assert.match(log.reason ?? "", /TEMP.*17.*min 19/);
+  });
+
+  // ---------- ABOVE_MIN / BELOW_MAX / ABOVE_TARGET / BELOW_TARGET rule conditions ----------
+
+  test("evaluator - BELOW_MAX rule fires when telemetry value drops below the active DAY tempMax", async () => {
+    // Reuse the DAY env created by the ABOVE_MAX test (tempMax=28, tempMin=22).
+    // Clear the fan's prior state and ALL its prior rules so the only rule
+    // that can fire is the one this test creates (hysteresis + rule isolation).
+    await prismaClient.deviceStateLog.deleteMany({ where: { deviceId: fanId } });
+    await prismaClient.automationRule.deleteMany({
+      where: { deviceId: fanId },
+    });
+    await prismaClient.automationRule.create({
+      data: {
+        growPhaseId,
+        deviceId: fanId,
+        watchedSensorType: "TEMPERATURE",
+        period: "DAY",
+        condition: "BELOW_MAX",
+        action: "ON",
+        cooldownSeconds: 0,
+      },
+    });
+
+    // 27°C at noon (DAY for 18/6 starting at 06:00) -> below 28 -> ON
+    await evaluateThresholds({
+      growCycleId,
+      sensorType: "TEMPERATURE",
+      value: 27,
+      now: new Date("2026-07-01T12:00:00"),
+    });
+
+    const log = await prismaClient.deviceStateLog.findFirst({
+      where: { deviceId: fanId, source: "AUTO" },
+      orderBy: { createdAt: "desc" },
+    });
+    assert.ok(log, "DeviceStateLog should be written for BELOW_MAX fire");
+    assert.equal(log.action, "ON");
+    assert.match(log.reason ?? "", /TEMP.*27.*max 28/);
+  });
+
+  test("evaluator - ABOVE_MIN rule fires when telemetry value rises above the active NIGHT tempMin", async () => {
+    // Reuse the NIGHT env created by the BELOW_MIN test (tempMax=24, tempMin=19).
+    // Clear the heater's prior state and ALL its prior rules so the only rule
+    // that can fire is the one this test creates (hysteresis + rule isolation).
+    await prismaClient.deviceStateLog.deleteMany({ where: { deviceId: heaterId } });
+    await prismaClient.automationRule.deleteMany({
+      where: { deviceId: heaterId },
+    });
+    await prismaClient.automationRule.create({
+      data: {
+        growPhaseId,
+        deviceId: heaterId,
+        watchedSensorType: "TEMPERATURE",
+        period: "NIGHT",
+        condition: "ABOVE_MIN",
+        action: "ON",
+        cooldownSeconds: 0,
+      },
+    });
+
+    // 20°C at 02:00 (NIGHT for 18/6 starting at 06:00) -> above 19 -> ON
+    await evaluateThresholds({
+      growCycleId,
+      sensorType: "TEMPERATURE",
+      value: 20,
+      now: new Date("2026-07-01T02:00:00"),
+    });
+
+    const log = await prismaClient.deviceStateLog.findFirst({
+      where: { deviceId: heaterId, source: "AUTO" },
+      orderBy: { createdAt: "desc" },
+    });
+    assert.ok(log, "DeviceStateLog should be written for ABOVE_MIN fire");
+    assert.equal(log.action, "ON");
+    assert.match(log.reason ?? "", /TEMP.*20.*min 19/);
+  });
+
+  test("evaluator - ABOVE_TARGET rule fires when telemetry value exceeds the active DAY tempTarget", async () => {
+    // Upsert DAY env to add tempTarget=25 alongside the existing tempMax/tempMin.
+    await prismaClient.phaseEnvironment.upsert({
+      where: { growPhaseId_period: { growPhaseId, period: "DAY" } },
+      update: { tempTarget: 25 },
+      create: { growPhaseId, period: "DAY", tempTarget: 25, tempMax: 28, tempMin: 22 },
+    });
+    // Clear the fan's prior state and ALL its prior rules so the only rule
+    // that can fire is the one this test creates (hysteresis + rule isolation).
+    await prismaClient.deviceStateLog.deleteMany({ where: { deviceId: fanId } });
+    await prismaClient.automationRule.deleteMany({
+      where: { deviceId: fanId },
+    });
+    await prismaClient.automationRule.create({
+      data: {
+        growPhaseId,
+        deviceId: fanId,
+        watchedSensorType: "TEMPERATURE",
+        period: "DAY",
+        condition: "ABOVE_TARGET",
+        action: "ON",
+        cooldownSeconds: 0,
+      },
+    });
+
+    // 26°C at noon (DAY) -> above target 25 -> ON
+    await evaluateThresholds({
+      growCycleId,
+      sensorType: "TEMPERATURE",
+      value: 26,
+      now: new Date("2026-07-01T12:00:00"),
+    });
+
+    const log = await prismaClient.deviceStateLog.findFirst({
+      where: { deviceId: fanId, source: "AUTO" },
+      orderBy: { createdAt: "desc" },
+    });
+    assert.ok(log, "DeviceStateLog should be written for ABOVE_TARGET fire");
+    assert.equal(log.action, "ON");
+    assert.match(log.reason ?? "", /TEMP.*26.*target 25/);
+  });
+
+  test("evaluator - BELOW_TARGET rule fires when telemetry value drops below the active NIGHT tempTarget", async () => {
+    // Upsert NIGHT env to add tempTarget=20 alongside the existing tempMax/tempMin.
+    await prismaClient.phaseEnvironment.upsert({
+      where: { growPhaseId_period: { growPhaseId, period: "NIGHT" } },
+      update: { tempTarget: 20 },
+      create: { growPhaseId, period: "NIGHT", tempTarget: 20, tempMax: 24, tempMin: 19 },
+    });
+    // Clear the heater's prior state and ALL its prior rules so the only rule
+    // that can fire is the one this test creates (hysteresis + rule isolation).
+    await prismaClient.deviceStateLog.deleteMany({ where: { deviceId: heaterId } });
+    await prismaClient.automationRule.deleteMany({
+      where: { deviceId: heaterId },
+    });
+    await prismaClient.automationRule.create({
+      data: {
+        growPhaseId,
+        deviceId: heaterId,
+        watchedSensorType: "TEMPERATURE",
+        period: "NIGHT",
+        condition: "BELOW_TARGET",
+        action: "ON",
+        cooldownSeconds: 0,
+      },
+    });
+
+    // 18°C at 02:00 (NIGHT) -> below target 20 -> ON
+    await evaluateThresholds({
+      growCycleId,
+      sensorType: "TEMPERATURE",
+      value: 18,
+      now: new Date("2026-07-01T02:00:00"),
+    });
+
+    const log = await prismaClient.deviceStateLog.findFirst({
+      where: { deviceId: heaterId, source: "AUTO" },
+      orderBy: { createdAt: "desc" },
+    });
+    assert.ok(log, "DeviceStateLog should be written for BELOW_TARGET fire");
+    assert.equal(log.action, "ON");
+    assert.match(log.reason ?? "", /TEMP.*18.*target 20/);
   });
 
   test("evaluator - rule scoped to a different period does not fire", async () => {

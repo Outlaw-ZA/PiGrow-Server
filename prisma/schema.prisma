@@ -178,17 +178,23 @@ model PhaseEnvironment {
   @@unique([growPhaseId, period], map: "one_env_per_phase_period")
 }
 
-// What a rule does. ABOVE_MAX / BELOW_MIN are evaluated against the current
-// PhaseEnvironment row for the watched sensor type. ALWAYS_ON / ALWAYS_OFF
-// pin a device to a fixed state within the rule's scope (phase or cycle) and
-// are enforced by the automation scheduler's 60s tick — they suppress any
-// ABOVE_MAX / BELOW_MIN rules for the same (device, scope, period).
+// What a rule does. The six threshold conditions (ABOVE_MAX / BELOW_MIN /
+// ABOVE_MIN / BELOW_MAX / ABOVE_TARGET / BELOW_TARGET) are evaluated by the
+// threshold evaluator against the current PhaseEnvironment row for the
+// watched sensor type. ALWAYS_ON / ALWAYS_OFF pin a device to a fixed state
+// within the rule's scope (phase or cycle) and are enforced by the
+// automation scheduler's 60s tick — they suppress any threshold rules for
+// the same (device, scope, period).
 // SCHEDULE_ON / SCHEDULE_OFF are retained for backward compatibility but are
 // rejected at the API layer (no remaining consumer — light scheduling is
 // driven directly by the grow-phase clock).
 enum RuleCondition {
   ABOVE_MAX
   BELOW_MIN
+  ABOVE_MIN
+  BELOW_MAX
+  ABOVE_TARGET
+  BELOW_TARGET
   ALWAYS_ON
   ALWAYS_OFF
   SCHEDULE_ON

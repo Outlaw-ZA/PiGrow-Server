@@ -16,10 +16,13 @@ interface EvaluateArgs {
 interface EnvFields {
   tempMin: number | null;
   tempMax: number | null;
+  tempTarget: number | null;
   humidityMin: number | null;
   humidityMax: number | null;
+  humidityTarget: number | null;
   co2Min: number | null;
   co2Max: number | null;
+  co2Target: number | null;
 }
 
 // Map a SensorType to the matching pair of threshold fields on PhaseEnvironment.
@@ -32,20 +35,24 @@ const SENSOR_TO_ENV_KEY: Record<SensorTypeLiteral, keyof EnvFields | null> = {
   EC: null,
 };
 
-// Returns the relevant min/max pair for a sensor type, or null when
+// Returns the relevant min/max/target triple for a sensor type, or null when
 // PhaseEnvironment has no thresholds for that type.
 function getBoundaryFields(
   sensorType: SensorTypeLiteral,
   env: EnvFields,
-): { min: number | null; max: number | null } | null {
+): { min: number | null; max: number | null; target: number | null } | null {
   switch (sensorType) {
     case "TEMPERATURE":
     case "TEMP_HUMIDITY":
-      return { min: env.tempMin, max: env.tempMax };
+      return { min: env.tempMin, max: env.tempMax, target: env.tempTarget };
     case "HUMIDITY":
-      return { min: env.humidityMin, max: env.humidityMax };
+      return {
+        min: env.humidityMin,
+        max: env.humidityMax,
+        target: env.humidityTarget,
+      };
     case "CO2":
-      return { min: env.co2Min, max: env.co2Max };
+      return { min: env.co2Min, max: env.co2Max, target: env.co2Target };
     case "PH":
     case "EC":
       return null;
@@ -101,10 +108,13 @@ export async function evaluateThresholds({
     select: {
       tempMin: true,
       tempMax: true,
+      tempTarget: true,
       humidityMin: true,
       humidityMax: true,
+      humidityTarget: true,
       co2Min: true,
       co2Max: true,
+      co2Target: true,
     },
   });
 
@@ -118,7 +128,16 @@ export async function evaluateThresholds({
   const rules = await prisma.automationRule.findMany({
     where: {
       enabled: true,
-      condition: { in: ["ABOVE_MAX", "BELOW_MIN"] },
+      condition: {
+        in: [
+          "ABOVE_MAX",
+          "BELOW_MIN",
+          "ABOVE_MIN",
+          "BELOW_MAX",
+          "ABOVE_TARGET",
+          "BELOW_TARGET",
+        ],
+      },
       watchedSensorType: sensorType,
       // LIGHT devices are not eligible for automation rules; this filter is
       // defensive in case a stale row exists from before that constraint.
@@ -185,6 +204,26 @@ export async function evaluateThresholds({
       if (boundary.min !== null && value < boundary.min) {
         shouldFire = true;
         reason = `${sensorType} ${value} < min ${boundary.min} (${period})`;
+      }
+    } else if (rule.condition === "ABOVE_MIN") {
+      if (boundary.min !== null && value > boundary.min) {
+        shouldFire = true;
+        reason = `${sensorType} ${value} > min ${boundary.min} (${period})`;
+      }
+    } else if (rule.condition === "BELOW_MAX") {
+      if (boundary.max !== null && value < boundary.max) {
+        shouldFire = true;
+        reason = `${sensorType} ${value} < max ${boundary.max} (${period})`;
+      }
+    } else if (rule.condition === "ABOVE_TARGET") {
+      if (boundary.target !== null && value > boundary.target) {
+        shouldFire = true;
+        reason = `${sensorType} ${value} > target ${boundary.target} (${period})`;
+      }
+    } else if (rule.condition === "BELOW_TARGET") {
+      if (boundary.target !== null && value < boundary.target) {
+        shouldFire = true;
+        reason = `${sensorType} ${value} < target ${boundary.target} (${period})`;
       }
     }
 
