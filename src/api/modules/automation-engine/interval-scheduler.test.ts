@@ -11,7 +11,6 @@ describe("Interval scheduler (duty-cycle schedules)", () => {
   let growPhaseId: string;
   let lightId: string;
   let fanId: string;
-  let heaterId: string;
 
   const mac = `88:99:aa:bb:cc:${Date.now().toString(16).slice(-2)}`;
 
@@ -69,19 +68,8 @@ describe("Interval scheduler (duty-cycle schedules)", () => {
         automationMode: "THRESHOLD",
       },
     });
-    const heater = await prisma.device.create({
-      data: {
-        controllerId,
-        name: "Heater",
-        type: "HEATER",
-        pinNumber: 27,
-        mqttTopic: "tent1/heater",
-        automationMode: "THRESHOLD",
-      },
-    });
     lightId = light.id;
     fanId = fan.id;
-    heaterId = heater.id;
   });
 
   after(async () => {
@@ -121,10 +109,6 @@ describe("Interval scheduler (duty-cycle schedules)", () => {
     // Restore default device automationMode in case a previous test changed it.
     await prismaClient.device.updateMany({
       where: { controllerId, type: "EXHAUST_FAN" },
-      data: { automationMode: "THRESHOLD" },
-    });
-    await prismaClient.device.updateMany({
-      where: { controllerId, type: "HEATER" },
       data: { automationMode: "THRESHOLD" },
     });
   });
