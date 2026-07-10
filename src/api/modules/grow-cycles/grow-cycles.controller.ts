@@ -1,69 +1,72 @@
-import { FastifyInstance } from "fastify";
+import type { FastifyInstance } from 'fastify'
 
 export class SkipPhaseError extends Error {
   constructor(message: string) {
-    super(message);
-    this.name = "SkipPhaseError";
+    super(message)
+    this.name = 'SkipPhaseError'
   }
 }
 
 export class ControllerBusyError extends Error {
   constructor(message: string) {
-    super(message);
-    this.name = "ControllerBusyError";
+    super(message)
+    this.name = 'ControllerBusyError'
   }
 }
 
 export class GrowCyclesController {
-  private prisma;
+  private prisma
 
   constructor(server: FastifyInstance) {
-    this.prisma = server.prisma;
+    this.prisma = server.prisma
   }
 
   private formatDateOnly(date: Date | null): string | null {
-    return date ? date.toISOString().slice(0, 10) : null;
+    return date ? date.toISOString().slice(0, 10) : null
   }
 
-  private serializeStartAt<T extends { startAt: Date | null } | { startAt: Date | null }[]>(cycle: T): T {
+  private serializeStartAt<T extends { startAt: Date | null } | { startAt: Date | null }[]>(
+    cycle: T,
+  ): T {
     if (Array.isArray(cycle)) {
-      return cycle.map((c) => ({ ...c, startAt: this.formatDateOnly(c.startAt) })) as T;
+      return cycle.map((c) => ({ ...c, startAt: this.formatDateOnly(c.startAt) })) as T
     }
-    return { ...cycle, startAt: this.formatDateOnly(cycle.startAt) } as T;
+    return { ...cycle, startAt: this.formatDateOnly(cycle.startAt) } as T
   }
 
-  private serializePhaseDates<T extends { startAt: Date | null; endAt: Date | null } | { startAt: Date | null; endAt: Date | null }[]>(phases: T): T {
+  private serializePhaseDates<
+    T extends
+      | { startAt: Date | null; endAt: Date | null }
+      | { startAt: Date | null; endAt: Date | null }[],
+  >(phases: T): T {
     if (Array.isArray(phases)) {
       return phases.map((p) => ({
         ...p,
-        startAt: this.formatDateOnly(p.startAt),
         endAt: this.formatDateOnly(p.endAt),
-      })) as T;
+        startAt: this.formatDateOnly(p.startAt),
+      })) as T
     }
     return {
       ...phases,
-      startAt: this.formatDateOnly(phases.startAt),
       endAt: this.formatDateOnly(phases.endAt),
-    } as T;
+      startAt: this.formatDateOnly(phases.startAt),
+    } as T
   }
 
   // Reject if the controller already has an active grow cycle.
-  private async assertControllerAvailable(
-    controllerId: string,
-    exceptGrowCycleId?: string,
-  ) {
+  private async assertControllerAvailable(controllerId: string, exceptGrowCycleId?: string) {
     const active = await this.prisma.growCycle.findFirst({
+      select: { id: true },
       where: {
         controllerId,
         isActive: true,
         ...(exceptGrowCycleId ? { NOT: { id: exceptGrowCycleId } } : {}),
       },
-      select: { id: true },
-    });
+    })
     if (active) {
       throw new ControllerBusyError(
-        "Controller already has an active grow cycle. End the current grow before starting a new one.",
-      );
+        'Controller already has an active grow cycle. End the current grow before starting a new one.',
+      )
     }
   }
 
@@ -78,112 +81,108 @@ export class GrowCyclesController {
           },
         },
       },
-    });
-    return this.serializeStartAt(cycles);
+    })
+    return this.serializeStartAt(cycles)
   }
 
   // 2. READ ONE (Deeply fetches related phases with environments).
   // Note: devices are NOT included — they are owned by the controller.
   async getGrowCycleById(id: string) {
     const cycle = await this.prisma.growCycle.findUniqueOrThrow({
-      where: { id },
       include: {
         controller: true,
         phases: {
-          orderBy: { order: "asc" },
           include: {
-            environments: { orderBy: { period: "asc" } },
+            environments: { orderBy: { period: 'asc' } },
           },
+          orderBy: { order: 'asc' },
         },
       },
-    });
-    cycle.phases = this.serializePhaseDates(cycle.phases);
-    return this.serializeStartAt(cycle);
+      where: { id },
+    })
+    cycle.phases = this.serializePhaseDates(cycle.phases)
+    return this.serializeStartAt(cycle)
   }
 
   // 3. CREATE
   // Devices are no longer seeded here — they belong to the controller.
   // Phases are created separately via POST /api/grow-phases.
-  async createGrowCycle(body: {
-    name: string;
-    controllerId: string;
-    isActive?: boolean;
-  }) {
-    const isActive = body.isActive ?? false;
+  async createGrowCycle(body: { name: string; controllerId: string; isActive?: boolean }) {
+    const isActive = body.isActive ?? false
 
     if (isActive) {
-      await this.assertControllerAvailable(body.controllerId);
+      await this.assertControllerAvailable(body.controllerId)
     }
 
     const createdCycle = await this.prisma.growCycle.create({
       data: {
-        name: body.name,
         controllerId: body.controllerId,
         isActive,
+        name: body.name,
       },
-    });
+    })
 
-    return this.getGrowCycleById(createdCycle.id);
+    return this.getGrowCycleById(createdCycle.id)
   }
 
   // 4. UPDATE
   async updateGrowCycle(
     id: string,
     body: {
-      name?: string;
-      isActive?: boolean;
-      startAt?: string;
+      name?: string
+      isActive?: boolean
+      startAt?: string
     },
   ) {
-    const { startAt, isActive, ...rest } = body;
+    const { startAt, isActive, ...rest } = body
 
     if (isActive === true) {
       const cycle = await this.prisma.growCycle.findUniqueOrThrow({
-        where: { id },
         select: { controllerId: true },
-      });
-      await this.assertControllerAvailable(cycle.controllerId, id);
+        where: { id },
+      })
+      await this.assertControllerAvailable(cycle.controllerId, id)
     }
 
     const updated = await this.prisma.growCycle.update({
-      where: { id },
       data: {
         ...rest,
         isActive: isActive,
         startAt: startAt ? new Date(startAt) : undefined,
       },
-    });
-    return this.serializeStartAt(updated);
+      where: { id },
+    })
+    return this.serializeStartAt(updated)
   }
 
   // 5. DELETE
   async deleteGrowCycle(id: string) {
     await this.prisma.growCycle.delete({
       where: { id },
-    });
+    })
   }
 
   // 6. SKIP ACTIVE PHASE
   async skipPhase(id: string, todayOverride?: string) {
     const cycle = await this.prisma.growCycle.findUniqueOrThrow({
-      where: { id },
       include: {
         phases: {
-          orderBy: { order: "asc" },
+          orderBy: { order: 'asc' },
         },
       },
-    });
+      where: { id },
+    })
 
     if (!cycle.startAt) {
-      throw new SkipPhaseError("Grow cycle has not started yet");
+      throw new SkipPhaseError('Grow cycle has not started yet')
     }
 
-    const today = todayOverride ?? this.formatDateOnly(new Date());
+    const today = todayOverride ?? this.formatDateOnly(new Date())
     if (!today) {
-      throw new SkipPhaseError("Server could not determine today's date");
+      throw new SkipPhaseError("Server could not determine today's date")
     }
 
-    this.recalculatePhaseDates(cycle.phases, cycle.startAt);
+    this.recalculatePhaseDates(cycle.phases, cycle.startAt)
 
     const activeIdx = cycle.phases.findIndex(
       (p) =>
@@ -191,70 +190,69 @@ export class GrowCyclesController {
         p.endAt &&
         today >= this.formatDateOnly(p.startAt)! &&
         today < this.formatDateOnly(p.endAt)!,
-    );
+    )
 
-    if (activeIdx < 0) {
-      throw new SkipPhaseError("No active phase to skip");
+    if (activeIdx === -1) {
+      throw new SkipPhaseError('No active phase to skip')
     }
 
     if (activeIdx === cycle.phases.length - 1) {
-      throw new SkipPhaseError("Cannot skip the final grow phase");
+      throw new SkipPhaseError('Cannot skip the final grow phase')
     }
 
-    const active = cycle.phases[activeIdx];
-    const elapsed = this.daysBetween(active.startAt!, today);
-    active.durationDays = elapsed;
+    const active = cycle.phases[activeIdx]
+    const elapsed = this.daysBetween(active.startAt!, today)
+    active.durationDays = elapsed
 
-    this.recalculatePhaseDates(cycle.phases, cycle.startAt);
+    this.recalculatePhaseDates(cycle.phases, cycle.startAt)
 
-    const next = cycle.phases[activeIdx + 1];
+    const next = cycle.phases[activeIdx + 1]
 
     await this.prisma.$transaction([
       this.prisma.growPhase.updateMany({
-        where: { growCycleId: id },
         data: { isActive: false },
+        where: { growCycleId: id },
       }),
       this.prisma.growPhase.update({
-        where: { id: next.id },
         data: { isActive: true },
+        where: { id: next.id },
       }),
       ...cycle.phases.map((p) =>
         this.prisma.growPhase.update({
-          where: { id: p.id },
           data: {
-            durationDays:
-              p.id === active.id ? elapsed : p.durationDays,
-            startAt: p.startAt,
+            durationDays: p.id === active.id ? elapsed : p.durationDays,
             endAt: p.endAt,
+            startAt: p.startAt,
           },
+          where: { id: p.id },
         }),
       ),
-    ]);
+    ])
 
-    return this.getGrowCycleById(id);
+    return this.getGrowCycleById(id)
   }
 
   // 7. END GROW
   async endGrow(id: string, todayOverride?: string) {
     const cycle = await this.prisma.growCycle.findUniqueOrThrow({
-      where: { id },
       include: {
         phases: {
-          orderBy: { order: "asc" },
+          orderBy: { order: 'asc' },
         },
       },
-    });
+      where: { id },
+    })
 
     if (!cycle.startAt) {
-      throw new SkipPhaseError("Grow cycle has not started yet");
+      throw new SkipPhaseError('Grow cycle has not started yet')
     }
 
-    const today = todayOverride ?? this.formatDateOnly(new Date());
+    const today = todayOverride ?? this.formatDateOnly(new Date())
     if (!today) {
-      throw new SkipPhaseError("Server could not determine today's date");
+      throw new SkipPhaseError("Server could not determine today's date")
     }
 
-    this.recalculatePhaseDates(cycle.phases, cycle.startAt);
+    this.recalculatePhaseDates(cycle.phases, cycle.startAt)
 
     const activeIdx = cycle.phases.findIndex(
       (p) =>
@@ -262,41 +260,40 @@ export class GrowCyclesController {
         p.endAt &&
         today >= this.formatDateOnly(p.startAt)! &&
         today < this.formatDateOnly(p.endAt)!,
-    );
+    )
 
-    if (activeIdx < 0) {
-      throw new SkipPhaseError("No active phase to end");
+    if (activeIdx === -1) {
+      throw new SkipPhaseError('No active phase to end')
     }
 
-    const active = cycle.phases[activeIdx];
-    const elapsed = this.daysBetween(active.startAt!, today);
-    active.durationDays = elapsed;
+    const active = cycle.phases[activeIdx]
+    const elapsed = this.daysBetween(active.startAt!, today)
+    active.durationDays = elapsed
 
-    this.recalculatePhaseDates(cycle.phases, cycle.startAt);
+    this.recalculatePhaseDates(cycle.phases, cycle.startAt)
 
     await this.prisma.$transaction([
       this.prisma.growPhase.updateMany({
-        where: { growCycleId: id },
         data: { isActive: false },
+        where: { growCycleId: id },
       }),
       this.prisma.growCycle.update({
-        where: { id },
         data: { isActive: false },
+        where: { id },
       }),
       ...cycle.phases.map((p) =>
         this.prisma.growPhase.update({
-          where: { id: p.id },
           data: {
-            durationDays:
-              p.id === active.id ? elapsed : p.durationDays,
-            startAt: p.startAt,
+            durationDays: p.id === active.id ? elapsed : p.durationDays,
             endAt: p.endAt,
+            startAt: p.startAt,
           },
+          where: { id: p.id },
         }),
       ),
-    ]);
+    ])
 
-    return this.getGrowCycleById(id);
+    return this.getGrowCycleById(id)
   }
 
   // Recompute every phase's startAt/endAt from cycle.startAt + cumulative durations.
@@ -304,22 +301,22 @@ export class GrowCyclesController {
     phases: { startAt: Date | null; endAt: Date | null; durationDays: number }[],
     growStart: Date,
   ): void {
-    const cursor = new Date(growStart);
-    cursor.setUTCHours(0, 0, 0, 0);
+    const cursor = new Date(growStart)
+    cursor.setUTCHours(0, 0, 0, 0)
     for (const phase of phases) {
-      phase.startAt = new Date(cursor);
-      cursor.setUTCDate(cursor.getUTCDate() + phase.durationDays);
-      phase.endAt = new Date(cursor);
+      phase.startAt = new Date(cursor)
+      cursor.setUTCDate(cursor.getUTCDate() + phase.durationDays)
+      phase.endAt = new Date(cursor)
     }
   }
 
   // Whole-day difference between two dates (date-only, UTC).
   private daysBetween(from: Date, todayStr: string): number {
-    const fromDate = new Date(from);
-    fromDate.setUTCHours(0, 0, 0, 0);
-    const toDate = new Date(`${todayStr}T00:00:00Z`);
-    toDate.setUTCHours(0, 0, 0, 0);
-    const diffMs = toDate.getTime() - fromDate.getTime();
-    return Math.max(0, Math.floor(diffMs / 86_400_000));
+    const fromDate = new Date(from)
+    fromDate.setUTCHours(0, 0, 0, 0)
+    const toDate = new Date(`${todayStr}T00:00:00Z`)
+    toDate.setUTCHours(0, 0, 0, 0)
+    const diffMs = toDate.getTime() - fromDate.getTime()
+    return Math.max(0, Math.floor(diffMs / 86_400_000))
   }
 }

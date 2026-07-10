@@ -1,4 +1,4 @@
-import type { DayNightPeriod as DayNightPeriodLiteral } from "../generated/client/enums.js";
+import type { DayNightPeriod as DayNightPeriodLiteral } from '../generated/client/enums.js'
 
 /**
  * Resolve the current day/night period from a phase's clock schedule.
@@ -19,24 +19,28 @@ export function resolvePeriod(
   dayDurationMinutes: number,
   now: Date = new Date(),
 ): DayNightPeriodLiteral {
-  if (dayDurationMinutes >= 1440) return "DAY";
-  if (dayDurationMinutes <= 0) return "NIGHT";
+  if (dayDurationMinutes >= 1440) {
+    return 'DAY'
+  }
+  if (dayDurationMinutes <= 0) {
+    return 'NIGHT'
+  }
 
-  const start = ((dayStartMinutes % 1440) + 1440) % 1440;
-  const end = (start + dayDurationMinutes) % 1440;
+  const start = ((dayStartMinutes % 1440) + 1440) % 1440
+  const end = (start + dayDurationMinutes) % 1440
 
-  const minutesOfDay = now.getHours() * 60 + now.getMinutes();
+  const minutesOfDay = now.getHours() * 60 + now.getMinutes()
 
   if (start === end) {
     // Defensive: should not happen because of the >=1440 / <=0 guards above.
-    return "NIGHT";
+    return 'NIGHT'
   }
 
   if (start < end) {
     // Window does not wrap: e.g. 06:00..24:00 for an 18/6 schedule starting at 6.
-    return minutesOfDay >= start && minutesOfDay < end ? "DAY" : "NIGHT";
+    return minutesOfDay >= start && minutesOfDay < end ? 'DAY' : 'NIGHT'
   }
 
   // Window wraps midnight: e.g. 18:00..12:00 for an 18/6 starting at 18.
-  return minutesOfDay >= start || minutesOfDay < end ? "DAY" : "NIGHT";
+  return minutesOfDay >= start || minutesOfDay < end ? 'DAY' : 'NIGHT'
 }

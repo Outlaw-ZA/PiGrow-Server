@@ -1,13 +1,13 @@
-import type { SensorType } from "./generated/client/enums.js";
+import type { SensorType } from './generated/client/enums.js'
 
-export type { SensorType };
+export type { SensorType }
 
 /**
  * A single numeric reading emitted by a physical sensor.
  */
 export interface TelemetryReading {
-  sensorType: SensorType;
-  value: number;
+  sensorType: SensorType
+  value: number
 }
 
 /**
@@ -16,5 +16,5 @@ export interface TelemetryReading {
  * sensors like `TEMP_HUMIDITY` probes that publish both metrics at once.
  */
 export interface SensorData {
-  readings: TelemetryReading[];
+  readings: TelemetryReading[]
 }

@@ -1,191 +1,173 @@
-import { FastifyInstance } from "fastify";
-import { Type } from "@sinclair/typebox";
-import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
+import type { FastifyInstance } from 'fastify'
+import { Type } from '@sinclair/typebox'
+import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox'
 import {
+  ControllerBusyError,
   GrowCyclesController,
   SkipPhaseError,
-  ControllerBusyError,
-} from "./grow-cycles.controller.js";
+} from './grow-cycles.controller.js'
 import {
   CreateGrowCycleSchema,
-  UpdateGrowCycleSchema,
-  GrowCycleParamsIdSchema,
-  SkipPhaseQuerySchema,
+  ErrorSchema,
   GrowCycleArrayResponseSchema,
   GrowCycleDetailResponseSchema,
+  GrowCycleParamsIdSchema,
   GrowCycleUpdateResponseSchema,
-  ErrorSchema,
-} from "./grow-cycles.schema.js";
-import { cast } from "../../shared/cast.js";
+  SkipPhaseQuerySchema,
+  UpdateGrowCycleSchema,
+} from './grow-cycles.schema.js'
+import { cast } from '../../shared/cast.js'
 
 export default async function growCycleRoutes(server: FastifyInstance) {
-  const router = server.withTypeProvider<TypeBoxTypeProvider>();
+  const router = server.withTypeProvider<TypeBoxTypeProvider>()
 
   // Instantiate the controller exactly once for this group of routes
-  const controller = new GrowCyclesController(server);
+  const controller = new GrowCyclesController(server)
 
   // 1. READ ALL
   router.get(
-    "/api/grow-cycles",
+    '/api/grow-cycles',
     {
       schema: {
-        tags: ["GrowCycles"],
-        summary: "List all grow cycles",
         response: { 200: GrowCycleArrayResponseSchema },
+        summary: 'List all grow cycles',
+        tags: ['GrowCycles'],
       },
     },
-    async () => {
-      return cast<typeof GrowCycleArrayResponseSchema.static>(
-        await controller.getAllGrowCycles(),
-      );
-    },
-  );
+    async () =>
+      cast<typeof GrowCycleArrayResponseSchema.static>(await controller.getAllGrowCycles()),
+  )
 
   // 2. READ ONE
   router.get(
-    "/api/grow-cycles/:id",
+    '/api/grow-cycles/:id',
     {
       schema: {
-        tags: ["GrowCycles"],
-        summary: "Get one grow cycle with its phases + environments",
         params: GrowCycleParamsIdSchema,
         response: {
           200: GrowCycleDetailResponseSchema,
           404: ErrorSchema,
         },
+        summary: 'Get one grow cycle with its phases + environments',
+        tags: ['GrowCycles'],
       },
     },
     async (request, reply) => {
       try {
         return cast<typeof GrowCycleDetailResponseSchema.static>(
           await controller.getGrowCycleById(request.params.id),
-        );
-      } catch (error) {
-        return reply.code(404).send({ error: "Grow cycle record not found" });
+        )
+      } catch {
+        return reply.code(404).send({ error: 'Grow cycle record not found' })
       }
     },
-  );
+  )
 
   // 3. CREATE
   router.post(
-    "/api/grow-cycles",
+    '/api/grow-cycles',
     {
       schema: {
-        tags: ["GrowCycles"],
-        summary: "Create a new grow cycle",
         body: CreateGrowCycleSchema,
         response: {
           201: GrowCycleDetailResponseSchema,
           400: ErrorSchema,
           409: ErrorSchema,
         },
+        summary: 'Create a new grow cycle',
+        tags: ['GrowCycles'],
       },
     },
     async (request, reply) => {
       try {
-        const newGrowCycle = await controller.createGrowCycle(request.body);
-        return reply.code(201).send(
-          cast<typeof GrowCycleDetailResponseSchema.static>(newGrowCycle),
-        );
+        const newGrowCycle = await controller.createGrowCycle(request.body)
+        return reply.code(201).send(cast<typeof GrowCycleDetailResponseSchema.static>(newGrowCycle))
       } catch (error) {
         if (error instanceof ControllerBusyError) {
-          return reply.code(409).send({ error: error.message });
+          return reply.code(409).send({ error: error.message })
         }
         if (
-          typeof error === "object" &&
+          typeof error === 'object' &&
           error !== null &&
-          "code" in error &&
-          (error as { code: string }).code === "P2002"
+          'code' in error &&
+          (error as { code: string }).code === 'P2002'
         ) {
-          return reply
-            .code(409)
-            .send({ error: "Controller already has an active grow cycle" });
+          return reply.code(409).send({ error: 'Controller already has an active grow cycle' })
         }
-        router.log.error(error);
-        return reply
-          .code(400)
-          .send({ error: "Failed to create grow cycle record" });
+        router.log.error(error)
+        return reply.code(400).send({ error: 'Failed to create grow cycle record' })
       }
     },
-  );
+  )
 
   // 4. UPDATE
   router.put(
-    "/api/grow-cycles/:id",
+    '/api/grow-cycles/:id',
     {
       schema: {
-        tags: ["GrowCycles"],
-        summary: "Update a grow cycle",
-        params: GrowCycleParamsIdSchema,
         body: UpdateGrowCycleSchema,
+        params: GrowCycleParamsIdSchema,
         response: {
           200: GrowCycleUpdateResponseSchema,
           400: ErrorSchema,
           409: ErrorSchema,
         },
+        summary: 'Update a grow cycle',
+        tags: ['GrowCycles'],
       },
     },
     async (request, reply) => {
       try {
         return cast<typeof GrowCycleUpdateResponseSchema.static>(
-          await controller.updateGrowCycle(
-            request.params.id,
-            request.body,
-          ),
-        );
+          await controller.updateGrowCycle(request.params.id, request.body),
+        )
       } catch (error) {
         if (error instanceof ControllerBusyError) {
-          return reply.code(409).send({ error: error.message });
+          return reply.code(409).send({ error: error.message })
         }
         if (
-          typeof error === "object" &&
+          typeof error === 'object' &&
           error !== null &&
-          "code" in error &&
-          (error as { code: string }).code === "P2002"
+          'code' in error &&
+          (error as { code: string }).code === 'P2002'
         ) {
-          return reply
-            .code(409)
-            .send({ error: "Controller already has an active grow cycle" });
+          return reply.code(409).send({ error: 'Controller already has an active grow cycle' })
         }
-        router.log.error(error);
-        return reply
-          .code(400)
-          .send({ error: "Failed to update grow cycle record" });
+        router.log.error(error)
+        return reply.code(400).send({ error: 'Failed to update grow cycle record' })
       }
     },
-  );
+  )
 
   // 5. DELETE
   router.delete(
-    "/api/grow-cycles/:id",
+    '/api/grow-cycles/:id',
     {
       schema: {
-        tags: ["GrowCycles"],
-        summary: "Delete a grow cycle",
         params: GrowCycleParamsIdSchema,
         response: {
-          204: Type.Null({ description: "Grow cycle deleted (no content)" }),
+          204: Type.Null({ description: 'Grow cycle deleted (no content)' }),
           404: ErrorSchema,
         },
+        summary: 'Delete a grow cycle',
+        tags: ['GrowCycles'],
       },
     },
     async (request, reply) => {
       try {
-        await controller.deleteGrowCycle(request.params.id);
-        return reply.code(204).send(null);
-      } catch (error) {
-        return reply.code(404).send({ error: "Record could not be deleted" });
+        await controller.deleteGrowCycle(request.params.id)
+        return reply.code(204).send(null)
+      } catch {
+        return reply.code(404).send({ error: 'Record could not be deleted' })
       }
     },
-  );
+  )
 
   // 6. SKIP ACTIVE PHASE (atomic)
   router.post(
-    "/api/grow-cycles/:id/skip-phase",
+    '/api/grow-cycles/:id/skip-phase',
     {
       schema: {
-        tags: ["GrowCycles"],
-        summary: "Skip the currently active grow phase",
         description:
           "Atomically ends the active phase, re-computes each phase's `startAt`/`endAt`, and activates the next phase.",
         params: GrowCycleParamsIdSchema,
@@ -195,47 +177,40 @@ export default async function growCycleRoutes(server: FastifyInstance) {
           400: ErrorSchema,
           404: ErrorSchema,
         },
+        summary: 'Skip the currently active grow phase',
+        tags: ['GrowCycles'],
       },
     },
     async (request, reply) => {
       try {
         return cast<typeof GrowCycleDetailResponseSchema.static>(
-          await controller.skipPhase(
-            request.params.id,
-            request.query.today,
-          ),
-        );
+          await controller.skipPhase(request.params.id, request.query.today),
+        )
       } catch (error) {
         if (error instanceof SkipPhaseError) {
-          return reply.code(400).send({ error: error.message });
+          return reply.code(400).send({ error: error.message })
         }
         if (
-          typeof error === "object" &&
+          typeof error === 'object' &&
           error !== null &&
-          "code" in error &&
-          (error as { code: string }).code === "P2025"
+          'code' in error &&
+          (error as { code: string }).code === 'P2025'
         ) {
-          return reply
-            .code(404)
-            .send({ error: "Grow cycle record not found" });
+          return reply.code(404).send({ error: 'Grow cycle record not found' })
         }
-        router.log.error(error);
-        return reply
-          .code(400)
-          .send({ error: "Failed to skip active grow phase" });
+        router.log.error(error)
+        return reply.code(400).send({ error: 'Failed to skip active grow phase' })
       }
     },
-  );
+  )
 
   // 7. END GROW (atomic)
   router.post(
-    "/api/grow-cycles/:id/end-grow",
+    '/api/grow-cycles/:id/end-grow',
     {
       schema: {
-        tags: ["GrowCycles"],
-        summary: "End the entire grow cycle",
         description:
-          "Atomically ends the active phase, marks the cycle inactive, and persists the final phase dates.",
+          'Atomically ends the active phase, marks the cycle inactive, and persists the final phase dates.',
         params: GrowCycleParamsIdSchema,
         querystring: SkipPhaseQuerySchema,
         response: {
@@ -243,35 +218,30 @@ export default async function growCycleRoutes(server: FastifyInstance) {
           400: ErrorSchema,
           404: ErrorSchema,
         },
+        summary: 'End the entire grow cycle',
+        tags: ['GrowCycles'],
       },
     },
     async (request, reply) => {
       try {
         return cast<typeof GrowCycleDetailResponseSchema.static>(
-          await controller.endGrow(
-            request.params.id,
-            request.query.today,
-          ),
-        );
+          await controller.endGrow(request.params.id, request.query.today),
+        )
       } catch (error) {
         if (error instanceof SkipPhaseError) {
-          return reply.code(400).send({ error: error.message });
+          return reply.code(400).send({ error: error.message })
         }
         if (
-          typeof error === "object" &&
+          typeof error === 'object' &&
           error !== null &&
-          "code" in error &&
-          (error as { code: string }).code === "P2025"
+          'code' in error &&
+          (error as { code: string }).code === 'P2025'
         ) {
-          return reply
-            .code(404)
-            .send({ error: "Grow cycle record not found" });
+          return reply.code(404).send({ error: 'Grow cycle record not found' })
         }
-        router.log.error(error);
-        return reply
-          .code(400)
-          .send({ error: "Failed to end grow cycle" });
+        router.log.error(error)
+        return reply.code(400).send({ error: 'Failed to end grow cycle' })
       }
     },
-  );
+  )
 }

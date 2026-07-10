@@ -10,7 +10,14 @@
     "start": "node dist/server.js",
     "test": "node --env-file=.env --import tsx --test src/api/modules/**/*.test.ts",
     "openapi:export": "tsx scripts/export-openapi.ts",
-    "openapi:check": "tsx scripts/export-openapi.ts && git diff --exit-code openapi.json"
+    "openapi:check": "tsx scripts/export-openapi.ts && git diff --exit-code openapi.json",
+    "lint": "oxlint src/",
+    "lint:fix": "oxlint --fix src/",
+    "format": "oxfmt --write src/",
+    "format:check": "oxfmt --check src/",
+    "type-check": "tsc --noEmit",
+    "prepare": "lefthook install",
+    "quality": "npm run lint && npm run format:check && npm run type-check"
   },
   "repository": {
     "type": "git",
@@ -42,6 +49,9 @@
     "@types/node": "^25.9.2",
     "@types/pg": "^8.20.0",
     "@types/socket.io": "^3.0.1",
+    "lefthook": "^2.1.9",
+    "oxfmt": "^0.55.0",
+    "oxlint": "^1.70.0",
     "prisma": "^7.8.0",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"

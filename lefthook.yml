@@ -1,0 +1,19 @@
+pre-commit:
+  parallel: true
+  commands:
+    lint:
+      run: npx oxlint --fix {staged_files}
+      stage_fixed: true
+    format:
+      run: npx oxfmt --write {staged_files}
+      stage_fixed: true
+
+pre-push:
+  parallel: false
+  commands:
+    lint:
+      run: npx oxlint --fix src/
+    type-check:
+      run: npx tsc --noEmit
+    build:
+      run: npm run build

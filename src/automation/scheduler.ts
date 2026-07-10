@@ -1,9 +1,9 @@
-import { prisma } from "../prisma.js";
-import { resolvePeriod } from "./period.js";
-import { issueAutoCommand } from "./command-publisher.js";
-import type { DeviceAction as DeviceActionLiteral } from "../generated/client/enums.js";
+import { prisma } from '../prisma.js'
+import { resolvePeriod } from './period.js'
+import { issueAutoCommand } from './command-publisher.js'
+import type { DeviceAction as DeviceActionLiteral } from '../generated/client/enums.js'
 
-const TICK_MS = 60_000;
+const TICK_MS = 60_000
 
 /**
  * Automation scheduler. Runs every TICK_MS. For each controller with an active
@@ -32,110 +32,126 @@ const TICK_MS = 60_000;
  * No-op when there is no active grow cycle or no active phase on a controller.
  */
 export class AutomationScheduler {
-  private timer: NodeJS.Timeout | null = null;
+  private timer: NodeJS.Timeout | null = null
 
   start() {
-    if (this.timer) return;
+    if (this.timer) {
+      return
+    }
     // Run once immediately so behavior is observable on dev startup, then on tick.
-    void this.tick();
-    this.timer = setInterval(() => void this.tick(), TICK_MS);
+    void this.tick()
+    this.timer = setInterval(() => void this.tick(), TICK_MS)
   }
 
   stop() {
     if (this.timer) {
-      clearInterval(this.timer);
-      this.timer = null;
+      clearInterval(this.timer)
+      this.timer = null
     }
   }
 
   // Exposed for tests and manual invocation.
   async tick(now: Date = new Date()) {
     const activeCycles = await prisma.growCycle.findMany({
-      where: { isActive: true },
       include: {
-        phases: { where: { isActive: true }, take: 1 },
         controller: {
           select: {
+            devices: { where: { type: 'LIGHT' } },
             id: true,
-            devices: { where: { type: "LIGHT" } },
           },
         },
+        phases: { take: 1, where: { isActive: true } },
       },
-    });
+      where: { isActive: true },
+    })
 
     for (const cycle of activeCycles) {
-      const activePhase = cycle.phases[0];
-      if (!activePhase) continue;
+      const activePhase = cycle.phases[0]
+      if (!activePhase) {
+        continue
+      }
 
-      const period = resolvePeriod(
-        activePhase.dayStartMinutes,
-        activePhase.dayDurationMinutes,
-        now,
-      );
-      const lightAction: DeviceActionLiteral =
-        period === "DAY" ? "ON" : "OFF";
+      const period = resolvePeriod(activePhase.dayStartMinutes, activePhase.dayDurationMinutes, now)
+      const lightAction: DeviceActionLiteral = period === 'DAY' ? 'ON' : 'OFF'
 
       // (1) Drive LIGHT devices directly from the clock.
       for (const device of cycle.controller.devices) {
-        if (device.automationMode === "MANUAL") continue;
-        if (device.automationMode === "THRESHOLD") continue;
-        if (device.automationMode === "ALWAYS_ON" && lightAction === "OFF") continue;
-        if (device.automationMode === "ALWAYS_OFF" && lightAction === "ON") continue;
+        if (device.automationMode === 'MANUAL') {
+          continue
+        }
+        if (device.automationMode === 'THRESHOLD') {
+          continue
+        }
+        if (device.automationMode === 'ALWAYS_ON' && lightAction === 'OFF') {
+          continue
+        }
+        if (device.automationMode === 'ALWAYS_OFF' && lightAction === 'ON') {
+          continue
+        }
 
         const result = await issueAutoCommand(
           device.id,
           lightAction,
-          `${period === "DAY" ? "day cycle start" : "night cycle start"} (phase ${activePhase.id})`,
-        );
+          `${period === 'DAY' ? 'day cycle start' : 'night cycle start'} (phase ${activePhase.id})`,
+        )
         if (result.issued) {
           console.log(
             `[scheduler] cycle=${cycle.id} phase=${activePhase.id} device=${device.id} action=${lightAction} (${period})`,
-          );
+          )
         }
       }
 
       // (2) Enforce ALWAYS_ON / ALWAYS_OFF rules scoped to the active phase
       //     (preferred) or active cycle. Filter by `period` matching the
-      //     current period or being null (both).
+      //     Current period or being null (both).
       const alwaysRules = await prisma.automationRule.findMany({
+        include: { device: true },
         where: {
-          enabled: true,
-          condition: { in: ["ALWAYS_ON", "ALWAYS_OFF"] },
+          AND: [{ OR: [{ period }, { period: null }] }],
           OR: [
             { growPhaseId: activePhase.id, growCycleId: null },
             { growCycleId: cycle.id, growPhaseId: null },
           ],
-          AND: [{ OR: [{ period }, { period: null }] }],
+          condition: { in: ['ALWAYS_ON', 'ALWAYS_OFF'] },
+          enabled: true,
         },
-        include: { device: true },
-      });
+      })
 
       for (const rule of alwaysRules) {
-        if (!rule.device) continue;
-        if (rule.device.type === "LIGHT") continue; // defensive — LIGHTs are ineligible
-        if (rule.device.automationMode === "MANUAL") continue;
-        const target: DeviceActionLiteral =
-          rule.condition === "ALWAYS_ON" ? "ON" : "OFF";
-        if (rule.device.automationMode === "ALWAYS_ON" && target === "OFF") continue;
-        if (rule.device.automationMode === "ALWAYS_OFF" && target === "ON") continue;
+        if (!rule.device) {
+          continue
+        }
+        if (rule.device.type === 'LIGHT') {
+          continue
+        } // Defensive — LIGHTs are ineligible
+        if (rule.device.automationMode === 'MANUAL') {
+          continue
+        }
+        const target: DeviceActionLiteral = rule.condition === 'ALWAYS_ON' ? 'ON' : 'OFF'
+        if (rule.device.automationMode === 'ALWAYS_ON' && target === 'OFF') {
+          continue
+        }
+        if (rule.device.automationMode === 'ALWAYS_OFF' && target === 'ON') {
+          continue
+        }
 
         const result = await issueAutoCommand(
           rule.device.id,
           target,
           `${rule.condition} rule (${rule.id})`,
-        );
+        )
         if (result.issued) {
           console.log(
             `[scheduler] cycle=${cycle.id} phase=${activePhase.id} rule=${rule.id} device=${rule.device.id} action=${target} (${rule.condition})`,
-          );
+          )
         }
       }
     }
   }
 }
 
-export const automationScheduler = new AutomationScheduler();
+export const automationScheduler = new AutomationScheduler()
 
 // Backward-compat re-export for any caller still using the old name.
-export { AutomationScheduler as LightScheduler };
-export const lightScheduler = automationScheduler;
+export { AutomationScheduler as LightScheduler }
+export const lightScheduler = automationScheduler

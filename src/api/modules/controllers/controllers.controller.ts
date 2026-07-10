@@ -1,41 +1,41 @@
-import { FastifyInstance } from "fastify";
-import { SensorType, SensorProtocol } from "../../../generated/client/enums.js";
+import type { FastifyInstance } from 'fastify'
+import type { SensorProtocol, SensorType } from '../../../generated/client/enums.js'
 
-export type SensorProtocolType = (typeof SensorProtocol)[keyof typeof SensorProtocol];
-export type SensorTypeValue = (typeof SensorType)[keyof typeof SensorType];
+export type SensorProtocolType = (typeof SensorProtocol)[keyof typeof SensorProtocol]
+export type SensorTypeValue = (typeof SensorType)[keyof typeof SensorType]
 
 export interface SeedSensorInput {
-  name: string;
-  type: SensorTypeValue;
-  mqttTopic: string;
-  pinNumbers: number[];
-  protocol: SensorProtocolType;
+  name: string
+  type: SensorTypeValue
+  mqttTopic: string
+  pinNumbers: number[]
+  protocol: SensorProtocolType
 }
 
 interface CreateControllerInput {
-  macAddress: string;
-  name: string;
-  ipAddress: string;
-  sensors?: SeedSensorInput[];
+  macAddress: string
+  name: string
+  ipAddress: string
+  sensors?: SeedSensorInput[]
 }
 
 interface UpdateControllerInput {
-  name?: string;
-  status?: "ONLINE" | "OFFLINE" | "ERROR";
+  name?: string
+  status?: 'ONLINE' | 'OFFLINE' | 'ERROR'
 }
 
 export class ControllersController {
-  private prisma;
+  private prisma
 
   constructor(server: FastifyInstance) {
-    this.prisma = server.prisma;
+    this.prisma = server.prisma
   }
 
   // 1. READ ALL (Lists all registered hubs with light status payloads)
   async getAllControllers() {
     return await this.prisma.controller.findMany({
-      orderBy: { createdAt: "desc" },
-    });
+      orderBy: { createdAt: 'desc' },
+    })
   }
 
   // 2. READ ONE
@@ -44,55 +44,54 @@ export class ControllersController {
   //    - sensor inventory
   async getControllerById(id: string) {
     return await this.prisma.controller.findUniqueOrThrow({
-      where: { id },
       include: {
+        devices: {
+          orderBy: { pinNumber: 'asc' },
+        },
         growCycles: {
-          where: { isActive: true },
           include: {
             phases: {
-              where: { isActive: true },
               include: {
-                environments: { orderBy: { period: "asc" } },
+                environments: { orderBy: { period: 'asc' } },
               },
+              where: { isActive: true },
             },
           },
-        },
-        devices: {
-          orderBy: { pinNumber: "asc" },
+          where: { isActive: true },
         },
         sensors: {
-          orderBy: { createdAt: "asc" },
+          orderBy: { createdAt: 'asc' },
         },
       },
-    });
+      where: { id },
+    })
   }
 
   // 3. CREATE / REGISTER
   //    Preserves the existing upsert-by-macAddress contract. Sensor seeding only
-  //    happens on a fresh create; re-registrations never silently mutate the
-  //    sensor inventory.
+  //    Happens on a fresh create; re-registrations never silently mutate the
+  //    Sensor inventory.
   async createController(body: CreateControllerInput) {
-    const sensors = body.sensors ?? [];
+    const sensors = body.sensors ?? []
 
     return await this.prisma.$transaction(async (tx) => {
       const existing = await tx.controller.findUnique({
-        where: { macAddress: body.macAddress },
         select: { id: true },
-      });
+        where: { macAddress: body.macAddress },
+      })
 
       if (existing) {
         return tx.controller.update({
-          where: { macAddress: body.macAddress },
           data: { name: body.name },
-        });
+          where: { macAddress: body.macAddress },
+        })
       }
 
       return tx.controller.create({
         data: {
+          ipAddress: body.ipAddress,
           macAddress: body.macAddress,
           name: body.name,
-          ipAddress: body.ipAddress,
-          status: "OFFLINE",
           sensors: {
             create: sensors.map((s) => ({
               name: s.name,
@@ -102,32 +101,33 @@ export class ControllersController {
               protocol: s.protocol,
             })),
           },
+          status: 'OFFLINE',
         },
         include: { sensors: true },
-      });
-    });
+      })
+    })
   }
 
   // 4. UPDATE STATUS / DETAILS
   async updateController(id: string, body: UpdateControllerInput) {
     return await this.prisma.controller.update({
-      where: { id },
       data: body,
-    });
+      where: { id },
+    })
   }
 
   // 5. REMOVE HUB PROVISION
   async deleteController(id: string) {
     await this.prisma.controller.delete({
       where: { id },
-    });
+    })
   }
 
   // 6. HEARTBEAT STATUS UPDATE
-  async heartbeat(id: string, status: "ONLINE" | "OFFLINE") {
+  async heartbeat(id: string, status: 'ONLINE' | 'OFFLINE') {
     return await this.prisma.controller.update({
-      where: { id },
       data: { status },
-    });
+      where: { id },
+    })
   }
 }

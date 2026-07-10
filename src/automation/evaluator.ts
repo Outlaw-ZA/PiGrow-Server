@@ -1,39 +1,39 @@
-import { prisma } from "../prisma.js";
-import { resolvePeriod } from "./period.js";
-import { issueAutoCommand } from "./command-publisher.js";
+import { prisma } from '../prisma.js'
+import { resolvePeriod } from './period.js'
+import { issueAutoCommand } from './command-publisher.js'
 import type {
-  SensorType as SensorTypeLiteral,
   DayNightPeriod as DayNightPeriodLiteral,
-} from "../generated/client/enums.js";
+  SensorType as SensorTypeLiteral,
+} from '../generated/client/enums.js'
 
 interface EvaluateArgs {
-  growCycleId: string;
-  sensorType: SensorTypeLiteral;
-  value: number;
-  now?: Date;
+  growCycleId: string
+  sensorType: SensorTypeLiteral
+  value: number
+  now?: Date
 }
 
 interface EnvFields {
-  tempMin: number | null;
-  tempMax: number | null;
-  tempTarget: number | null;
-  humidityMin: number | null;
-  humidityMax: number | null;
-  humidityTarget: number | null;
-  co2Min: number | null;
-  co2Max: number | null;
-  co2Target: number | null;
+  tempMin: number | null
+  tempMax: number | null
+  tempTarget: number | null
+  humidityMin: number | null
+  humidityMax: number | null
+  humidityTarget: number | null
+  co2Min: number | null
+  co2Max: number | null
+  co2Target: number | null
 }
 
 // Map a SensorType to the matching pair of threshold fields on PhaseEnvironment.
 const SENSOR_TO_ENV_KEY: Record<SensorTypeLiteral, keyof EnvFields | null> = {
-  TEMPERATURE: "tempMax", // sentinel — see resolveBoundary for min/max pair
-  HUMIDITY: "humidityMax",
-  TEMP_HUMIDITY: "tempMax", // prefers temperature when paired
-  CO2: "co2Max",
-  PH: null,
+  CO2: 'co2Max',
   EC: null,
-};
+  HUMIDITY: 'humidityMax',
+  PH: null,
+  TEMPERATURE: 'tempMax', // sentinel — see resolveBoundary for min/max pair
+  TEMP_HUMIDITY: 'tempMax', // prefers temperature when paired,
+}
 
 // Returns the relevant min/max/target triple for a sensor type, or null when
 // PhaseEnvironment has no thresholds for that type.
@@ -42,26 +42,30 @@ function getBoundaryFields(
   env: EnvFields,
 ): { min: number | null; max: number | null; target: number | null } | null {
   switch (sensorType) {
-    case "TEMPERATURE":
-    case "TEMP_HUMIDITY":
-      return { min: env.tempMin, max: env.tempMax, target: env.tempTarget };
-    case "HUMIDITY":
+    case 'TEMPERATURE':
+    case 'TEMP_HUMIDITY': {
+      return { min: env.tempMin, max: env.tempMax, target: env.tempTarget }
+    }
+    case 'HUMIDITY': {
       return {
         min: env.humidityMin,
         max: env.humidityMax,
         target: env.humidityTarget,
-      };
-    case "CO2":
-      return { min: env.co2Min, max: env.co2Max, target: env.co2Target };
-    case "PH":
-    case "EC":
-      return null;
+      }
+    }
+    case 'CO2': {
+      return { min: env.co2Min, max: env.co2Max, target: env.co2Target }
+    }
+    case 'PH':
+    case 'EC': {
+      return null
+    }
   }
 }
 
 // Touch SENSOR_TO_ENV_KEY to keep the map referenced (the runtime lookup
-// is in getBoundaryFields; the map is left as documentation for callers).
-void SENSOR_TO_ENV_KEY;
+// Is in getBoundaryFields; the map is left as documentation for callers).
+void SENSOR_TO_ENV_KEY
 
 /**
  * Evaluate threshold rules for one persisted telemetry reading.
@@ -82,66 +86,64 @@ export async function evaluateThresholds({
   now = new Date(),
 }: EvaluateArgs): Promise<void> {
   const cycle = await prisma.growCycle.findUnique({
-    where: { id: growCycleId },
     select: {
       id: true,
       isActive: true,
       phases: {
-        where: { isActive: true },
+        select: { dayDurationMinutes: true, dayStartMinutes: true, id: true },
         take: 1,
-        select: { id: true, dayStartMinutes: true, dayDurationMinutes: true },
+        where: { isActive: true },
       },
     },
-  });
-  if (!cycle || !cycle.isActive) return;
-  const activePhase = cycle.phases[0];
-  if (!activePhase) return;
+    where: { id: growCycleId },
+  })
+  if (!cycle || !cycle.isActive) {
+    return
+  }
+  const activePhase = cycle.phases[0]
+  if (!activePhase) {
+    return
+  }
 
-  const period = resolvePeriod(
-    activePhase.dayStartMinutes,
-    activePhase.dayDurationMinutes,
-    now,
-  );
+  const period = resolvePeriod(activePhase.dayStartMinutes, activePhase.dayDurationMinutes, now)
 
   const env = await prisma.phaseEnvironment.findUnique({
-    where: { growPhaseId_period: { growPhaseId: activePhase.id, period } },
     select: {
-      tempMin: true,
-      tempMax: true,
-      tempTarget: true,
-      humidityMin: true,
-      humidityMax: true,
-      humidityTarget: true,
-      co2Min: true,
       co2Max: true,
+      co2Min: true,
       co2Target: true,
+      humidityMax: true,
+      humidityMin: true,
+      humidityTarget: true,
+      tempMax: true,
+      tempMin: true,
+      tempTarget: true,
     },
-  });
+    where: { growPhaseId_period: { growPhaseId: activePhase.id, period } },
+  })
 
   // Without an environment row for this period, no rule has a threshold to
-  // compare against. Schedule rules run via the scheduler tick.
-  if (!env) return;
+  // Compare against. Schedule rules run via the scheduler tick.
+  if (!env) {
+    return
+  }
 
-  const boundary = getBoundaryFields(sensorType, env);
-  if (!boundary) return;
+  const boundary = getBoundaryFields(sensorType, env)
+  if (!boundary) {
+    return
+  }
 
   const rules = await prisma.automationRule.findMany({
+    include: { device: true },
     where: {
       enabled: true,
       condition: {
-        in: [
-          "ABOVE_MAX",
-          "BELOW_MIN",
-          "ABOVE_MIN",
-          "BELOW_MAX",
-          "ABOVE_TARGET",
-          "BELOW_TARGET",
-        ],
+        in: ['ABOVE_MAX', 'BELOW_MIN', 'ABOVE_MIN', 'BELOW_MAX', 'ABOVE_TARGET', 'BELOW_TARGET'],
       },
       watchedSensorType: sensorType,
       // LIGHT devices are not eligible for automation rules; this filter is
       // defensive in case a stale row exists from before that constraint.
-      device: { type: { not: "LIGHT" } },
+      device: { type: { not: 'LIGHT' } },
       OR: [
         { growPhaseId: activePhase.id, growCycleId: null },
         { growCycleId: cycle.id, growPhaseId: null },
@@ -152,104 +154,118 @@ export async function evaluateThresholds({
         },
       ],
     },
-    include: { device: true },
-  });
+  })
 
   // Per-device suppression: if an enabled ALWAYS_ON / ALWAYS_OFF rule covers
-  // this device within the active scope + current period, threshold rules for
-  // that same (device, scope, period) are skipped. The ALWAYS_* rule itself
-  // is enforced by the automation scheduler on its 60s tick.
+  // This device within the active scope + current period, threshold rules for
+  // That same (device, scope, period) are skipped. The ALWAYS_* rule itself
+  // Is enforced by the automation scheduler on its 60s tick.
   const alwaysRules = await prisma.automationRule.findMany({
+    select: { deviceId: true, period: true },
     where: {
-      enabled: true,
-      condition: { in: ["ALWAYS_ON", "ALWAYS_OFF"] },
+      AND: [{ OR: [{ period }, { period: null }] }],
       OR: [
         { growPhaseId: activePhase.id, growCycleId: null },
         { growCycleId: cycle.id, growPhaseId: null },
       ],
-      AND: [{ OR: [{ period }, { period: null }] }],
+      condition: { in: ['ALWAYS_ON', 'ALWAYS_OFF'] },
+      enabled: true,
     },
-    select: { deviceId: true, period: true },
-  });
-  const pinnedDeviceIds = new Set(alwaysRules.map((r) => r.deviceId));
+  })
+  const pinnedDeviceIds = new Set(alwaysRules.map((r) => r.deviceId))
 
   for (const rule of rules) {
-    if (rule.period !== null && rule.period !== period) continue;
+    if (rule.period !== null && rule.period !== period) {
+      continue
+    }
 
     // Suppression: an enabled ALWAYS_* rule for this device + scope + period
-    // pins the device; threshold rules for that device in that scope + period
-    // are skipped. The pin is enforced by the automation scheduler.
-    if (pinnedDeviceIds.has(rule.deviceId)) continue;
+    // Pins the device; threshold rules for that device in that scope + period
+    // Are skipped. The pin is enforced by the automation scheduler.
+    if (pinnedDeviceIds.has(rule.deviceId)) {
+      continue
+    }
 
-    if (!rule.device) continue;
-    if (rule.device.automationMode === "MANUAL") continue;
-    if (rule.device.automationMode === "ALWAYS_ON" && rule.action === "OFF") continue;
-    if (rule.device.automationMode === "ALWAYS_OFF" && rule.action === "ON") continue;
+    if (!rule.device) {
+      continue
+    }
+    if (rule.device.automationMode === 'MANUAL') {
+      continue
+    }
+    if (rule.device.automationMode === 'ALWAYS_ON' && rule.action === 'OFF') {
+      continue
+    }
+    if (rule.device.automationMode === 'ALWAYS_OFF' && rule.action === 'ON') {
+      continue
+    }
 
     // Cooldown: skip if the rule fired recently.
     if (rule.lastTriggeredAt) {
-      const elapsedMs = now.getTime() - rule.lastTriggeredAt.getTime();
-      if (elapsedMs < rule.cooldownSeconds * 1000) continue;
+      const elapsedMs = now.getTime() - rule.lastTriggeredAt.getTime()
+      if (elapsedMs < rule.cooldownSeconds * 1000) {
+        continue
+      }
     }
 
-    let shouldFire = false;
-    let reason = "";
+    let shouldFire = false
+    let reason = ''
 
-    if (rule.condition === "ABOVE_MAX") {
+    if (rule.condition === 'ABOVE_MAX') {
       if (boundary.max !== null && value > boundary.max) {
-        shouldFire = true;
-        reason = `${sensorType} ${value} > max ${boundary.max} (${period})`;
+        shouldFire = true
+        reason = `${sensorType} ${value} > max ${boundary.max} (${period})`
       }
-    } else if (rule.condition === "BELOW_MIN") {
+    } else if (rule.condition === 'BELOW_MIN') {
       if (boundary.min !== null && value < boundary.min) {
-        shouldFire = true;
-        reason = `${sensorType} ${value} < min ${boundary.min} (${period})`;
+        shouldFire = true
+        reason = `${sensorType} ${value} < min ${boundary.min} (${period})`
       }
-    } else if (rule.condition === "ABOVE_MIN") {
+    } else if (rule.condition === 'ABOVE_MIN') {
       if (boundary.min !== null && value > boundary.min) {
-        shouldFire = true;
-        reason = `${sensorType} ${value} > min ${boundary.min} (${period})`;
+        shouldFire = true
+        reason = `${sensorType} ${value} > min ${boundary.min} (${period})`
       }
-    } else if (rule.condition === "BELOW_MAX") {
+    } else if (rule.condition === 'BELOW_MAX') {
       if (boundary.max !== null && value < boundary.max) {
-        shouldFire = true;
-        reason = `${sensorType} ${value} < max ${boundary.max} (${period})`;
+        shouldFire = true
+        reason = `${sensorType} ${value} < max ${boundary.max} (${period})`
       }
-    } else if (rule.condition === "ABOVE_TARGET") {
+    } else if (rule.condition === 'ABOVE_TARGET') {
       if (boundary.target !== null && value > boundary.target) {
-        shouldFire = true;
-        reason = `${sensorType} ${value} > target ${boundary.target} (${period})`;
+        shouldFire = true
+        reason = `${sensorType} ${value} > target ${boundary.target} (${period})`
       }
-    } else if (rule.condition === "BELOW_TARGET") {
+    } else if (rule.condition === 'BELOW_TARGET') {
       if (boundary.target !== null && value < boundary.target) {
-        shouldFire = true;
-        reason = `${sensorType} ${value} < target ${boundary.target} (${period})`;
+        shouldFire = true
+        reason = `${sensorType} ${value} < target ${boundary.target} (${period})`
       }
     }
 
-    if (!shouldFire) continue;
+    if (!shouldFire) {
+      continue
+    }
 
     // Persist lastTriggeredAt *before* the command so concurrent ticks on
-    // the same rule respect cooldown.
+    // The same rule respect cooldown.
     await prisma.automationRule.update({
-      where: { id: rule.id },
       data: { lastTriggeredAt: now },
-    });
+      where: { id: rule.id },
+    })
 
-    const result = await issueAutoCommand(rule.device.id, rule.action, reason);
+    const result = await issueAutoCommand(rule.device.id, rule.action, reason)
     if (result.issued) {
       console.log(
         `[evaluator] cycle=${cycle.id} rule=${rule.id} device=${rule.device.id} action=${rule.action} value=${value}`,
-      );
+      )
     }
 
     // Mark the device as "threshold-held" for the interval scheduler so an
-    // interval schedule on the same device yields while this condition is
-    // actively asserting. heldUntil = now + cooldownSeconds; the scheduler
-    // fully suspends the device while the hold is fresh. Refreshed on every
-    // fire, so a persistent condition keeps the hold alive.
+    // Interval schedule on the same device yields while this condition is
+    // Actively asserting. heldUntil = now + cooldownSeconds; the scheduler
+    // Fully suspends the device while the hold is fresh. Refreshed on every
+    // Fire, so a persistent condition keeps the hold alive.
     await prisma.deviceThresholdHold.upsert({
-      where: { deviceId: rule.device.id },
       create: {
         deviceId: rule.device.id,
         heldUntil: new Date(now.getTime() + rule.cooldownSeconds * 1000),
@@ -259,6 +275,7 @@ export async function evaluateThresholds({
         heldUntil: new Date(now.getTime() + rule.cooldownSeconds * 1000),
         ruleId: rule.id,
       },
-    });
+      where: { deviceId: rule.device.id },
+    })
   }
 }

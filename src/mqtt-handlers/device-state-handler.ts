@@ -1,4 +1,4 @@
-import { prisma } from "../prisma.js";
+import { prisma } from '../prisma.js'
 
 /**
  * Handles `devices/<deviceId>/state` MQTT messages published by the Pi.
@@ -12,69 +12,62 @@ import { prisma } from "../prisma.js";
  * and the Pi reports the state, the evaluator will not issue a redundant
  * ON command.
  */
-export async function handleDeviceState(
-  topic: string,
-  messageBuffer: Buffer,
-): Promise<void> {
+export async function handleDeviceState(topic: string, messageBuffer: Buffer): Promise<void> {
   try {
-    const parts = topic.split("/");
-    const deviceId = parts[1];
+    const parts = topic.split('/')
+    const deviceId = parts[1]
     if (!deviceId) {
-      console.warn(`[device-state] Ignoring malformed topic: ${topic}`);
-      return;
+      console.warn(`[device-state] Ignoring malformed topic: ${topic}`)
+      return
     }
 
-    let payload: { action?: "ON" | "OFF"; timestamp?: number };
+    let payload: { action?: 'ON' | 'OFF'; timestamp?: number }
     try {
-      payload = JSON.parse(messageBuffer.toString());
+      payload = JSON.parse(messageBuffer.toString())
     } catch {
-      console.warn(
-        `[device-state] Non-JSON payload on ${topic}; dropping.`,
-      );
-      return;
+      console.warn(`[device-state] Non-JSON payload on ${topic}; dropping.`)
+      return
     }
 
-    if (payload?.action !== "ON" && payload?.action !== "OFF") {
-      console.warn(
-        `[device-state] Unknown action "${payload?.action}" on ${topic}`,
-      );
-      return;
+    if (payload?.action !== 'ON' && payload?.action !== 'OFF') {
+      console.warn(`[device-state] Unknown action "${payload?.action}" on ${topic}`)
+      return
     }
 
     const device = await prisma.device.findUnique({
-      where: { id: deviceId },
       select: { id: true, isActive: true },
-    });
+      where: { id: deviceId },
+    })
     if (!device) {
-      console.warn(`[device-state] Unknown device id: ${deviceId}`);
-      return;
+      console.warn(`[device-state] Unknown device id: ${deviceId}`)
+      return
     }
 
-    const reportedIsActive = payload.action === "ON";
+    const reportedIsActive = payload.action === 'ON'
     if (device.isActive === reportedIsActive) {
       // No-op reconciliation: device already in the reported state.
-      return;
+      return
     }
 
     await prisma.$transaction([
       prisma.device.update({
-        where: { id: deviceId },
         data: { isActive: reportedIsActive },
+        where: { id: deviceId },
       }),
       prisma.deviceStateLog.create({
         data: {
-          deviceId,
           action: payload.action,
-          source: "AUTO",
-          reason: "state confirmed",
+          deviceId,
+          reason: 'state confirmed',
+          source: 'AUTO',
         },
       }),
-    ]);
+    ])
 
     console.log(
-      `[device-state] device=${deviceId} reconciled to ${payload.action} (was ${device.isActive ? "ON" : "OFF"})`,
-    );
-  } catch (err) {
-    console.error("[device-state] Failed to process MQTT payload:", err);
+      `[device-state] device=${deviceId} reconciled to ${payload.action} (was ${device.isActive ? 'ON' : 'OFF'})`,
+    )
+  } catch (error) {
+    console.error('[device-state] Failed to process MQTT payload:', error)
   }
 }

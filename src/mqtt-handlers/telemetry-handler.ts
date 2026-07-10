@@ -1,7 +1,7 @@
-import type { SensorData } from "../types.js";
-import { prisma } from "../prisma.js";
-import { io } from "../server.js";
-import { evaluateThresholds } from "../automation/evaluator.js";
+import type { SensorData } from '../types.js'
+import { prisma } from '../prisma.js'
+import { io } from '../server.js'
+import { evaluateThresholds } from '../automation/evaluator.js'
 
 /**
  * Parses `sensors/<sensorId>/telemetry` payloads into telemetry rows.
@@ -16,45 +16,42 @@ import { evaluateThresholds } from "../automation/evaluator.js";
  * After persisting, every reading is fed to the threshold evaluator, which
  * may fire automation rules against the active grow cycle's phase environment.
  */
-export async function handleTelemetry(
-  topic: string,
-  messageBuffer: Buffer,
-): Promise<void> {
+export async function handleTelemetry(topic: string, messageBuffer: Buffer): Promise<void> {
   try {
-    const sensorId = topic.split("/")[1];
+    const sensorId = topic.split('/')[1]
     if (!sensorId) {
-      console.warn(`[telemetry] Ignoring malformed topic: ${topic}`);
-      return;
+      console.warn(`[telemetry] Ignoring malformed topic: ${topic}`)
+      return
     }
 
-    const payload: SensorData = JSON.parse(messageBuffer.toString());
+    const payload: SensorData = JSON.parse(messageBuffer.toString())
     if (!payload?.readings || payload.readings.length === 0) {
-      console.warn(`[telemetry] Empty payload from sensor ${sensorId}`);
-      return;
+      console.warn(`[telemetry] Empty payload from sensor ${sensorId}`)
+      return
     }
 
     const sensor = await prisma.sensor.findUnique({
-      where: { id: sensorId },
       include: {
         controller: {
           include: {
-            growCycles: { where: { isActive: true }, take: 1 },
+            growCycles: { take: 1, where: { isActive: true } },
           },
         },
       },
-    });
+      where: { id: sensorId },
+    })
 
     if (!sensor) {
-      console.warn(`[telemetry] Unknown sensor id: ${sensorId}`);
-      return;
+      console.warn(`[telemetry] Unknown sensor id: ${sensorId}`)
+      return
     }
 
-    const activeGrowCycle = sensor.controller.growCycles[0];
+    const activeGrowCycle = sensor.controller.growCycles[0]
     if (!activeGrowCycle) {
       console.warn(
         `[telemetry] Sensor ${sensorId} has no active grow cycle on controller ${sensor.controller.id}; dropping ${payload.readings.length} reading(s).`,
-      );
-      return;
+      )
+      return
     }
 
     const persisted = await prisma.$transaction(
@@ -68,41 +65,38 @@ export async function handleTelemetry(
           },
         }),
       ),
-    );
+    )
 
     await prisma.sensor.update({
-      where: { id: sensor.id },
       data: { lastActive: new Date() },
-    });
+      where: { id: sensor.id },
+    })
 
     console.log(
       `\n[telemetry] sensor=${sensor.name} (${sensor.id}) stored=${persisted.length} reading(s)`,
-    );
+    )
 
     for (const row of persisted) {
-      io.emit("frontend_telemetry", {
+      io.emit('frontend_telemetry', {
+        growCycleId: row.growCycleId,
         sensorId: sensor.id,
         sensorName: sensor.name,
         sensorType: row.sensorType,
-        value: row.value,
-        growCycleId: row.growCycleId,
         timestamp: row.createdAt,
-      });
+        value: row.value,
+      })
 
       // Threshold evaluation is fire-and-forget so a slow evaluator never
-      // blocks the persistence path. Errors are logged inside the evaluator.
+      // Blocks the persistence path. Errors are logged inside the evaluator.
       void evaluateThresholds({
         growCycleId: activeGrowCycle.id,
         sensorType: row.sensorType,
         value: row.value,
-      }).catch((err) => {
-        console.error(
-          "[telemetry] Threshold evaluator threw:",
-          err,
-        );
-      });
+      }).catch((error) => {
+        console.error('[telemetry] Threshold evaluator threw:', error)
+      })
     }
-  } catch (err) {
-    console.error("[telemetry] Failed to process MQTT payload:", err);
+  } catch (error) {
+    console.error('[telemetry] Failed to process MQTT payload:', error)
   }
 }

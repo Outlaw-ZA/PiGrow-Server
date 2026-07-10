@@ -1,9 +1,9 @@
-import { prisma } from "../prisma.js";
-import { resolvePeriod } from "./period.js";
-import { issueAutoCommand } from "./command-publisher.js";
-import type { DeviceAction as DeviceActionLiteral } from "../generated/client/enums.js";
+import { prisma } from '../prisma.js'
+import { resolvePeriod } from './period.js'
+import { issueAutoCommand } from './command-publisher.js'
+import type { DeviceAction as DeviceActionLiteral } from '../generated/client/enums.js'
 
-const TICK_MS = 5_000;
+const TICK_MS = 5000
 
 /**
  * Interval scheduler. Runs every TICK_MS and duty-cycles the devices of
@@ -31,126 +31,130 @@ const TICK_MS = 5_000;
  * No-op when there is no active grow cycle or no active phase.
  */
 export class IntervalScheduler {
-  private timer: NodeJS.Timeout | null = null;
+  private timer: NodeJS.Timeout | null = null
 
   start() {
-    if (this.timer) return;
-    void this.tick();
-    this.timer = setInterval(() => void this.tick(), TICK_MS);
+    if (this.timer) {
+      return
+    }
+    void this.tick()
+    this.timer = setInterval(() => void this.tick(), TICK_MS)
   }
 
   stop() {
     if (this.timer) {
-      clearInterval(this.timer);
-      this.timer = null;
+      clearInterval(this.timer)
+      this.timer = null
     }
   }
 
   // Exposed for tests and manual invocation.
   async tick(now: Date = new Date()) {
     const activeCycles = await prisma.growCycle.findMany({
-      where: { isActive: true },
       select: {
         id: true,
         phases: {
-          where: { isActive: true },
-          take: 1,
           select: {
-            id: true,
-            dayStartMinutes: true,
             dayDurationMinutes: true,
+            dayStartMinutes: true,
+            id: true,
           },
+          take: 1,
+          where: { isActive: true },
         },
       },
-    });
+      where: { isActive: true },
+    })
 
     for (const cycle of activeCycles) {
-      const activePhase = cycle.phases[0];
-      if (!activePhase) continue;
+      const activePhase = cycle.phases[0]
+      if (!activePhase) {
+        continue
+      }
 
-      const period = resolvePeriod(
-        activePhase.dayStartMinutes,
-        activePhase.dayDurationMinutes,
-        now,
-      );
+      const period = resolvePeriod(activePhase.dayStartMinutes, activePhase.dayDurationMinutes, now)
 
       const rules = await prisma.automationRule.findMany({
+        select: {
+          action: true,
+          createdAt: true,
+          device: {
+            select: { automationMode: true, id: true },
+          },
+          deviceId: true,
+          id: true,
+          intervalCycleSeconds: true,
+          intervalOnSeconds: true,
+        },
         where: {
           enabled: true,
-          condition: "INTERVAL",
+          condition: 'INTERVAL',
           // LIGHT devices are not eligible for automation rules; this filter
           // is defensive in case a stale row exists from before that constraint.
-          device: { type: { not: "LIGHT" } },
+          device: { type: { not: 'LIGHT' } },
           OR: [
             { growPhaseId: activePhase.id, growCycleId: null },
             { growCycleId: cycle.id, growPhaseId: null },
           ],
           AND: [{ OR: [{ period }, { period: null }] }],
         },
-        select: {
-          id: true,
-          deviceId: true,
-          action: true,
-          intervalOnSeconds: true,
-          intervalCycleSeconds: true,
-          createdAt: true,
-          device: {
-            select: { id: true, automationMode: true },
-          },
-        },
-      });
+      })
 
-      if (rules.length === 0) continue;
+      if (rules.length === 0) {
+        continue
+      }
 
       // One read for all non-expired holds on the involved devices.
-      const deviceIds = rules.map((r) => r.deviceId);
+      const deviceIds = rules.map((r) => r.deviceId)
       const activeHolds = await prisma.deviceThresholdHold.findMany({
+        select: { deviceId: true },
         where: {
           deviceId: { in: deviceIds },
           heldUntil: { gt: now },
         },
-        select: { deviceId: true },
-      });
-      const heldDeviceIds = new Set(activeHolds.map((h) => h.deviceId));
+      })
+      const heldDeviceIds = new Set(activeHolds.map((h) => h.deviceId))
 
       for (const rule of rules) {
-        if (
-          rule.intervalOnSeconds === null ||
-          rule.intervalCycleSeconds === null
-        ) {
+        if (rule.intervalOnSeconds === null || rule.intervalCycleSeconds === null) {
           // A row with condition=INTERVAL but null durations would be invalid
-          // by API validation; skip defensively.
-          continue;
+          // By API validation; skip defensively.
+          continue
         }
 
         if (heldDeviceIds.has(rule.deviceId)) {
           // Threshold rule is actively asserting this device. Yield entirely.
-          continue;
+          continue
         }
 
-        const mode = rule.device.automationMode;
-        if (mode === "MANUAL") continue;
+        const mode = rule.device.automationMode
+        if (mode === 'MANUAL') {
+          continue
+        }
 
-        const onMs = rule.intervalOnSeconds * 1000;
-        const cycleMs = rule.intervalCycleSeconds * 1000;
-        const elapsedMs = now.getTime() - rule.createdAt.getTime();
-        const position = ((elapsedMs % cycleMs) + cycleMs) % cycleMs;
-        const desiredAction: DeviceActionLiteral =
-          position < onMs ? "ON" : "OFF";
+        const onMs = rule.intervalOnSeconds * 1000
+        const cycleMs = rule.intervalCycleSeconds * 1000
+        const elapsedMs = now.getTime() - rule.createdAt.getTime()
+        const position = ((elapsedMs % cycleMs) + cycleMs) % cycleMs
+        const desiredAction: DeviceActionLiteral = position < onMs ? 'ON' : 'OFF'
 
         // Device-level automationMode always wins.
-        if (mode === "ALWAYS_ON" && desiredAction === "OFF") continue;
-        if (mode === "ALWAYS_OFF" && desiredAction === "ON") continue;
+        if (mode === 'ALWAYS_ON' && desiredAction === 'OFF') {
+          continue
+        }
+        if (mode === 'ALWAYS_OFF' && desiredAction === 'ON') {
+          continue
+        }
 
         const result = await issueAutoCommand(
           rule.deviceId,
           desiredAction,
           `INTERVAL rule (${rule.id})`,
-        );
+        )
         if (result.issued) {
           console.log(
             `[interval-scheduler] cycle=${cycle.id} phase=${activePhase.id} rule=${rule.id} device=${rule.deviceId} action=${desiredAction}`,
-          );
+          )
         }
       }
     }
@@ -158,8 +162,8 @@ export class IntervalScheduler {
     // Clean up expired holds globally. Cheap (bounded by recently-expired rows).
     await prisma.deviceThresholdHold.deleteMany({
       where: { heldUntil: { lt: now } },
-    });
+    })
   }
 }
 
-export const intervalScheduler = new IntervalScheduler();
+export const intervalScheduler = new IntervalScheduler()

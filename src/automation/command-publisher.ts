@@ -1,5 +1,5 @@
-import { mqttClient } from "../mqtt/client.js";
-import { prisma } from "../prisma.js";
+import { mqttClient } from '../mqtt/client.js'
+import { prisma } from '../prisma.js'
 
 /**
  * Issue an automated device command and persist a DeviceStateLog row.
@@ -11,39 +11,39 @@ import { prisma } from "../prisma.js";
  */
 export async function issueAutoCommand(
   deviceId: string,
-  action: "ON" | "OFF",
+  action: 'ON' | 'OFF',
   reason: string,
 ): Promise<{ issued: boolean; reason: string }> {
   const device = await prisma.device.findUnique({
+    select: { id: true, isActive: true, pinNumber: true },
     where: { id: deviceId },
-    select: { id: true, pinNumber: true, isActive: true },
-  });
+  })
   if (!device) {
-    return { issued: false, reason: "device not found" };
+    return { issued: false, reason: 'device not found' }
   }
 
   // Hysteresis: if the device's most recent state log already records this action,
-  // skip the command. This applies across all sources (MANUAL, AUTO, UI) so an
-  // operator's manual toggle is respected by the automation engine.
+  // Skip the command. This applies across all sources (MANUAL, AUTO, UI) so an
+  // Operator's manual toggle is respected by the automation engine.
   const last = await prisma.deviceStateLog.findFirst({
-    where: { deviceId },
-    orderBy: { createdAt: "desc" },
+    orderBy: { createdAt: 'desc' },
     select: { action: true },
-  });
+    where: { deviceId },
+  })
   if (last?.action === action) {
-    return { issued: false, reason: "device already in this state" };
+    return { issued: false, reason: 'device already in this state' }
   }
 
   // Persist state transition + audit row in a single transaction.
   await prisma.$transaction([
     prisma.device.update({
+      data: { isActive: action === 'ON' },
       where: { id: deviceId },
-      data: { isActive: action === "ON" },
     }),
     prisma.deviceStateLog.create({
-      data: { deviceId, action, source: "AUTO", reason },
+      data: { action, deviceId, reason, source: 'AUTO' },
     }),
-  ]);
+  ])
 
   mqttClient.publish(
     `devices/${deviceId}/commands`,
@@ -52,7 +52,7 @@ export async function issueAutoCommand(
       pin: device.pinNumber,
       timestamp: Date.now(),
     }),
-  );
+  )
 
-  return { issued: true, reason };
+  return { issued: true, reason }
 }
