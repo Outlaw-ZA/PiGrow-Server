@@ -12,6 +12,8 @@ import {
   DeviceParamsControllerIdSchema,
   DeviceParamsIdSchema,
   DeviceResponseSchema,
+  DeviceStateLogQuerySchema,
+  DeviceStateLogsResponseSchema,
   ErrorSchema,
   UpdateDeviceSchema,
 } from './devices.schema.js'
@@ -195,6 +197,35 @@ export default async function deviceRoutes(server: FastifyInstance) {
         )
       } catch {
         return reply.code(404).send({ error: 'Device command dispatch failed' })
+      }
+    },
+  )
+
+  // 8. DEVICE STATE LOGS (ON/OFF history within a time range)
+  router.get(
+    '/api/devices/:id/state-logs',
+    {
+      schema: {
+        description:
+          'Returns device ON/OFF state-transition logs within the given time range, plus the state at the start boundary.',
+        params: DeviceParamsIdSchema,
+        querystring: DeviceStateLogQuerySchema,
+        response: {
+          200: DeviceStateLogsResponseSchema,
+          404: ErrorSchema,
+        },
+        summary: 'Device ON/OFF state history',
+        tags: ['Devices'],
+      },
+    },
+    async (request, reply) => {
+      try {
+        return cast<typeof DeviceStateLogsResponseSchema.static>(
+          await controller.getDeviceStateLogs(request.params.id, request.query),
+        )
+      } catch (error) {
+        server.log.error({ deviceId: request.params.id, err: error }, 'Device state log query failed')
+        return reply.code(404).send({ error: 'Device state log query failed' })
       }
     },
   )

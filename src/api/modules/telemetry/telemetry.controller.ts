@@ -37,7 +37,20 @@ export class TelemetryController {
 
   // 2. READ LATEST READING PER SENSOR (newest reading per physical sensor)
   async getLatestByGrowCycleId(growCycleId: string) {
-    const allReadings = await this.prisma.telemetry.findMany({
+    // Use groupBy to get the most recent createdAt per sensorId, avoiding
+    // An unbounded full-table scan that the previous in-memory dedup caused.
+    const groups = await this.prisma.telemetry.groupBy({
+      _max: { createdAt: true },
+      by: ['sensorId'],
+      where: { growCycleId },
+    })
+
+    if (groups.length === 0) {
+      return []
+    }
+
+    // Fetch the full reading row for each (sensorId, createdAt) pair.
+    const readings = await this.prisma.telemetry.findMany({
       include: {
         sensor: {
           select: {
@@ -48,18 +61,16 @@ export class TelemetryController {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
-      where: { growCycleId },
+      where: {
+        OR: groups.map((g) => ({
+          sensorId: g.sensorId,
+          createdAt: g._max.createdAt!,
+        })),
+        growCycleId,
+      },
     })
 
-    const latestBySensor = new Map<string, (typeof allReadings)[number]>()
-    for (const reading of allReadings) {
-      if (!latestBySensor.has(reading.sensorId)) {
-        latestBySensor.set(reading.sensorId, reading)
-      }
-    }
-
-    return [...latestBySensor.values()]
+    return readings
   }
 
   // 3. READ TELEMETRY IN A DATE RANGE

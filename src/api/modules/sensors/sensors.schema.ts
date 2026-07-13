@@ -22,7 +22,6 @@ export const SensorResponseSchema = Type.Object({
   createdAt: Type.String({ format: 'date-time' }),
   id: Type.String({ format: 'uuid' }),
   lastActive: Type.Union([Type.String({ format: 'date-time' }), Type.Null()]),
-  mqttTopic: Type.String(),
   name: Type.String(),
   pinNumbers: Type.Array(Type.Integer()),
   protocol: SensorProtocolSchema,
@@ -51,9 +50,8 @@ export const SensorParamsControllerIdSchema = Type.Object({
 
 export const CreateSensorSchema = Type.Object({
   controllerId: Type.String({ format: 'uuid' }),
-  mqttTopic: Type.String({ maxLength: 200 }),
   name: Type.String({ maxLength: 100 }),
-  pinNumbers: Type.Array(Type.Integer({ minimum: 0, maximum: 40 })),
+  pinNumbers: Type.Array(Type.Integer({ maximum: 40, minimum: 0 })),
   protocol: SensorProtocolSchema,
   type: SensorTypeSchema,
 })
@@ -61,13 +59,12 @@ export const CreateSensorSchema = Type.Object({
 export const UpdateSensorSchema = Type.Object({
   lastActive: Type.Optional(
     Type.String({
-      format: 'date-time',
       description: 'ISO 8601 timestamp. Server-managed in normal flow.',
+      format: 'date-time',
     }),
   ),
-  mqttTopic: Type.Optional(Type.String({ maxLength: 200 })),
   name: Type.Optional(Type.String({ maxLength: 100 })),
-  pinNumbers: Type.Optional(Type.Array(Type.Integer({ minimum: 0, maximum: 40 }))),
+  pinNumbers: Type.Optional(Type.Array(Type.Integer({ maximum: 40, minimum: 0 }))),
   protocol: Type.Optional(SensorProtocolSchema),
   type: Type.Optional(SensorTypeSchema),
 })

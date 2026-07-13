@@ -17,13 +17,13 @@ export const TelemetryResponseSchema = Type.Object({
   sensor: Type.Object({
     id: Type.String({ format: 'uuid' }),
     name: Type.String(),
-    type: TelemetrySensorTypeSchema,
     protocol: Type.Union([
       Type.Literal('I2C'),
       Type.Literal('SPI'),
       Type.Literal('UART'),
       Type.Literal('RS485'),
     ]),
+    type: TelemetrySensorTypeSchema,
   }),
   sensorId: Type.String({ format: 'uuid' }),
   sensorType: TelemetrySensorTypeSchema,

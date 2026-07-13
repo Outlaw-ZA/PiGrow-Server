@@ -8,6 +8,7 @@ import type {
 
 interface EvaluateArgs {
   growCycleId: string
+  sensorId?: string // Optional — staleness check is skipped when omitted
   sensorType: SensorTypeLiteral
   value: number
   now?: Date
@@ -31,8 +32,8 @@ const SENSOR_TO_ENV_KEY: Record<SensorTypeLiteral, keyof EnvFields | null> = {
   EC: null,
   HUMIDITY: 'humidityMax',
   PH: null,
-  TEMPERATURE: 'tempMax', // sentinel — see resolveBoundary for min/max pair
-  TEMP_HUMIDITY: 'tempMax', // prefers temperature when paired,
+  TEMPERATURE: 'tempMax', // Sentinel — see resolveBoundary for min/max pair
+  TEMP_HUMIDITY: 'tempMax', // Prefers temperature when paired,
 }
 
 // Returns the relevant min/max/target triple for a sensor type, or null when
@@ -44,17 +45,17 @@ function getBoundaryFields(
   switch (sensorType) {
     case 'TEMPERATURE':
     case 'TEMP_HUMIDITY': {
-      return { min: env.tempMin, max: env.tempMax, target: env.tempTarget }
+      return { max: env.tempMax, min: env.tempMin, target: env.tempTarget }
     }
     case 'HUMIDITY': {
       return {
-        min: env.humidityMin,
         max: env.humidityMax,
+        min: env.humidityMin,
         target: env.humidityTarget,
       }
     }
     case 'CO2': {
-      return { min: env.co2Min, max: env.co2Max, target: env.co2Target }
+      return { max: env.co2Max, min: env.co2Min, target: env.co2Target }
     }
     case 'PH':
     case 'EC': {
@@ -79,8 +80,11 @@ void SENSOR_TO_ENV_KEY
  *      threshold boundary. Apply cooldown and hysteresis. Issue the action
  *      via issueAutoCommand.
  */
+const STALE_SENSOR_MS = 120_000 // 2 minutes — 4x a typical 30s interval
+
 export async function evaluateThresholds({
   growCycleId,
+  sensorId,
   sensorType,
   value,
   now = new Date(),
@@ -103,6 +107,23 @@ export async function evaluateThresholds({
   const activePhase = cycle.phases[0]
   if (!activePhase) {
     return
+  }
+
+  // Sensor-staleness gate: if the sensor's lastActive timestamp exceeds
+  // The staleness window, skip threshold evaluation and warn. This
+  // Prevents the engine from holding a stale command indefinitely when
+  // A sensor goes silent (dead I2C, loose jumper, etc.).
+  if (sensorId) {
+    const sensor = await prisma.sensor.findUnique({
+      select: { lastActive: true },
+      where: { id: sensorId },
+    })
+    if (sensor?.lastActive && now.getTime() - sensor.lastActive.getTime() > STALE_SENSOR_MS) {
+      console.warn(
+        `[evaluator] Sensor ${sensorId} lastActive ${sensor.lastActive.toISOString()} is stale (>${STALE_SENSOR_MS}ms); skipping evaluation.`,
+      )
+      return
+    }
   }
 
   const period = resolvePeriod(activePhase.dayStartMinutes, activePhase.dayDurationMinutes, now)
@@ -142,10 +163,10 @@ export async function evaluateThresholds({
       },
       watchedSensorType: sensorType,
       // LIGHT devices are not eligible for automation rules; this filter is
-      // defensive in case a stale row exists from before that constraint.
+      // Defensive in case a stale row exists from before that constraint.
       device: { type: { not: 'LIGHT' } },
       OR: [
-        { growPhaseId: activePhase.id, growCycleId: null },
+        { growCycleId: null, growPhaseId: activePhase.id },
         { growCycleId: cycle.id, growPhaseId: null },
       ],
       AND: [
@@ -165,7 +186,7 @@ export async function evaluateThresholds({
     where: {
       AND: [{ OR: [{ period }, { period: null }] }],
       OR: [
-        { growPhaseId: activePhase.id, growCycleId: null },
+        { growCycleId: null, growPhaseId: activePhase.id },
         { growCycleId: cycle.id, growPhaseId: null },
       ],
       condition: { in: ['ALWAYS_ON', 'ALWAYS_OFF'] },
@@ -187,9 +208,6 @@ export async function evaluateThresholds({
     }
 
     if (!rule.device) {
-      continue
-    }
-    if (rule.device.automationMode === 'MANUAL') {
       continue
     }
     if (rule.device.automationMode === 'ALWAYS_ON' && rule.action === 'OFF') {

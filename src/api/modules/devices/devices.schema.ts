@@ -25,9 +25,9 @@ const AutomationModeEnum = Type.Union([
 const DeviceBody = Type.Object({
   automationMode: Type.Optional(Type.Union([AutomationModeEnum], { default: 'MANUAL' })),
   isActive: Type.Optional(Type.Boolean({ default: true })),
-  mqttTopic: Type.String({ maxLength: 150 }),
+  maxOnSeconds: Type.Optional(Type.Union([Type.Integer(), Type.Null()])),
   name: Type.String({ maxLength: 100 }),
-  pinNumber: Type.Integer({ minimum: 0, maximum: 40 }),
+  pinNumber: Type.Integer({ maximum: 40, minimum: 0 }),
   type: DeviceTypeEnum,
 })
 
@@ -37,7 +37,7 @@ export const DeviceResponseSchema = Type.Object({
   createdAt: Type.String({ format: 'date-time' }),
   id: Type.String({ format: 'uuid' }),
   isActive: Type.Boolean(),
-  mqttTopic: Type.String(),
+  maxOnSeconds: Type.Optional(Type.Union([Type.Integer(), Type.Null()])),
   name: Type.String(),
   pinNumber: Type.Integer(),
   type: DeviceTypeEnum,
@@ -64,13 +64,13 @@ export const DeviceCommandResponseSchema = Type.Object({
 export const CreateDeviceSchema = Type.Object({
   automationMode: Type.Optional(AutomationModeEnum),
   controllerId: Type.String({
-    format: 'uuid',
     description: 'UUID of the parent Controller that owns this device',
+    format: 'uuid',
   }),
   isActive: Type.Optional(Type.Boolean({ default: true })),
-  mqttTopic: Type.String({ maxLength: 150 }),
+  maxOnSeconds: Type.Optional(Type.Union([Type.Integer(), Type.Null()])),
   name: Type.String({ maxLength: 100 }),
-  pinNumber: Type.Integer({ minimum: 0, maximum: 40 }),
+  pinNumber: Type.Integer({ maximum: 40, minimum: 0 }),
   type: DeviceTypeEnum,
 })
 
@@ -82,9 +82,9 @@ export const BatchCreateDeviceSchema = Type.Object({
 export const UpdateDeviceSchema = Type.Object({
   automationMode: Type.Optional(AutomationModeEnum),
   isActive: Type.Optional(Type.Boolean()),
-  mqttTopic: Type.Optional(Type.String({ maxLength: 150 })),
+  maxOnSeconds: Type.Optional(Type.Union([Type.Integer(), Type.Null()])),
   name: Type.Optional(Type.String({ maxLength: 100 })),
-  pinNumber: Type.Optional(Type.Integer({ minimum: 0, maximum: 40 })),
+  pinNumber: Type.Optional(Type.Integer({ maximum: 40, minimum: 0 })),
   type: Type.Optional(DeviceTypeEnum),
 })
 
@@ -98,6 +98,42 @@ export const DeviceParamsIdSchema = Type.Object({
 
 export const DeviceParamsControllerIdSchema = Type.Object({
   controllerId: Type.String({ format: 'uuid' }),
+})
+
+// ── Device State Log schemas ──────────────────────────────────────────
+
+const DeviceActionEnum = Type.Union([Type.Literal('ON'), Type.Literal('OFF')])
+
+const DeviceStateSourceEnum = Type.Union([
+  Type.Literal('MANUAL'),
+  Type.Literal('AUTO'),
+  Type.Literal('UI'),
+])
+
+export const DeviceStateLogResponseSchema = Type.Object({
+  action: DeviceActionEnum,
+  createdAt: Type.String({ format: 'date-time' }),
+  deviceId: Type.String({ format: 'uuid' }),
+  id: Type.String({ format: 'uuid' }),
+  reason: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  source: DeviceStateSourceEnum,
+})
+
+export const DeviceStateLogArrayResponseSchema = Type.Array(DeviceStateLogResponseSchema)
+
+export const DeviceStateLogsResponseSchema = Type.Object({
+  logs: DeviceStateLogArrayResponseSchema,
+  priorAction: Type.Optional(Type.Union([DeviceActionEnum, Type.Null()])),
+})
+
+export const DeviceStateLogQuerySchema = Type.Object({
+  from: Type.Optional(
+    Type.String({ description: 'ISO 8601 start (inclusive)', format: 'date-time' }),
+  ),
+  limit: Type.Optional(Type.Integer({ default: 500, maximum: 2000 })),
+  to: Type.Optional(
+    Type.String({ description: 'ISO 8601 end (inclusive)', format: 'date-time' }),
+  ),
 })
 
 export { ErrorSchema }

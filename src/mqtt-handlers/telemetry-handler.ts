@@ -72,6 +72,19 @@ export async function handleTelemetry(topic: string, messageBuffer: Buffer): Pro
       where: { id: sensor.id },
     })
 
+    // Mark the controller ONLINE on every telemetry receipt. The RPi cannot
+    // Reach the HTTP API on port 4000 (cross-subnet routing restriction), so
+    // The heartbeat endpoint is unreachable — telemetry presence is the only
+    // Reliable liveness signal.
+    if (sensor.controller.status !== 'ONLINE') {
+      await prisma.controller.update({
+        data: { status: 'ONLINE', updatedAt: new Date() },
+        where: { id: sensor.controller.id },
+      }).catch((error: Error) =>
+        console.error('[telemetry] Failed to update controller status:', error),
+      )
+    }
+
     console.log(
       `\n[telemetry] sensor=${sensor.name} (${sensor.id}) stored=${persisted.length} reading(s)`,
     )
@@ -90,6 +103,7 @@ export async function handleTelemetry(topic: string, messageBuffer: Buffer): Pro
       // Blocks the persistence path. Errors are logged inside the evaluator.
       void evaluateThresholds({
         growCycleId: activeGrowCycle.id,
+        sensorId: sensor.id,
         sensorType: row.sensorType,
         value: row.value,
       }).catch((error) => {

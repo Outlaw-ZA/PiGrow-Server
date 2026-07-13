@@ -126,7 +126,7 @@ describe('Phase Environments API Feature Module', () => {
       method: 'PUT',
       payload: {
         tempMax: 30,
-        // all other fields omitted => cleared
+        // All other fields omitted => cleared
       },
       url: `/api/grow-phases/${phaseId}/environment/DAY`,
     })

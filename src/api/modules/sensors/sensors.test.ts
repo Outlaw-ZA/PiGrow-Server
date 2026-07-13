@@ -37,7 +37,6 @@ describe('Sensors API Feature Module', () => {
       method: 'POST',
       payload: {
         controllerId,
-        mqttTopic: 'tent1/sensor/ambient',
         name: 'DHT22 Ambient',
         pinNumbers: [4],
         protocol: 'I2C',
@@ -109,7 +108,6 @@ describe('Sensors API Feature Module', () => {
     const sensor = await prismaClient.sensor.create({
       data: {
         controllerId,
-        mqttTopic: 'tent1/sensor/ph',
         name: 'Throwaway',
         pinNumbers: [],
         protocol: 'UART',

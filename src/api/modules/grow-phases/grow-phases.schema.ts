@@ -43,35 +43,35 @@ export const GrowPhaseArrayResponseSchema = Type.Array(GrowPhaseResponseSchema)
 export const CreateGrowPhaseSchema = Type.Object({
   dayDurationMinutes: Type.Optional(
     Type.Integer({
-      minimum: 0,
-      maximum: 1440,
       default: 1080,
       description:
         'Duration in minutes (0..1440) of the photoperiod DAY. NIGHT = 1440 - this. Default 1080 = 18h.',
+      maximum: 1440,
+      minimum: 0,
     }),
   ),
   dayStartMinutes: Type.Optional(
     Type.Integer({
-      minimum: 0,
-      maximum: 1440,
       default: 360,
       description:
         'Minutes from midnight (0..1440) when the photoperiod DAY begins. Default 360 = 06:00.',
+      maximum: 1440,
+      minimum: 0,
     }),
   ),
   durationDays: Type.Integer({
-    minimum: 1,
     description: 'Target runtime duration in days for this phase',
+    minimum: 1,
   }),
   endAt: Type.Optional(
     Type.String({
-      format: 'date',
       description: 'Date (YYYY-MM-DD) when this phase concluded',
+      format: 'date',
     }),
   ),
   growCycleId: Type.String({
-    format: 'uuid',
     description: 'The unique ID of the grow cycle this phase belongs to',
+    format: 'uuid',
   }),
   isActive: Type.Optional(
     Type.Boolean({
@@ -80,24 +80,24 @@ export const CreateGrowPhaseSchema = Type.Object({
     }),
   ),
   name: Type.String({
-    maxLength: 100,
     description: 'e.g., Early Veg, Late Bloom, Flush',
+    maxLength: 100,
   }),
   order: Type.Integer({
-    minimum: 1,
     description: 'The sequential execution order index (e.g., 1, 2, 3)',
+    minimum: 1,
   }),
   startAt: Type.Optional(
     Type.String({
-      format: 'date',
       description: 'Date (YYYY-MM-DD) when this phase actively started execution',
+      format: 'date',
     }),
   ),
 })
 
 export const UpdateGrowPhaseSchema = Type.Object({
-  dayDurationMinutes: Type.Optional(Type.Integer({ minimum: 0, maximum: 1440 })),
-  dayStartMinutes: Type.Optional(Type.Integer({ minimum: 0, maximum: 1440 })),
+  dayDurationMinutes: Type.Optional(Type.Integer({ maximum: 1440, minimum: 0 })),
+  dayStartMinutes: Type.Optional(Type.Integer({ maximum: 1440, minimum: 0 })),
   durationDays: Type.Optional(Type.Integer({ minimum: 1 })),
   endAt: Type.Optional(Type.String({ format: 'date' })),
   isActive: Type.Optional(Type.Boolean()),

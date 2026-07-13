@@ -935,14 +935,6 @@ export type EnumDeviceActionFieldUpdateOperationsInput = {
   set?: $Enums.DeviceAction
 }
 
-export type NullableIntFieldUpdateOperationsInput = {
-  set?: number | null
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
 }

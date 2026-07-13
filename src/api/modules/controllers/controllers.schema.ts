@@ -76,7 +76,7 @@ const DeviceSchema = Type.Object({
   createdAt: Type.String({ format: 'date-time' }),
   id: Type.String({ format: 'uuid' }),
   isActive: Type.Boolean(),
-  mqttTopic: Type.String(),
+  maxOnSeconds: Type.Optional(Type.Union([Type.Integer(), Type.Null()])),
   name: Type.String(),
   pinNumber: Type.Integer(),
   type: Type.Union([
@@ -99,7 +99,6 @@ const SensorSchema = Type.Object({
   createdAt: Type.String({ format: 'date-time' }),
   id: Type.String({ format: 'uuid' }),
   lastActive: Type.Union([Type.String({ format: 'date-time' }), Type.Null()]),
-  mqttTopic: Type.String(),
   name: Type.String(),
   pinNumbers: Type.Array(Type.Integer()),
   protocol: SensorProtocolSchema,
@@ -141,9 +140,8 @@ export const ControllerCreateResponseSchema = Type.Object({
 })
 
 export const SeedSensorSchema = Type.Object({
-  mqttTopic: Type.String({ maxLength: 200 }),
   name: Type.String({ maxLength: 100 }),
-  pinNumbers: Type.Array(Type.Integer({ minimum: 0, maximum: 40 })),
+  pinNumbers: Type.Array(Type.Integer({ maximum: 40, minimum: 0 })),
   protocol: SensorProtocolSchema,
   type: SensorTypeSchema,
 })
@@ -151,16 +149,16 @@ export const SeedSensorSchema = Type.Object({
 // Schema for registering a new physical Raspberry Pi hub
 export const CreateControllerSchema = Type.Object({
   ipAddress: Type.String({
-    format: 'ipv4',
     description: 'The local network IP of the active Raspberry Pi client node',
+    format: 'ipv4',
   }),
   macAddress: Type.String({
-    pattern: '^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$',
     description: 'Valid standard network MAC Address string (e.g., b8:27:eb:bf:d3:42)',
+    pattern: '^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$',
   }),
   name: Type.String({
-    maxLength: 100,
     description: 'Descriptive label for identifying the tent deployment location',
+    maxLength: 100,
   }),
   sensors: Type.Optional(
     Type.Array(SeedSensorSchema, {

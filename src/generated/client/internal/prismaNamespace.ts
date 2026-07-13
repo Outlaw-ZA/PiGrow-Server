@@ -1243,6 +1243,7 @@ export const DeviceScalarFieldEnum = {
   mqttTopic: 'mqttTopic',
   automationMode: 'automationMode',
   isActive: 'isActive',
+  maxOnSeconds: 'maxOnSeconds',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
 } as const

@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { mqttClient } from '../../../mqtt/client.js'
+import { DEVICE_STATE_CHANGED, deviceEvents } from '../../../events.js'
 import type { AutomationMode, DeviceType } from '../../../generated/client/enums.js'
 
 type DeviceTypeLiteral = (typeof DeviceType)[keyof typeof DeviceType]
@@ -10,27 +11,27 @@ interface CreateDeviceInput {
   name: string
   type: DeviceTypeLiteral
   pinNumber: number
-  mqttTopic: string
   automationMode?: AutomationModeLiteral
   isActive?: boolean
+  maxOnSeconds?: number | null
 }
 
 interface UpdateDeviceInput {
   name?: string
   type?: DeviceTypeLiteral
   pinNumber?: number
-  mqttTopic?: string
   automationMode?: AutomationModeLiteral
   isActive?: boolean
+  maxOnSeconds?: number | null
 }
 
 interface BatchDeviceInput {
   name: string
   type: DeviceTypeLiteral
   pinNumber: number
-  mqttTopic: string
   automationMode?: AutomationModeLiteral
   isActive?: boolean
+  maxOnSeconds?: number | null
 }
 
 interface BatchCreateInput {
@@ -72,7 +73,7 @@ export class DevicesController {
         automationMode: body.automationMode ?? 'MANUAL',
         controllerId: body.controllerId,
         isActive: body.isActive ?? true,
-        mqttTopic: body.mqttTopic,
+        maxOnSeconds: body.maxOnSeconds ?? null,
         name: body.name,
         pinNumber: body.pinNumber,
         type: body.type,
@@ -104,7 +105,7 @@ export class DevicesController {
             automationMode: device.automationMode ?? 'MANUAL',
             controllerId: body.controllerId,
             isActive: device.isActive ?? true,
-            mqttTopic: device.mqttTopic,
+            maxOnSeconds: device.maxOnSeconds ?? null,
             name: device.name,
             pinNumber: device.pinNumber,
             type: device.type,
@@ -135,6 +136,8 @@ export class DevicesController {
       }),
     ])
 
+    deviceEvents.emit(DEVICE_STATE_CHANGED, { deviceId: id, isActive: action === 'ON' })
+
     mqttClient.publish(
       `devices/${id}/commands`,
       JSON.stringify({
@@ -149,5 +152,37 @@ export class DevicesController {
       deviceId: id,
       timestamp: new Date().toISOString(),
     }
+  }
+
+  // 8. DEVICE STATE LOGS (ON/OFF history within a time range)
+  async getDeviceStateLogs(
+    deviceId: string,
+    query: { from?: string; to?: string; limit?: number },
+  ) {
+    const { from, to, limit = 500 } = query
+    const where: { deviceId: string; createdAt?: { gte?: Date; lte?: Date } } = { deviceId }
+    if (from || to) {
+      where.createdAt = {}
+      if (from) {where.createdAt.gte = new Date(from)}
+      if (to) {where.createdAt.lte = new Date(to)}
+    }
+
+    const logs = await this.prisma.deviceStateLog.findMany({
+      orderBy: { createdAt: 'asc' },
+      take: limit,
+      where,
+    })
+
+    let priorAction: 'ON' | 'OFF' | null = null
+    if (from) {
+      const prior = await this.prisma.deviceStateLog.findFirst({
+        orderBy: { createdAt: 'desc' },
+        select: { action: true },
+        where: { createdAt: { lt: new Date(from) }, deviceId },
+      })
+      priorAction = (prior?.action as 'ON' | 'OFF') ?? null
+    }
+
+    return { logs, priorAction }
   }
 }

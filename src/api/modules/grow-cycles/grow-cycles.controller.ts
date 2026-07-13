@@ -147,7 +147,7 @@ export class GrowCyclesController {
     const updated = await this.prisma.growCycle.update({
       data: {
         ...rest,
-        isActive: isActive,
+        isActive,
         startAt: startAt ? new Date(startAt) : undefined,
       },
       where: { id },

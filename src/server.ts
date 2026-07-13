@@ -18,13 +18,14 @@ import { MQTT_BROKER_URL, mqttClient } from './mqtt/client.js'
 import { prisma } from './prisma.js'
 import { automationScheduler } from './automation/scheduler.js'
 import { intervalScheduler } from './automation/interval-scheduler.js'
+import { DEVICE_STATE_CHANGED, deviceEvents } from './events.js'
 
 // 1. Initialize Fastify and register CORS for the Frontend
 const fastify = Fastify({
   ajv: {
     // Disable type coercion so JSON `null` for nullable numeric fields stays `null`
     // (default coercion converts `null` -> 0 which corrupts the PhaseEnvironment
-    // payload semantics for our automation engine).
+    // Payload semantics for our automation engine).
     customOptions: {
       coerceTypes: false,
       removeAdditional: false,
@@ -54,6 +55,20 @@ io.on('connection', (socket) => {
   socket.on('ui_command', (data) => {
     console.log('Command received from UI dashboard:', data)
 
+    // Validate deviceId is a UUID before it becomes an MQTT topic,
+    // Preventing topic injection from a malformed socket payload.
+    if (
+      typeof data?.deviceId !== 'string' ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.deviceId)
+    ) {
+      console.warn(`[ui_command] Invalid deviceId: ${data?.deviceId}`)
+      return
+    }
+    if (data?.action !== 'ON' && data?.action !== 'OFF') {
+      console.warn(`[ui_command] Invalid action: ${data?.action}`)
+      return
+    }
+
     // Relay the frontend action down to the RPi via MQTT
     const targetTopic = `devices/${data.deviceId}/commands`
     mqttClient.publish(
@@ -65,25 +80,36 @@ io.on('connection', (socket) => {
       }),
     )
 
-    // Persist an audit log row. Fire-and-forget so a slow DB doesn't
-    // Block the dashboard round-trip; errors are logged but do not
-    // Affect the MQTT publish.
-    if (data?.deviceId && (data.action === 'ON' || data.action === 'OFF')) {
-      prisma.deviceStateLog
-        .create({
-          data: {
-            action: data.action,
-            deviceId: data.deviceId,
-            source: 'UI',
-          },
-        })
-        .catch((error) => {
-          console.error('[ui_command] Failed to write DeviceStateLog:', error)
-        })
-    }
+    // Persist an audit log row AND update Device.isActive in a single
+    // Transaction, matching the REST command path's semantics so the
+    // Device's cached state stays consistent regardless of command channel.
+    prisma.$transaction([
+      prisma.deviceStateLog.create({
+        data: {
+          action: data.action,
+          deviceId: data.deviceId,
+          source: 'UI',
+        },
+      }),
+      prisma.device.update({
+        data: { isActive: data.action === 'ON' },
+        where: { id: data.deviceId },
+      }),
+    ]).catch((error) => {
+      console.error('[ui_command] Failed to persist command:', error)
+    })
+
+    // Broadcast the state change to all connected frontend clients.
+    io.emit('device_state_update', { deviceId: data.deviceId, isActive: data.action === 'ON' })
   })
 
   socket.on('disconnect', () => console.log(`💻 Frontend Client Disconnected`))
+})
+
+// Broadcast device state changes from all sources (automation, MQTT, REST) to
+// All connected frontend clients via Socket.IO.
+deviceEvents.on(DEVICE_STATE_CHANGED, (data: { deviceId: string; isActive: boolean }) => {
+  io.emit('device_state_update', data)
 })
 
 // Dynamic Topic Registry Map

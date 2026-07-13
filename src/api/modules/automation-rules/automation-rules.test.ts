@@ -52,7 +52,6 @@ describe('Automation Rules API Feature Module', () => {
       data: {
         automationMode: 'SCHEDULED',
         controllerId,
-        mqttTopic: 'tent1/light',
         name: 'Light',
         pinNumber: 4,
         type: 'LIGHT',
@@ -62,7 +61,6 @@ describe('Automation Rules API Feature Module', () => {
       data: {
         automationMode: 'THRESHOLD',
         controllerId,
-        mqttTopic: 'tent1/fan',
         name: 'Exhaust Fan',
         pinNumber: 17,
         type: 'EXHAUST_FAN',
@@ -72,7 +70,6 @@ describe('Automation Rules API Feature Module', () => {
       data: {
         automationMode: 'THRESHOLD',
         controllerId,
-        mqttTopic: 'tent1/heater',
         name: 'Heater',
         pinNumber: 27,
         type: 'HEATER',

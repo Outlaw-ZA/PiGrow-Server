@@ -7,7 +7,6 @@ export type SensorTypeValue = (typeof SensorType)[keyof typeof SensorType]
 export interface SeedSensorInput {
   name: string
   type: SensorTypeValue
-  mqttTopic: string
   pinNumbers: number[]
   protocol: SensorProtocolType
 }
@@ -95,10 +94,9 @@ export class ControllersController {
           sensors: {
             create: sensors.map((s) => ({
               name: s.name,
-              type: s.type,
-              mqttTopic: s.mqttTopic,
               pinNumbers: s.pinNumbers,
               protocol: s.protocol,
+              type: s.type,
             })),
           },
           status: 'OFFLINE',

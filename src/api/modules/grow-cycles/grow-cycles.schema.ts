@@ -71,8 +71,8 @@ export const GrowCycleArrayResponseSchema = Type.Array(GrowCycleResponseSchema)
 
 export const CreateGrowCycleSchema = Type.Object({
   controllerId: Type.String({
-    format: 'uuid',
     description: 'The UUID of the physical Raspberry Pi running this cycle',
+    format: 'uuid',
   }),
   isActive: Type.Optional(
     Type.Boolean({
@@ -81,8 +81,8 @@ export const CreateGrowCycleSchema = Type.Object({
     }),
   ),
   name: Type.String({
-    maxLength: 100,
     description: 'The name of the specific grow run or harvest batch',
+    maxLength: 100,
   }),
 })
 
@@ -91,8 +91,8 @@ export const UpdateGrowCycleSchema = Type.Object({
   name: Type.Optional(Type.String({ maxLength: 100 })),
   startAt: Type.Optional(
     Type.String({
-      format: 'date',
       description: 'Date (YYYY-MM-DD) marking when this grow cycle started',
+      format: 'date',
     }),
   ),
 })

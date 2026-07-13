@@ -31,17 +31,15 @@ describe('Telemetry API Feature Module', () => {
           create: [
             {
               name: 'DHT22 Temp',
-              type: 'TEMPERATURE',
-              mqttTopic: 'test/sensor/temp',
               pinNumbers: [4],
               protocol: 'I2C',
+              type: 'TEMPERATURE',
             },
             {
               name: 'DHT22 Humidity',
-              type: 'HUMIDITY',
-              mqttTopic: 'test/sensor/humidity',
               pinNumbers: [4],
               protocol: 'I2C',
+              type: 'HUMIDITY',
             },
           ],
         },
@@ -118,7 +116,6 @@ describe('Telemetry API Feature Module', () => {
     const combined = await prismaClient.sensor.create({
       data: {
         controllerId: testControllerId,
-        mqttTopic: 'test/sensor/combo',
         name: 'DHT22 Combo',
         pinNumbers: [4],
         protocol: 'I2C',

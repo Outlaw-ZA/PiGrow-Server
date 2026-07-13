@@ -326,7 +326,7 @@ export type SensorCreateInput = {
   id?: string
   name: string
   type: $Enums.SensorType
-  mqttTopic: string
+  mqttTopic?: string
   pinNumbers?: Prisma.SensorCreatepinNumbersInput | number[]
   protocol: $Enums.SensorProtocol
   lastActive?: Date | string | null
@@ -341,7 +341,7 @@ export type SensorUncheckedCreateInput = {
   controllerId: string
   name: string
   type: $Enums.SensorType
-  mqttTopic: string
+  mqttTopic?: string
   pinNumbers?: Prisma.SensorCreatepinNumbersInput | number[]
   protocol: $Enums.SensorProtocol
   lastActive?: Date | string | null
@@ -383,7 +383,7 @@ export type SensorCreateManyInput = {
   controllerId: string
   name: string
   type: $Enums.SensorType
-  mqttTopic: string
+  mqttTopic?: string
   pinNumbers?: Prisma.SensorCreatepinNumbersInput | number[]
   protocol: $Enums.SensorProtocol
   lastActive?: Date | string | null
@@ -621,7 +621,7 @@ export type SensorCreateWithoutControllerInput = {
   id?: string
   name: string
   type: $Enums.SensorType
-  mqttTopic: string
+  mqttTopic?: string
   pinNumbers?: Prisma.SensorCreatepinNumbersInput | number[]
   protocol: $Enums.SensorProtocol
   lastActive?: Date | string | null
@@ -634,7 +634,7 @@ export type SensorUncheckedCreateWithoutControllerInput = {
   id?: string
   name: string
   type: $Enums.SensorType
-  mqttTopic: string
+  mqttTopic?: string
   pinNumbers?: Prisma.SensorCreatepinNumbersInput | number[]
   protocol: $Enums.SensorProtocol
   lastActive?: Date | string | null
@@ -704,7 +704,7 @@ export type SensorCreateWithoutTelemetryInput = {
   id?: string
   name: string
   type: $Enums.SensorType
-  mqttTopic: string
+  mqttTopic?: string
   pinNumbers?: Prisma.SensorCreatepinNumbersInput | number[]
   protocol: $Enums.SensorProtocol
   lastActive?: Date | string | null
@@ -718,7 +718,7 @@ export type SensorUncheckedCreateWithoutTelemetryInput = {
   controllerId: string
   name: string
   type: $Enums.SensorType
-  mqttTopic: string
+  mqttTopic?: string
   pinNumbers?: Prisma.SensorCreatepinNumbersInput | number[]
   protocol: $Enums.SensorProtocol
   lastActive?: Date | string | null
@@ -784,7 +784,7 @@ export type SensorCreateManyControllerInput = {
   id?: string
   name: string
   type: $Enums.SensorType
-  mqttTopic: string
+  mqttTopic?: string
   pinNumbers?: Prisma.SensorCreatepinNumbersInput | number[]
   protocol: $Enums.SensorProtocol
   lastActive?: Date | string | null

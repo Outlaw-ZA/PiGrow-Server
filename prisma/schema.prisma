@@ -47,7 +47,7 @@ model Sensor {
   controllerId String
   name         String
   type         SensorType
-  mqttTopic    String
+  mqttTopic    String         @default("") // Deprecated — topics are derived from sensor ID
   pinNumbers   Int[]
   protocol     SensorProtocol
   lastActive   DateTime?
@@ -91,9 +91,10 @@ model Device {
   name           String // e.g., "SpiderFarmer SF2000", "AC Infinity T6"
   type           DeviceType
   pinNumber      Int // GPIO pin or Relay channel on the Pi
-  mqttTopic      String // e.g., "tent1/device/light/cmd"
+  mqttTopic      String         @default("") // Deprecated — topics are derived from device ID
   automationMode AutomationMode @default(MANUAL)
   isActive       Boolean        @default(true)
+  maxOnSeconds   Int?           // Maximum continuous ON time before the engine force-OFFs; null = unlimited
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
@@ -283,4 +284,10 @@ model Telemetry {
 
   growCycle GrowCycle @relation(fields: [growCycleId], references: [id], onDelete: Cascade)
   sensor    Sensor    @relation(fields: [sensorId], references: [id], onDelete: Cascade)
+
+  @@index([growCycleId])
+  @@index([sensorId])
+  @@index([sensorType])
+  @@index([createdAt])
+  @@index([growCycleId, sensorType, createdAt])
 }

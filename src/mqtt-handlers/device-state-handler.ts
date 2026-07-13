@@ -1,4 +1,5 @@
 import { prisma } from '../prisma.js'
+import { DEVICE_STATE_CHANGED, deviceEvents } from '../events.js'
 
 /**
  * Handles `devices/<deviceId>/state` MQTT messages published by the Pi.
@@ -63,6 +64,8 @@ export async function handleDeviceState(topic: string, messageBuffer: Buffer): P
         },
       }),
     ])
+
+    deviceEvents.emit(DEVICE_STATE_CHANGED, { deviceId, isActive: reportedIsActive })
 
     console.log(
       `[device-state] device=${deviceId} reconciled to ${payload.action} (was ${device.isActive ? 'ON' : 'OFF'})`,

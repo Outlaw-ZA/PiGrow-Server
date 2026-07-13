@@ -1,4 +1,4 @@
-import { test, describe, before, after } from "node:test";
+import { after, before, describe, test } from "node:test";
 import assert from "node:assert/strict";
 import { createTestApp, teardownTestApp } from "../test-helper.js";
 import { resolvePeriod } from "../../../automation/period.js";
@@ -26,13 +26,10 @@ describe("Automation engine", () => {
 
     const controller = await prisma.controller.create({
       data: {
-        macAddress: mac,
-        name: "Automation Engine Test Pi",
-        ipAddress: "192.168.1.130",
         growCycles: {
           create: {
-            name: "Engine Test Cycle",
             isActive: true,
+            name: "Engine Test Cycle",
             phases: {
               create: {
                 name: "Veg",
@@ -46,6 +43,9 @@ describe("Automation engine", () => {
             },
           },
         },
+        ipAddress: "192.168.1.130",
+        macAddress: mac,
+        name: "Automation Engine Test Pi",
       },
       include: { growCycles: { include: { phases: true } } },
     });
@@ -57,41 +57,37 @@ describe("Automation engine", () => {
       data: {
         controllerId,
         name: "DHT22",
-        type: "TEMPERATURE",
-        mqttTopic: "tent1/temp",
         pinNumbers: [4],
         protocol: "I2C",
+        type: "TEMPERATURE",
       },
     });
 
     const light = await prisma.device.create({
       data: {
+        automationMode: "SCHEDULED",
         controllerId,
         name: "Light",
-        type: "LIGHT",
         pinNumber: 4,
-        mqttTopic: "tent1/light",
-        automationMode: "SCHEDULED",
+        type: "LIGHT",
       },
     });
     const fan = await prisma.device.create({
       data: {
+        automationMode: "THRESHOLD",
         controllerId,
         name: "Exhaust Fan",
-        type: "EXHAUST_FAN",
         pinNumber: 17,
-        mqttTopic: "tent1/fan",
-        automationMode: "THRESHOLD",
+        type: "EXHAUST_FAN",
       },
     });
     const heater = await prisma.device.create({
       data: {
+        automationMode: "THRESHOLD",
         controllerId,
         name: "Heater",
-        type: "HEATER",
         pinNumber: 27,
-        mqttTopic: "tent1/heater",
-        automationMode: "THRESHOLD",
+        type: "HEATER",
       },
     });
     lightId = light.id;
@@ -160,37 +156,38 @@ describe("Automation engine", () => {
     await prismaClient.phaseEnvironment.create({
       data: {
         growPhaseId,
+        humidityMax: 80,
+        humidityMin: 50,
         period: "DAY",
         tempMax: 28,
         tempMin: 22,
-        humidityMax: 80,
-        humidityMin: 50,
       },
     });
     // Create the rule: fan ABOVE_MAX on TEMPERATURE, DAY
     await prismaClient.automationRule.create({
       data: {
-        growPhaseId,
-        deviceId: fanId,
-        watchedSensorType: "TEMPERATURE",
-        period: "DAY",
-        condition: "ABOVE_MAX",
         action: "ON",
-        cooldownSeconds: 0, // disable cooldown for the test
+        condition: "ABOVE_MAX",
+        cooldownSeconds: 0, // Disable cooldown for the test
+        deviceId: fanId,
+        growPhaseId,
+        period: "DAY",
+        watchedSensorType: "TEMPERATURE",
       },
     });
 
     // First reading: 31°C -> ABOVE 28 -> command ON issued
     await evaluateThresholds({
       growCycleId,
+      now: new Date("2026-07-01T12:00:00"),
+      sensorId: 'test-sensor-id',
       sensorType: "TEMPERATURE",
       value: 31,
-      now: new Date("2026-07-01T12:00:00"),
     });
 
     const log = await prismaClient.deviceStateLog.findFirst({
-      where: { deviceId: fanId },
       orderBy: { createdAt: "desc" },
+      where: { deviceId: fanId },
     });
     assert.ok(log, "DeviceStateLog should be written");
     assert.equal(log.action, "ON");
@@ -203,9 +200,10 @@ describe("Automation engine", () => {
     });
     await evaluateThresholds({
       growCycleId,
+      now: new Date("2026-07-01T12:00:01"),
+      sensorId: 'test-sensor-id',
       sensorType: "TEMPERATURE",
       value: 32,
-      now: new Date("2026-07-01T12:00:01"),
     });
     const after = await prismaClient.deviceStateLog.count({
       where: { deviceId: fanId },
@@ -218,36 +216,37 @@ describe("Automation engine", () => {
     await prismaClient.phaseEnvironment.create({
       data: {
         growPhaseId,
+        humidityMax: 80,
+        humidityMin: 50,
         period: "NIGHT",
         tempMax: 24,
         tempMin: 19,
-        humidityMax: 80,
-        humidityMin: 50,
       },
     });
     await prismaClient.automationRule.create({
       data: {
-        growPhaseId,
-        deviceId: heaterId,
-        watchedSensorType: "TEMPERATURE",
-        period: "NIGHT",
-        condition: "BELOW_MIN",
         action: "ON",
+        condition: "BELOW_MIN",
         cooldownSeconds: 0,
+        deviceId: heaterId,
+        growPhaseId,
+        period: "NIGHT",
+        watchedSensorType: "TEMPERATURE",
       },
     });
 
     // 17°C at 02:00 (NIGHT for an 18/6 schedule starting at 06:00) -> below 19 -> ON
     await evaluateThresholds({
       growCycleId,
+      now: new Date("2026-07-01T02:00:00"),
+      sensorId: 'test-sensor-id',
       sensorType: "TEMPERATURE",
       value: 17,
-      now: new Date("2026-07-01T02:00:00"),
     });
 
     const log = await prismaClient.deviceStateLog.findFirst({
-      where: { deviceId: heaterId },
       orderBy: { createdAt: "desc" },
+      where: { deviceId: heaterId },
     });
     assert.ok(log);
     assert.equal(log.action, "ON");
@@ -259,7 +258,7 @@ describe("Automation engine", () => {
   test("evaluator - writes a DeviceThresholdHold row when a threshold rule fires", async () => {
     // Fresh setup: clean the heater's state + rules, then create a NIGHT env
     // + BELOW_MIN rule, fire it, and assert the hold row exists with the
-    // correct heldUntil and ruleId.
+    // Correct heldUntil and ruleId.
     await prismaClient.deviceStateLog.deleteMany({ where: { deviceId: heaterId } });
     await prismaClient.automationRule.deleteMany({ where: { deviceId: heaterId } });
     await prismaClient.phaseEnvironment.deleteMany({
@@ -275,22 +274,23 @@ describe("Automation engine", () => {
     });
     const rule = await prismaClient.automationRule.create({
       data: {
-        growPhaseId,
-        deviceId: heaterId,
-        watchedSensorType: "TEMPERATURE",
-        period: "NIGHT",
-        condition: "BELOW_MIN",
         action: "ON",
+        condition: "BELOW_MIN",
         cooldownSeconds: 0,
+        deviceId: heaterId,
+        growPhaseId,
+        period: "NIGHT",
+        watchedSensorType: "TEMPERATURE",
       },
     });
 
     const fireAt = new Date("2026-07-01T02:00:00");
     await evaluateThresholds({
       growCycleId,
+      now: fireAt,
+      sensorId: 'test-sensor-id',
       sensorType: "TEMPERATURE",
       value: 17,
-      now: fireAt,
     });
 
     const hold = await prismaClient.deviceThresholdHold.findUnique({
@@ -298,7 +298,7 @@ describe("Automation engine", () => {
     });
     assert.ok(hold, "DeviceThresholdHold should be written on a threshold fire");
     assert.equal(hold.ruleId, rule.id);
-    // heldUntil is now + cooldownSeconds (0 -> now). Use a small tolerance.
+    // HeldUntil is now + cooldownSeconds (0 -> now). Use a small tolerance.
     assert.ok(
       Math.abs(hold.heldUntil.getTime() - fireAt.getTime()) < 50,
       `heldUntil should be ~${fireAt.toISOString()}, got ${hold.heldUntil.toISOString()}`,
@@ -307,22 +307,23 @@ describe("Automation engine", () => {
 
   test("evaluator - refreshes the DeviceThresholdHold on a subsequent fire", async () => {
     // Hold from the previous test exists. Fire again with cooldownSeconds=120
-    // and assert heldUntil moves to now + 120s. To do that, update the rule's
-    // cooldown to 120 (the previous test used 0).
+    // And assert heldUntil moves to now + 120s. To do that, update the rule's
+    // Cooldown to 120 (the previous test used 0).
     const rule = await prismaClient.automationRule.findFirstOrThrow({
-      where: { deviceId: heaterId, condition: "BELOW_MIN" },
+      where: { condition: "BELOW_MIN", deviceId: heaterId },
     });
     await prismaClient.automationRule.update({
-      where: { id: rule.id },
       data: { cooldownSeconds: 120 },
+      where: { id: rule.id },
     });
 
     const fireAt = new Date("2026-07-01T03:00:00");
     await evaluateThresholds({
       growCycleId,
+      now: fireAt,
+      sensorId: 'test-sensor-id',
       sensorType: "TEMPERATURE",
       value: 16,
-      now: fireAt,
     });
 
     const hold = await prismaClient.deviceThresholdHold.findUnique({
@@ -339,10 +340,10 @@ describe("Automation engine", () => {
 
   test("evaluator - does NOT write a DeviceThresholdHold when the threshold does not fire", async () => {
     // Clean the hold. Then evaluate a reading that does NOT cross any
-    // threshold (25°C at night when tempMin=19, tempMax=24 -> 25 > 24, ABOVE_MAX).
+    // Threshold (25°C at night when tempMin=19, tempMax=24 -> 25 > 24, ABOVE_MAX).
     // Wait — the heater rule is BELOW_MIN. A reading of 25°C does not cross
     // BELOW_MIN (25 > 19). The heater has a BELOW_MIN rule (action ON when
-    // temp < 19). 25 does not fire it. So no fire -> no hold write.
+    // Temp < 19). 25 does not fire it. So no fire -> no hold write.
     // But there might be a hold from the previous test. Delete it first.
     await prismaClient.deviceThresholdHold.deleteMany({
       where: { deviceId: heaterId },
@@ -350,9 +351,10 @@ describe("Automation engine", () => {
 
     await evaluateThresholds({
       growCycleId,
+      now: new Date("2026-07-01T02:00:00"),
+      sensorId: 'test-sensor-id',
       sensorType: "TEMPERATURE",
       value: 25,
-      now: new Date("2026-07-01T02:00:00"),
     });
 
     const hold = await prismaClient.deviceThresholdHold.findUnique({
@@ -366,34 +368,35 @@ describe("Automation engine", () => {
   test("evaluator - BELOW_MAX rule fires when telemetry value drops below the active DAY tempMax", async () => {
     // Reuse the DAY env created by the ABOVE_MAX test (tempMax=28, tempMin=22).
     // Clear the fan's prior state and ALL its prior rules so the only rule
-    // that can fire is the one this test creates (hysteresis + rule isolation).
+    // That can fire is the one this test creates (hysteresis + rule isolation).
     await prismaClient.deviceStateLog.deleteMany({ where: { deviceId: fanId } });
     await prismaClient.automationRule.deleteMany({
       where: { deviceId: fanId },
     });
     await prismaClient.automationRule.create({
       data: {
-        growPhaseId,
-        deviceId: fanId,
-        watchedSensorType: "TEMPERATURE",
-        period: "DAY",
-        condition: "BELOW_MAX",
         action: "ON",
+        condition: "BELOW_MAX",
         cooldownSeconds: 0,
+        deviceId: fanId,
+        growPhaseId,
+        period: "DAY",
+        watchedSensorType: "TEMPERATURE",
       },
     });
 
     // 27°C at noon (DAY for 18/6 starting at 06:00) -> below 28 -> ON
     await evaluateThresholds({
       growCycleId,
+      now: new Date("2026-07-01T12:00:00"),
+      sensorId: 'test-sensor-id',
       sensorType: "TEMPERATURE",
       value: 27,
-      now: new Date("2026-07-01T12:00:00"),
     });
 
     const log = await prismaClient.deviceStateLog.findFirst({
-      where: { deviceId: fanId, source: "AUTO" },
       orderBy: { createdAt: "desc" },
+      where: { deviceId: fanId, source: "AUTO" },
     });
     assert.ok(log, "DeviceStateLog should be written for BELOW_MAX fire");
     assert.equal(log.action, "ON");
@@ -403,34 +406,35 @@ describe("Automation engine", () => {
   test("evaluator - ABOVE_MIN rule fires when telemetry value rises above the active NIGHT tempMin", async () => {
     // Reuse the NIGHT env created by the BELOW_MIN test (tempMax=24, tempMin=19).
     // Clear the heater's prior state and ALL its prior rules so the only rule
-    // that can fire is the one this test creates (hysteresis + rule isolation).
+    // That can fire is the one this test creates (hysteresis + rule isolation).
     await prismaClient.deviceStateLog.deleteMany({ where: { deviceId: heaterId } });
     await prismaClient.automationRule.deleteMany({
       where: { deviceId: heaterId },
     });
     await prismaClient.automationRule.create({
       data: {
-        growPhaseId,
-        deviceId: heaterId,
-        watchedSensorType: "TEMPERATURE",
-        period: "NIGHT",
-        condition: "ABOVE_MIN",
         action: "ON",
+        condition: "ABOVE_MIN",
         cooldownSeconds: 0,
+        deviceId: heaterId,
+        growPhaseId,
+        period: "NIGHT",
+        watchedSensorType: "TEMPERATURE",
       },
     });
 
     // 20°C at 02:00 (NIGHT for 18/6 starting at 06:00) -> above 19 -> ON
     await evaluateThresholds({
       growCycleId,
+      now: new Date("2026-07-01T02:00:00"),
+      sensorId: 'test-sensor-id',
       sensorType: "TEMPERATURE",
       value: 20,
-      now: new Date("2026-07-01T02:00:00"),
     });
 
     const log = await prismaClient.deviceStateLog.findFirst({
-      where: { deviceId: heaterId, source: "AUTO" },
       orderBy: { createdAt: "desc" },
+      where: { deviceId: heaterId, source: "AUTO" },
     });
     assert.ok(log, "DeviceStateLog should be written for ABOVE_MIN fire");
     assert.equal(log.action, "ON");
@@ -440,39 +444,40 @@ describe("Automation engine", () => {
   test("evaluator - ABOVE_TARGET rule fires when telemetry value exceeds the active DAY tempTarget", async () => {
     // Upsert DAY env to add tempTarget=25 alongside the existing tempMax/tempMin.
     await prismaClient.phaseEnvironment.upsert({
-      where: { growPhaseId_period: { growPhaseId, period: "DAY" } },
+      create: { growPhaseId, period: "DAY", tempMax: 28, tempMin: 22, tempTarget: 25 },
       update: { tempTarget: 25 },
-      create: { growPhaseId, period: "DAY", tempTarget: 25, tempMax: 28, tempMin: 22 },
+      where: { growPhaseId_period: { growPhaseId, period: "DAY" } },
     });
     // Clear the fan's prior state and ALL its prior rules so the only rule
-    // that can fire is the one this test creates (hysteresis + rule isolation).
+    // That can fire is the one this test creates (hysteresis + rule isolation).
     await prismaClient.deviceStateLog.deleteMany({ where: { deviceId: fanId } });
     await prismaClient.automationRule.deleteMany({
       where: { deviceId: fanId },
     });
     await prismaClient.automationRule.create({
       data: {
-        growPhaseId,
-        deviceId: fanId,
-        watchedSensorType: "TEMPERATURE",
-        period: "DAY",
-        condition: "ABOVE_TARGET",
         action: "ON",
+        condition: "ABOVE_TARGET",
         cooldownSeconds: 0,
+        deviceId: fanId,
+        growPhaseId,
+        period: "DAY",
+        watchedSensorType: "TEMPERATURE",
       },
     });
 
     // 26°C at noon (DAY) -> above target 25 -> ON
     await evaluateThresholds({
       growCycleId,
+      now: new Date("2026-07-01T12:00:00"),
+      sensorId: 'test-sensor-id',
       sensorType: "TEMPERATURE",
       value: 26,
-      now: new Date("2026-07-01T12:00:00"),
     });
 
     const log = await prismaClient.deviceStateLog.findFirst({
-      where: { deviceId: fanId, source: "AUTO" },
       orderBy: { createdAt: "desc" },
+      where: { deviceId: fanId, source: "AUTO" },
     });
     assert.ok(log, "DeviceStateLog should be written for ABOVE_TARGET fire");
     assert.equal(log.action, "ON");
@@ -482,39 +487,40 @@ describe("Automation engine", () => {
   test("evaluator - BELOW_TARGET rule fires when telemetry value drops below the active NIGHT tempTarget", async () => {
     // Upsert NIGHT env to add tempTarget=20 alongside the existing tempMax/tempMin.
     await prismaClient.phaseEnvironment.upsert({
-      where: { growPhaseId_period: { growPhaseId, period: "NIGHT" } },
+      create: { growPhaseId, period: "NIGHT", tempMax: 24, tempMin: 19, tempTarget: 20 },
       update: { tempTarget: 20 },
-      create: { growPhaseId, period: "NIGHT", tempTarget: 20, tempMax: 24, tempMin: 19 },
+      where: { growPhaseId_period: { growPhaseId, period: "NIGHT" } },
     });
     // Clear the heater's prior state and ALL its prior rules so the only rule
-    // that can fire is the one this test creates (hysteresis + rule isolation).
+    // That can fire is the one this test creates (hysteresis + rule isolation).
     await prismaClient.deviceStateLog.deleteMany({ where: { deviceId: heaterId } });
     await prismaClient.automationRule.deleteMany({
       where: { deviceId: heaterId },
     });
     await prismaClient.automationRule.create({
       data: {
-        growPhaseId,
-        deviceId: heaterId,
-        watchedSensorType: "TEMPERATURE",
-        period: "NIGHT",
-        condition: "BELOW_TARGET",
         action: "ON",
+        condition: "BELOW_TARGET",
         cooldownSeconds: 0,
+        deviceId: heaterId,
+        growPhaseId,
+        period: "NIGHT",
+        watchedSensorType: "TEMPERATURE",
       },
     });
 
     // 18°C at 02:00 (NIGHT) -> below target 20 -> ON
     await evaluateThresholds({
       growCycleId,
+      now: new Date("2026-07-01T02:00:00"),
+      sensorId: 'test-sensor-id',
       sensorType: "TEMPERATURE",
       value: 18,
-      now: new Date("2026-07-01T02:00:00"),
     });
 
     const log = await prismaClient.deviceStateLog.findFirst({
-      where: { deviceId: heaterId, source: "AUTO" },
       orderBy: { createdAt: "desc" },
+      where: { deviceId: heaterId, source: "AUTO" },
     });
     assert.ok(log, "DeviceStateLog should be written for BELOW_TARGET fire");
     assert.equal(log.action, "ON");
@@ -528,9 +534,10 @@ describe("Automation engine", () => {
     });
     await evaluateThresholds({
       growCycleId,
+      now: new Date("2026-07-01T02:00:00"),
+      sensorId: 'test-sensor-id',
       sensorType: "TEMPERATURE",
       value: 31,
-      now: new Date("2026-07-01T02:00:00"),
     });
     const after = await prismaClient.deviceStateLog.count({
       where: { deviceId: fanId },
@@ -542,31 +549,32 @@ describe("Automation engine", () => {
     // Create a null-period rule (applies both DAY and NIGHT)
     await prismaClient.automationRule.create({
       data: {
-        growPhaseId,
-        deviceId: heaterId,
-        watchedSensorType: "TEMPERATURE",
-        period: null,
-        condition: "BELOW_MIN",
         action: "OFF",
+        condition: "BELOW_MIN",
         cooldownSeconds: 0,
+        deviceId: heaterId,
+        growPhaseId,
+        period: null,
+        watchedSensorType: "TEMPERATURE",
       },
     });
 
     // Heater is currently ON. Reading 30°C (above NIGHT min 19) -> rule wants OFF
-    // at 12:00 (DAY) -> no DAY env, but rule is null-period, condition BELOW_MIN,
-    // so we should only fire if NIGHT env.min exists and value < min. We DID set
+    // At 12:00 (DAY) -> no DAY env, but rule is null-period, condition BELOW_MIN,
+    // So we should only fire if NIGHT env.min exists and value < min. We DID set
     // NIGHT min to 19 earlier, and the rule is null-period so it checks the
-    // current period's env. At DAY with no DAY env, getBoundaryFields returns
-    // null boundary -> we already early-return in that case. So the rule never
-    // fires at noon. Verify no new log.
+    // Current period's env. At DAY with no DAY env, getBoundaryFields returns
+    // Null boundary -> we already early-return in that case. So the rule never
+    // Fires at noon. Verify no new log.
     const before = await prismaClient.deviceStateLog.count({
       where: { deviceId: heaterId, source: "AUTO" },
     });
     await evaluateThresholds({
       growCycleId,
+      now: new Date("2026-07-01T12:00:00"),
+      sensorId: 'test-sensor-id',
       sensorType: "TEMPERATURE",
       value: 30,
-      now: new Date("2026-07-01T12:00:00"),
     });
     const after = await prismaClient.deviceStateLog.count({
       where: { deviceId: heaterId, source: "AUTO" },
@@ -577,17 +585,18 @@ describe("Automation engine", () => {
   test("evaluator - device with MANUAL automationMode is never auto-driven", async () => {
     // Switch the fan to MANUAL and add a fresh rule
     await prismaClient.device.update({
-      where: { id: fanId },
       data: { automationMode: "MANUAL" },
+      where: { id: fanId },
     });
     const before = await prismaClient.deviceStateLog.count({
       where: { deviceId: fanId, source: "AUTO" },
     });
     await evaluateThresholds({
       growCycleId,
+      now: new Date("2026-07-01T12:00:00"),
+      sensorId: 'test-sensor-id',
       sensorType: "TEMPERATURE",
       value: 99,
-      now: new Date("2026-07-01T12:00:00"),
     });
     const after = await prismaClient.deviceStateLog.count({
       where: { deviceId: fanId, source: "AUTO" },
@@ -597,22 +606,23 @@ describe("Automation engine", () => {
 
   test("evaluator - non-active grow cycle is a no-op even if rules exist", async () => {
     await prismaClient.growCycle.update({
-      where: { id: growCycleId },
       data: { isActive: false },
+      where: { id: growCycleId },
     });
     const before = await prismaClient.deviceStateLog.count();
     await evaluateThresholds({
       growCycleId,
+      now: new Date("2026-07-01T12:00:00"),
+      sensorId: 'test-sensor-id',
       sensorType: "TEMPERATURE",
       value: 99,
-      now: new Date("2026-07-01T12:00:00"),
     });
     const after = await prismaClient.deviceStateLog.count();
     assert.equal(after, before, "Inactive cycle: no commands");
     // Re-activate for any subsequent tests
     await prismaClient.growCycle.update({
-      where: { id: growCycleId },
       data: { isActive: true },
+      where: { id: growCycleId },
     });
   });
 
@@ -622,19 +632,19 @@ describe("Automation engine", () => {
     // Clear prior logs and ensure the LIGHT is in a known OFF state.
     await prismaClient.deviceStateLog.deleteMany({ where: { deviceId: lightId } });
     await prismaClient.device.update({
-      where: { id: lightId },
       data: { isActive: false },
+      where: { id: lightId },
     });
     // Defensive: if any prior scheduler runs left an AutomationRule for this
-    // light, clear it — the new scheduler does not consult rules.
+    // Light, clear it — the new scheduler does not consult rules.
     await prismaClient.automationRule.deleteMany({ where: { deviceId: lightId } });
 
     // Tick at noon (DAY for the 18/6 schedule starting at 06:00) -> ON
     await lightScheduler.tick(new Date("2026-07-01T12:00:00"));
 
     const onLog = await prismaClient.deviceStateLog.findFirst({
-      where: { deviceId: lightId, action: "ON", source: "AUTO" },
       orderBy: { createdAt: "desc" },
+      where: { action: "ON", deviceId: lightId, source: "AUTO" },
     });
     assert.ok(onLog, "Light ON log written by scheduler");
     assert.match(onLog.reason ?? "", /day cycle start/);
@@ -642,7 +652,8 @@ describe("Automation engine", () => {
     const light = await prismaClient.device.findUnique({ where: { id: lightId } });
     assert.equal(light.isActive, true);
 
-    // Tick again at noon -> hysteresis, no new log
+    // Tick again at noon -> hysteresis prevents a second MQTT command, but
+    // The scheduler still writes a log entry for the state history chart.
     const before = await prismaClient.deviceStateLog.count({
       where: { deviceId: lightId, source: "AUTO" },
     });
@@ -650,7 +661,7 @@ describe("Automation engine", () => {
     const after = await prismaClient.deviceStateLog.count({
       where: { deviceId: lightId, source: "AUTO" },
     });
-    assert.equal(after, before, "Hysteresis: no duplicate ON command");
+    assert.equal(after, before + 1, "Scheduler writes a tick log even when state is unchanged");
   });
 
   test("light scheduler - drives a SCHEDULED LIGHT to OFF when night begins", async () => {
@@ -658,8 +669,8 @@ describe("Automation engine", () => {
     await lightScheduler.tick(new Date("2026-07-01T02:00:00"));
 
     const offLog = await prismaClient.deviceStateLog.findFirst({
-      where: { deviceId: lightId, action: "OFF", source: "AUTO" },
       orderBy: { createdAt: "desc" },
+      where: { action: "OFF", deviceId: lightId, source: "AUTO" },
     });
     assert.ok(offLog, "Light OFF log written by scheduler");
     assert.match(offLog.reason ?? "", /night cycle start/);
@@ -670,16 +681,15 @@ describe("Automation engine", () => {
 
   test("light scheduler - leaves a MANUAL LIGHT untouched", async () => {
     // Set the fan to be a LIGHT in MANUAL mode for this scenario, since
-    // the test fixture's fan is an EXHAUST_FAN. Use a fresh device.
+    // The test fixture's fan is an EXHAUST_FAN. Use a fresh device.
     const manualLight = await prismaClient.device.create({
       data: {
-        controllerId,
-        name: "Manual Light (scheduler test)",
-        type: "LIGHT",
-        pinNumber: 24,
-        mqttTopic: "engine/manual-light",
         automationMode: "MANUAL",
+        controllerId,
         isActive: false,
+        name: "Manual Light (scheduler test)",
+        pinNumber: 24,
+        type: "LIGHT",
       },
     });
 
@@ -697,13 +707,12 @@ describe("Automation engine", () => {
   test("light scheduler - never turns an ALWAYS_ON LIGHT OFF", async () => {
     const alwaysOnLight = await prismaClient.device.create({
       data: {
-        controllerId,
-        name: "Always On Light (scheduler test)",
-        type: "LIGHT",
-        pinNumber: 25,
-        mqttTopic: "engine/always-on-light",
         automationMode: "ALWAYS_ON",
+        controllerId,
         isActive: true,
+        name: "Always On Light (scheduler test)",
+        pinNumber: 25,
+        type: "LIGHT",
       },
     });
 
@@ -711,7 +720,7 @@ describe("Automation engine", () => {
     await lightScheduler.tick(new Date("2026-07-01T02:00:00"));
 
     const offLog = await prismaClient.deviceStateLog.findFirst({
-      where: { deviceId: alwaysOnLight.id, action: "OFF", source: "AUTO" },
+      where: { action: "OFF", deviceId: alwaysOnLight.id, source: "AUTO" },
     });
     assert.equal(offLog, null, "ALWAYS_ON light must never receive an OFF command");
 
@@ -725,49 +734,50 @@ describe("Automation engine", () => {
     // Ensure the fan has both a NIGHT ABOVE_MAX rule and an ALWAYS_ON rule.
     // Configure NIGHT env to keep ABOVE_MAX fires deterministic.
     await prismaClient.phaseEnvironment.upsert({
-      where: { growPhaseId_period: { growPhaseId, period: "DAY" } },
-      update: { tempMax: 28 },
       create: { growPhaseId, period: "DAY", tempMax: 28, tempMin: 22 },
+      update: { tempMax: 28 },
+      where: { growPhaseId_period: { growPhaseId, period: "DAY" } },
     });
     await prismaClient.automationRule.deleteMany({ where: { deviceId: fanId } });
     await prismaClient.automationRule.create({
       data: {
-        growPhaseId,
-        deviceId: fanId,
-        watchedSensorType: "TEMPERATURE",
-        period: null,
-        condition: "ABOVE_MAX",
         action: "ON",
+        condition: "ABOVE_MAX",
         cooldownSeconds: 0,
+        deviceId: fanId,
+        growPhaseId,
+        period: null,
+        watchedSensorType: "TEMPERATURE",
       },
     });
     await prismaClient.automationRule.create({
       data: {
-        growPhaseId,
-        deviceId: fanId,
-        watchedSensorType: null,
-        period: null,
-        condition: "ALWAYS_ON",
         action: "ON",
+        condition: "ALWAYS_ON",
+        deviceId: fanId,
+        growPhaseId,
+        period: null,
+        watchedSensorType: null,
       },
     });
     // Reset fan state for a clean assertion.
     await prismaClient.device.update({
-      where: { id: fanId },
       data: { isActive: false },
+      where: { id: fanId },
     });
     await prismaClient.deviceStateLog.deleteMany({ where: { deviceId: fanId } });
 
     // Hot reading at noon -> ABOVE_MAX would normally fire, but the ALWAYS_ON
-    // rule suppresses it for this device in this scope.
+    // Rule suppresses it for this device in this scope.
     const before = await prismaClient.deviceStateLog.count({
       where: { deviceId: fanId, source: "AUTO" },
     });
     await evaluateThresholds({
       growCycleId,
+      now: new Date("2026-07-01T12:00:00"),
+      sensorId: 'test-sensor-id',
       sensorType: "TEMPERATURE",
       value: 99,
-      now: new Date("2026-07-01T12:00:00"),
     });
     const after = await prismaClient.deviceStateLog.count({
       where: { deviceId: fanId, source: "AUTO" },
@@ -781,30 +791,30 @@ describe("Automation engine", () => {
 
   test("evaluator - suppression is per-scope: ALWAYS_ON in a different phase does not suppress a threshold rule", async () => {
     // Always-on rule is cycle-scoped (rare case where the rule belongs to the
-    // cycle, not a phase). The threshold rule is phase-scoped. Cycle-scoped
-    // rules apply across all phases in the cycle, so this DOES suppress.
+    // Cycle, not a phase). The threshold rule is phase-scoped. Cycle-scoped
+    // Rules apply across all phases in the cycle, so this DOES suppress.
     // This test is asserting the behavior: a cycle-scoped ALWAYS_ON pin
-    // suppresses phase-scoped threshold rules in the cycle.
+    // Suppresses phase-scoped threshold rules in the cycle.
     await prismaClient.automationRule.deleteMany({ where: { deviceId: fanId } });
     await prismaClient.automationRule.create({
       data: {
-        growPhaseId,
-        deviceId: fanId,
-        watchedSensorType: "TEMPERATURE",
-        period: "DAY",
-        condition: "ABOVE_MAX",
         action: "ON",
+        condition: "ABOVE_MAX",
         cooldownSeconds: 0,
+        deviceId: fanId,
+        growPhaseId,
+        period: "DAY",
+        watchedSensorType: "TEMPERATURE",
       },
     });
     await prismaClient.automationRule.create({
       data: {
-        growCycleId,
-        deviceId: fanId,
-        watchedSensorType: null,
-        period: "DAY",
-        condition: "ALWAYS_ON",
         action: "ON",
+        condition: "ALWAYS_ON",
+        deviceId: fanId,
+        growCycleId,
+        period: "DAY",
+        watchedSensorType: null,
       },
     });
     await prismaClient.deviceStateLog.deleteMany({ where: { deviceId: fanId } });
@@ -814,9 +824,10 @@ describe("Automation engine", () => {
     });
     await evaluateThresholds({
       growCycleId,
+      now: new Date("2026-07-01T12:00:00"), // DAY for the 18/6 schedule
+      sensorId: 'test-sensor-id',
       sensorType: "TEMPERATURE",
       value: 99,
-      now: new Date("2026-07-01T12:00:00"), // DAY for the 18/6 schedule
     });
     const after = await prismaClient.deviceStateLog.count({
       where: { deviceId: fanId, source: "AUTO" },
@@ -829,31 +840,31 @@ describe("Automation engine", () => {
 
     // Clean up the cycle-scoped rule.
     await prismaClient.automationRule.deleteMany({
-      where: { growCycleId, deviceId: fanId, condition: "ALWAYS_ON" },
+      where: { condition: "ALWAYS_ON", deviceId: fanId, growCycleId },
     });
   });
 
   test("scheduler - ALWAYS_ON rule pins a non-LIGHT device to ON, even with no threshold trigger", async () => {
     // Earlier tests left the fan in MANUAL; reset to THRESHOLD so the
-    // scheduler will actually drive it.
+    // Scheduler will actually drive it.
     await prismaClient.device.update({
-      where: { id: fanId },
       data: { automationMode: "THRESHOLD" },
+      where: { id: fanId },
     });
     await prismaClient.automationRule.deleteMany({ where: { deviceId: fanId } });
     await prismaClient.automationRule.create({
       data: {
-        growPhaseId,
-        deviceId: fanId,
-        watchedSensorType: null,
-        period: null,
-        condition: "ALWAYS_ON",
         action: "ON",
+        condition: "ALWAYS_ON",
+        deviceId: fanId,
+        growPhaseId,
+        period: null,
+        watchedSensorType: null,
       },
     });
     await prismaClient.device.update({
-      where: { id: fanId },
       data: { isActive: false },
+      where: { id: fanId },
     });
     await prismaClient.deviceStateLog.deleteMany({ where: { deviceId: fanId } });
 
@@ -861,8 +872,8 @@ describe("Automation engine", () => {
     await lightScheduler.tick(new Date("2026-07-01T02:00:00"));
 
     const onLog = await prismaClient.deviceStateLog.findFirst({
-      where: { deviceId: fanId, action: "ON", source: "AUTO" },
       orderBy: { createdAt: "desc" },
+      where: { action: "ON", deviceId: fanId, source: "AUTO" },
     });
     assert.ok(onLog, "ALWAYS_ON rule should drive the device to ON");
     assert.match(onLog.reason ?? "", /ALWAYS_ON rule/);
@@ -870,7 +881,8 @@ describe("Automation engine", () => {
     const fan = await prismaClient.device.findUnique({ where: { id: fanId } });
     assert.equal(fan.isActive, true);
 
-    // Hysteresis: a second tick should not produce a new log.
+    // Hysteresis prevents a second MQTT command, but the scheduler still
+    // Writes a tick log for the state history chart.
     const before = await prismaClient.deviceStateLog.count({
       where: { deviceId: fanId, source: "AUTO" },
     });
@@ -878,32 +890,32 @@ describe("Automation engine", () => {
     const after = await prismaClient.deviceStateLog.count({
       where: { deviceId: fanId, source: "AUTO" },
     });
-    assert.equal(after, before, "no duplicate ON command on second tick");
+    assert.equal(after, before + 1, "Scheduler writes a tick log even when state is unchanged");
   });
 
   test("scheduler - ALWAYS_OFF rule with period: DAY does not fire at NIGHT", async () => {
     // Earlier tests left the fan in MANUAL; reset to THRESHOLD so the
-    // scheduler will actually drive it.
+    // Scheduler will actually drive it.
     await prismaClient.device.update({
-      where: { id: fanId },
       data: { automationMode: "THRESHOLD" },
+      where: { id: fanId },
     });
     // Create a cycle-scoped fan with period: DAY ALWAYS_OFF. At NIGHT the rule
-    // does not match the current period, so the device should not be driven.
+    // Does not match the current period, so the device should not be driven.
     await prismaClient.automationRule.deleteMany({ where: { deviceId: fanId } });
     await prismaClient.automationRule.create({
       data: {
-        growPhaseId,
-        deviceId: fanId,
-        watchedSensorType: null,
-        period: "DAY",
-        condition: "ALWAYS_OFF",
         action: "OFF",
+        condition: "ALWAYS_OFF",
+        deviceId: fanId,
+        growPhaseId,
+        period: "DAY",
+        watchedSensorType: null,
       },
     });
     await prismaClient.device.update({
-      where: { id: fanId },
       data: { isActive: true },
+      where: { id: fanId },
     });
     await prismaClient.deviceStateLog.deleteMany({ where: { deviceId: fanId } });
 
@@ -911,7 +923,7 @@ describe("Automation engine", () => {
     await lightScheduler.tick(new Date("2026-07-01T02:00:00"));
 
     const offLog = await prismaClient.deviceStateLog.findFirst({
-      where: { deviceId: fanId, action: "OFF", source: "AUTO" },
+      where: { action: "OFF", deviceId: fanId, source: "AUTO" },
     });
     assert.equal(offLog, null, "ALWAYS_OFF rule scoped to DAY must not fire at NIGHT");
 
@@ -919,29 +931,29 @@ describe("Automation engine", () => {
     await lightScheduler.tick(new Date("2026-07-01T12:00:00"));
 
     const newOffLog = await prismaClient.deviceStateLog.findFirst({
-      where: { deviceId: fanId, action: "OFF", source: "AUTO" },
       orderBy: { createdAt: "desc" },
+      where: { action: "OFF", deviceId: fanId, source: "AUTO" },
     });
     assert.ok(newOffLog, "ALWAYS_OFF rule should drive the device OFF during DAY");
     assert.match(newOffLog.reason ?? "", /ALWAYS_OFF rule/);
   });
 
-  test("scheduler - ALWAYS_ON rule is ignored if the device's automationMode is MANUAL", async () => {
-    // Switch the fan to MANUAL and confirm the scheduler does not touch it.
+  test("scheduler - ALWAYS_ON rule fires even when the device's automationMode is MANUAL", async () => {
+    // Switch the fan to MANUAL and confirm the scheduler still drives it.
     await prismaClient.automationRule.deleteMany({ where: { deviceId: fanId } });
     await prismaClient.automationRule.create({
       data: {
-        growPhaseId,
-        deviceId: fanId,
-        watchedSensorType: null,
-        period: null,
-        condition: "ALWAYS_ON",
         action: "ON",
+        condition: "ALWAYS_ON",
+        deviceId: fanId,
+        growPhaseId,
+        period: null,
+        watchedSensorType: null,
       },
     });
     await prismaClient.device.update({
-      where: { id: fanId },
       data: { automationMode: "MANUAL", isActive: false },
+      where: { id: fanId },
     });
     await prismaClient.deviceStateLog.deleteMany({ where: { deviceId: fanId } });
 
@@ -950,10 +962,11 @@ describe("Automation engine", () => {
     const log = await prismaClient.deviceStateLog.findFirst({
       where: { deviceId: fanId, source: "AUTO" },
     });
-    assert.equal(log, null, "MANUAL device should not be driven by an ALWAYS_ON rule");
+    assert.ok(log, "MANUAL device should still be driven by an enabled ALWAYS_ON rule");
+    assert.equal(log.action, "ON");
 
     const after = await prismaClient.device.findUnique({ where: { id: fanId } });
-    assert.equal(after.isActive, false, "MANUAL device should remain in its initial state");
+    assert.equal(after.isActive, true, "ALWAYS_ON rule should turn the device ON");
   });
 
   test("scheduler - device-level ALWAYS_OFF beats rule-level ALWAYS_ON", async () => {
@@ -962,24 +975,24 @@ describe("Automation engine", () => {
     await prismaClient.automationRule.deleteMany({ where: { deviceId: fanId } });
     await prismaClient.automationRule.create({
       data: {
-        growPhaseId,
-        deviceId: fanId,
-        watchedSensorType: null,
-        period: null,
-        condition: "ALWAYS_ON",
         action: "ON",
+        condition: "ALWAYS_ON",
+        deviceId: fanId,
+        growPhaseId,
+        period: null,
+        watchedSensorType: null,
       },
     });
     await prismaClient.device.update({
-      where: { id: fanId },
       data: { automationMode: "ALWAYS_OFF", isActive: false },
+      where: { id: fanId },
     });
     await prismaClient.deviceStateLog.deleteMany({ where: { deviceId: fanId } });
 
     await lightScheduler.tick(new Date("2026-07-01T12:00:00"));
 
     const onLog = await prismaClient.deviceStateLog.findFirst({
-      where: { deviceId: fanId, action: "ON", source: "AUTO" },
+      where: { action: "ON", deviceId: fanId, source: "AUTO" },
     });
     assert.equal(
       onLog,
@@ -988,10 +1001,10 @@ describe("Automation engine", () => {
     );
 
     // The scheduler does NOT actively drive non-LIGHT devices based on
-    // automationMode alone — the device is left in its initial state
+    // AutomationMode alone — the device is left in its initial state
     // (isActive: false, set up above) and only moved by a rule.
     const offLog = await prismaClient.deviceStateLog.findFirst({
-      where: { deviceId: fanId, action: "OFF", source: "AUTO" },
+      where: { action: "OFF", deviceId: fanId, source: "AUTO" },
     });
     assert.equal(
       offLog,

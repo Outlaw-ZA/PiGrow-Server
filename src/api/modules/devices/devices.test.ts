@@ -39,7 +39,6 @@ describe('Devices API Feature Module', () => {
       method: 'POST',
       payload: {
         controllerId: testControllerId,
-        mqttTopic: 'tent1/device/light/cmd',
         name: 'SpiderFarmer LED Panel',
         pinNumber: 4,
         type: 'LIGHT',
@@ -101,6 +100,61 @@ describe('Devices API Feature Module', () => {
     assert.equal(body.automationMode, 'SCHEDULED')
   })
 
+  test('GET /devices/:id/state-logs - Should return state logs for a device within a time range', async () => {
+    const list = await prismaClient.device.findFirst({
+      where: { controllerId: testControllerId },
+    })
+
+    // Create a test state log
+    await prismaClient.deviceStateLog.create({
+      data: { action: 'ON', deviceId: list.id, source: 'MANUAL' },
+    })
+
+    await prismaClient.deviceStateLog.create({
+      data: { action: 'OFF', deviceId: list.id, reason: 'test range', source: 'AUTO' },
+    })
+
+    const now = new Date()
+    const from = new Date(now.getTime() - 3_600_000).toISOString() // 1 hour ago
+    const to = now.toISOString()
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/api/devices/${list.id}/state-logs?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+    })
+
+    const body = JSON.parse(response.body)
+    assert.equal(response.statusCode, 200)
+    assert.ok(Array.isArray(body.logs))
+    assert.equal(body.logs.length, 2)
+    assert.equal(body.logs[0].action, 'ON')
+    assert.equal(body.logs[1].action, 'OFF')
+    assert.ok('priorAction' in body)
+  })
+
+  test('GET /devices/:id/state-logs - Should return priorAction when query has from', async () => {
+    const list = await prismaClient.device.findFirst({
+      where: { controllerId: testControllerId },
+    })
+
+    // Log from before the time range
+    await prismaClient.deviceStateLog.create({
+      data: { action: 'ON', createdAt: new Date(Date.now() - 86_400_000), deviceId: list.id, source: 'MANUAL' },
+    })
+
+    const from = new Date(Date.now() - 3_600_000).toISOString()
+    const to = new Date().toISOString()
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/api/devices/${list.id}/state-logs?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+    })
+
+    const body = JSON.parse(response.body)
+    assert.equal(response.statusCode, 200)
+    assert.equal(body.priorAction, 'ON')
+  })
+
   test('POST /devices/batch - Should bulk provision multiple devices', async () => {
     const response = await app.inject({
       method: 'POST',
@@ -109,16 +163,14 @@ describe('Devices API Feature Module', () => {
         devices: [
           {
             name: 'Exhaust Fan',
-            type: 'EXHAUST_FAN',
             pinNumber: 17,
-            mqttTopic: 'tent1/fan',
+            type: 'EXHAUST_FAN',
           },
           {
-            name: 'Heater',
-            type: 'HEATER',
-            pinNumber: 27,
-            mqttTopic: 'tent1/heater',
             automationMode: 'THRESHOLD',
+            name: 'Heater',
+            pinNumber: 27,
+            type: 'HEATER',
           },
         ],
       },

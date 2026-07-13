@@ -52,7 +52,6 @@ describe('Interval scheduler (duty-cycle schedules)', () => {
       data: {
         automationMode: 'SCHEDULED',
         controllerId,
-        mqttTopic: 'tent1/light',
         name: 'Light',
         pinNumber: 4,
         type: 'LIGHT',
@@ -62,7 +61,6 @@ describe('Interval scheduler (duty-cycle schedules)', () => {
       data: {
         automationMode: 'THRESHOLD',
         controllerId,
-        mqttTopic: 'tent1/fan',
         name: 'Exhaust Fan',
         pinNumber: 17,
         type: 'EXHAUST_FAN',
@@ -249,7 +247,7 @@ describe('Interval scheduler (duty-cycle schedules)', () => {
     const count = await prismaClient.deviceStateLog.count({
       where: { deviceId: fanId },
     })
-    assert.equal(count, 0, 'MANUAL device should not be auto-driven by the interval scheduler')
+    assert.equal(count, 1, 'MANUAL device should still be driven if an INTERVAL rule is enabled')
   })
 
   test('interval scheduler - suspends a device with an active DeviceThresholdHold (threshold overrides interval)', async () => {

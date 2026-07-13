@@ -27,10 +27,12 @@ export type AggregateDevice = {
 
 export type DeviceAvgAggregateOutputType = {
   pinNumber: number | null
+  maxOnSeconds: number | null
 }
 
 export type DeviceSumAggregateOutputType = {
   pinNumber: number | null
+  maxOnSeconds: number | null
 }
 
 export type DeviceMinAggregateOutputType = {
@@ -42,6 +44,7 @@ export type DeviceMinAggregateOutputType = {
   mqttTopic: string | null
   automationMode: $Enums.AutomationMode | null
   isActive: boolean | null
+  maxOnSeconds: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -55,6 +58,7 @@ export type DeviceMaxAggregateOutputType = {
   mqttTopic: string | null
   automationMode: $Enums.AutomationMode | null
   isActive: boolean | null
+  maxOnSeconds: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -68,6 +72,7 @@ export type DeviceCountAggregateOutputType = {
   mqttTopic: number
   automationMode: number
   isActive: number
+  maxOnSeconds: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -75,10 +80,12 @@ export type DeviceCountAggregateOutputType = {
 
 export type DeviceAvgAggregateInputType = {
   pinNumber?: true
+  maxOnSeconds?: true
 }
 
 export type DeviceSumAggregateInputType = {
   pinNumber?: true
+  maxOnSeconds?: true
 }
 
 export type DeviceMinAggregateInputType = {
@@ -90,6 +97,7 @@ export type DeviceMinAggregateInputType = {
   mqttTopic?: true
   automationMode?: true
   isActive?: true
+  maxOnSeconds?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -103,6 +111,7 @@ export type DeviceMaxAggregateInputType = {
   mqttTopic?: true
   automationMode?: true
   isActive?: true
+  maxOnSeconds?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -116,6 +125,7 @@ export type DeviceCountAggregateInputType = {
   mqttTopic?: true
   automationMode?: true
   isActive?: true
+  maxOnSeconds?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -217,6 +227,7 @@ export type DeviceGroupByOutputType = {
   mqttTopic: string
   automationMode: $Enums.AutomationMode
   isActive: boolean
+  maxOnSeconds: number | null
   createdAt: Date
   updatedAt: Date
   _count: DeviceCountAggregateOutputType | null
@@ -250,6 +261,7 @@ export type DeviceWhereInput = {
   mqttTopic?: Prisma.StringFilter<'Device'> | string
   automationMode?: Prisma.EnumAutomationModeFilter<'Device'> | $Enums.AutomationMode
   isActive?: Prisma.BoolFilter<'Device'> | boolean
+  maxOnSeconds?: Prisma.IntNullableFilter<'Device'> | number | null
   createdAt?: Prisma.DateTimeFilter<'Device'> | Date | string
   updatedAt?: Prisma.DateTimeFilter<'Device'> | Date | string
   controller?: Prisma.XOR<Prisma.ControllerScalarRelationFilter, Prisma.ControllerWhereInput>
@@ -270,6 +282,7 @@ export type DeviceOrderByWithRelationInput = {
   mqttTopic?: Prisma.SortOrder
   automationMode?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  maxOnSeconds?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   controller?: Prisma.ControllerOrderByWithRelationInput
@@ -291,6 +304,7 @@ export type DeviceWhereUniqueInput = Prisma.AtLeast<
     mqttTopic?: Prisma.StringFilter<'Device'> | string
     automationMode?: Prisma.EnumAutomationModeFilter<'Device'> | $Enums.AutomationMode
     isActive?: Prisma.BoolFilter<'Device'> | boolean
+    maxOnSeconds?: Prisma.IntNullableFilter<'Device'> | number | null
     createdAt?: Prisma.DateTimeFilter<'Device'> | Date | string
     updatedAt?: Prisma.DateTimeFilter<'Device'> | Date | string
     controller?: Prisma.XOR<Prisma.ControllerScalarRelationFilter, Prisma.ControllerWhereInput>
@@ -313,6 +327,7 @@ export type DeviceOrderByWithAggregationInput = {
   mqttTopic?: Prisma.SortOrder
   automationMode?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  maxOnSeconds?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.DeviceCountOrderByAggregateInput
@@ -334,6 +349,7 @@ export type DeviceScalarWhereWithAggregatesInput = {
   mqttTopic?: Prisma.StringWithAggregatesFilter<'Device'> | string
   automationMode?: Prisma.EnumAutomationModeWithAggregatesFilter<'Device'> | $Enums.AutomationMode
   isActive?: Prisma.BoolWithAggregatesFilter<'Device'> | boolean
+  maxOnSeconds?: Prisma.IntNullableWithAggregatesFilter<'Device'> | number | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<'Device'> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<'Device'> | Date | string
 }
@@ -343,9 +359,10 @@ export type DeviceCreateInput = {
   name: string
   type: $Enums.DeviceType
   pinNumber: number
-  mqttTopic: string
+  mqttTopic?: string
   automationMode?: $Enums.AutomationMode
   isActive?: boolean
+  maxOnSeconds?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   controller: Prisma.ControllerCreateNestedOneWithoutDevicesInput
@@ -360,9 +377,10 @@ export type DeviceUncheckedCreateInput = {
   name: string
   type: $Enums.DeviceType
   pinNumber: number
-  mqttTopic: string
+  mqttTopic?: string
   automationMode?: $Enums.AutomationMode
   isActive?: boolean
+  maxOnSeconds?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   deviceStateLogs?: Prisma.DeviceStateLogUncheckedCreateNestedManyWithoutDeviceInput
@@ -378,6 +396,7 @@ export type DeviceUpdateInput = {
   mqttTopic?: Prisma.StringFieldUpdateOperationsInput | string
   automationMode?: Prisma.EnumAutomationModeFieldUpdateOperationsInput | $Enums.AutomationMode
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   controller?: Prisma.ControllerUpdateOneRequiredWithoutDevicesNestedInput
@@ -395,6 +414,7 @@ export type DeviceUncheckedUpdateInput = {
   mqttTopic?: Prisma.StringFieldUpdateOperationsInput | string
   automationMode?: Prisma.EnumAutomationModeFieldUpdateOperationsInput | $Enums.AutomationMode
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deviceStateLogs?: Prisma.DeviceStateLogUncheckedUpdateManyWithoutDeviceNestedInput
@@ -408,9 +428,10 @@ export type DeviceCreateManyInput = {
   name: string
   type: $Enums.DeviceType
   pinNumber: number
-  mqttTopic: string
+  mqttTopic?: string
   automationMode?: $Enums.AutomationMode
   isActive?: boolean
+  maxOnSeconds?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -423,6 +444,7 @@ export type DeviceUpdateManyMutationInput = {
   mqttTopic?: Prisma.StringFieldUpdateOperationsInput | string
   automationMode?: Prisma.EnumAutomationModeFieldUpdateOperationsInput | $Enums.AutomationMode
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -436,6 +458,7 @@ export type DeviceUncheckedUpdateManyInput = {
   mqttTopic?: Prisma.StringFieldUpdateOperationsInput | string
   automationMode?: Prisma.EnumAutomationModeFieldUpdateOperationsInput | $Enums.AutomationMode
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -459,12 +482,14 @@ export type DeviceCountOrderByAggregateInput = {
   mqttTopic?: Prisma.SortOrder
   automationMode?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  maxOnSeconds?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type DeviceAvgOrderByAggregateInput = {
   pinNumber?: Prisma.SortOrder
+  maxOnSeconds?: Prisma.SortOrder
 }
 
 export type DeviceMaxOrderByAggregateInput = {
@@ -476,6 +501,7 @@ export type DeviceMaxOrderByAggregateInput = {
   mqttTopic?: Prisma.SortOrder
   automationMode?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  maxOnSeconds?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -489,12 +515,14 @@ export type DeviceMinOrderByAggregateInput = {
   mqttTopic?: Prisma.SortOrder
   automationMode?: Prisma.SortOrder
   isActive?: Prisma.SortOrder
+  maxOnSeconds?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
 
 export type DeviceSumOrderByAggregateInput = {
   pinNumber?: Prisma.SortOrder
+  maxOnSeconds?: Prisma.SortOrder
 }
 
 export type DeviceScalarRelationFilter = {
@@ -608,6 +636,14 @@ export type BoolFieldUpdateOperationsInput = {
   set?: boolean
 }
 
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type DeviceCreateNestedOneWithoutAutomationRulesInput = {
   create?: Prisma.XOR<
     Prisma.DeviceCreateWithoutAutomationRulesInput,
@@ -691,9 +727,10 @@ export type DeviceCreateWithoutControllerInput = {
   name: string
   type: $Enums.DeviceType
   pinNumber: number
-  mqttTopic: string
+  mqttTopic?: string
   automationMode?: $Enums.AutomationMode
   isActive?: boolean
+  maxOnSeconds?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   deviceStateLogs?: Prisma.DeviceStateLogCreateNestedManyWithoutDeviceInput
@@ -706,9 +743,10 @@ export type DeviceUncheckedCreateWithoutControllerInput = {
   name: string
   type: $Enums.DeviceType
   pinNumber: number
-  mqttTopic: string
+  mqttTopic?: string
   automationMode?: $Enums.AutomationMode
   isActive?: boolean
+  maxOnSeconds?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   deviceStateLogs?: Prisma.DeviceStateLogUncheckedCreateNestedManyWithoutDeviceInput
@@ -769,6 +807,7 @@ export type DeviceScalarWhereInput = {
   mqttTopic?: Prisma.StringFilter<'Device'> | string
   automationMode?: Prisma.EnumAutomationModeFilter<'Device'> | $Enums.AutomationMode
   isActive?: Prisma.BoolFilter<'Device'> | boolean
+  maxOnSeconds?: Prisma.IntNullableFilter<'Device'> | number | null
   createdAt?: Prisma.DateTimeFilter<'Device'> | Date | string
   updatedAt?: Prisma.DateTimeFilter<'Device'> | Date | string
 }
@@ -778,9 +817,10 @@ export type DeviceCreateWithoutAutomationRulesInput = {
   name: string
   type: $Enums.DeviceType
   pinNumber: number
-  mqttTopic: string
+  mqttTopic?: string
   automationMode?: $Enums.AutomationMode
   isActive?: boolean
+  maxOnSeconds?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   controller: Prisma.ControllerCreateNestedOneWithoutDevicesInput
@@ -794,9 +834,10 @@ export type DeviceUncheckedCreateWithoutAutomationRulesInput = {
   name: string
   type: $Enums.DeviceType
   pinNumber: number
-  mqttTopic: string
+  mqttTopic?: string
   automationMode?: $Enums.AutomationMode
   isActive?: boolean
+  maxOnSeconds?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   deviceStateLogs?: Prisma.DeviceStateLogUncheckedCreateNestedManyWithoutDeviceInput
@@ -839,6 +880,7 @@ export type DeviceUpdateWithoutAutomationRulesInput = {
   mqttTopic?: Prisma.StringFieldUpdateOperationsInput | string
   automationMode?: Prisma.EnumAutomationModeFieldUpdateOperationsInput | $Enums.AutomationMode
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   controller?: Prisma.ControllerUpdateOneRequiredWithoutDevicesNestedInput
@@ -855,6 +897,7 @@ export type DeviceUncheckedUpdateWithoutAutomationRulesInput = {
   mqttTopic?: Prisma.StringFieldUpdateOperationsInput | string
   automationMode?: Prisma.EnumAutomationModeFieldUpdateOperationsInput | $Enums.AutomationMode
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deviceStateLogs?: Prisma.DeviceStateLogUncheckedUpdateManyWithoutDeviceNestedInput
@@ -866,9 +909,10 @@ export type DeviceCreateWithoutDeviceStateLogsInput = {
   name: string
   type: $Enums.DeviceType
   pinNumber: number
-  mqttTopic: string
+  mqttTopic?: string
   automationMode?: $Enums.AutomationMode
   isActive?: boolean
+  maxOnSeconds?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   controller: Prisma.ControllerCreateNestedOneWithoutDevicesInput
@@ -882,9 +926,10 @@ export type DeviceUncheckedCreateWithoutDeviceStateLogsInput = {
   name: string
   type: $Enums.DeviceType
   pinNumber: number
-  mqttTopic: string
+  mqttTopic?: string
   automationMode?: $Enums.AutomationMode
   isActive?: boolean
+  maxOnSeconds?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   automationRules?: Prisma.AutomationRuleUncheckedCreateNestedManyWithoutDeviceInput
@@ -927,6 +972,7 @@ export type DeviceUpdateWithoutDeviceStateLogsInput = {
   mqttTopic?: Prisma.StringFieldUpdateOperationsInput | string
   automationMode?: Prisma.EnumAutomationModeFieldUpdateOperationsInput | $Enums.AutomationMode
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   controller?: Prisma.ControllerUpdateOneRequiredWithoutDevicesNestedInput
@@ -943,6 +989,7 @@ export type DeviceUncheckedUpdateWithoutDeviceStateLogsInput = {
   mqttTopic?: Prisma.StringFieldUpdateOperationsInput | string
   automationMode?: Prisma.EnumAutomationModeFieldUpdateOperationsInput | $Enums.AutomationMode
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   automationRules?: Prisma.AutomationRuleUncheckedUpdateManyWithoutDeviceNestedInput
@@ -954,9 +1001,10 @@ export type DeviceCreateWithoutThresholdHoldInput = {
   name: string
   type: $Enums.DeviceType
   pinNumber: number
-  mqttTopic: string
+  mqttTopic?: string
   automationMode?: $Enums.AutomationMode
   isActive?: boolean
+  maxOnSeconds?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   controller: Prisma.ControllerCreateNestedOneWithoutDevicesInput
@@ -970,9 +1018,10 @@ export type DeviceUncheckedCreateWithoutThresholdHoldInput = {
   name: string
   type: $Enums.DeviceType
   pinNumber: number
-  mqttTopic: string
+  mqttTopic?: string
   automationMode?: $Enums.AutomationMode
   isActive?: boolean
+  maxOnSeconds?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   deviceStateLogs?: Prisma.DeviceStateLogUncheckedCreateNestedManyWithoutDeviceInput
@@ -1015,6 +1064,7 @@ export type DeviceUpdateWithoutThresholdHoldInput = {
   mqttTopic?: Prisma.StringFieldUpdateOperationsInput | string
   automationMode?: Prisma.EnumAutomationModeFieldUpdateOperationsInput | $Enums.AutomationMode
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   controller?: Prisma.ControllerUpdateOneRequiredWithoutDevicesNestedInput
@@ -1031,6 +1081,7 @@ export type DeviceUncheckedUpdateWithoutThresholdHoldInput = {
   mqttTopic?: Prisma.StringFieldUpdateOperationsInput | string
   automationMode?: Prisma.EnumAutomationModeFieldUpdateOperationsInput | $Enums.AutomationMode
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deviceStateLogs?: Prisma.DeviceStateLogUncheckedUpdateManyWithoutDeviceNestedInput
@@ -1042,9 +1093,10 @@ export type DeviceCreateManyControllerInput = {
   name: string
   type: $Enums.DeviceType
   pinNumber: number
-  mqttTopic: string
+  mqttTopic?: string
   automationMode?: $Enums.AutomationMode
   isActive?: boolean
+  maxOnSeconds?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1057,6 +1109,7 @@ export type DeviceUpdateWithoutControllerInput = {
   mqttTopic?: Prisma.StringFieldUpdateOperationsInput | string
   automationMode?: Prisma.EnumAutomationModeFieldUpdateOperationsInput | $Enums.AutomationMode
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deviceStateLogs?: Prisma.DeviceStateLogUpdateManyWithoutDeviceNestedInput
@@ -1072,6 +1125,7 @@ export type DeviceUncheckedUpdateWithoutControllerInput = {
   mqttTopic?: Prisma.StringFieldUpdateOperationsInput | string
   automationMode?: Prisma.EnumAutomationModeFieldUpdateOperationsInput | $Enums.AutomationMode
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deviceStateLogs?: Prisma.DeviceStateLogUncheckedUpdateManyWithoutDeviceNestedInput
@@ -1087,6 +1141,7 @@ export type DeviceUncheckedUpdateManyWithoutControllerInput = {
   mqttTopic?: Prisma.StringFieldUpdateOperationsInput | string
   automationMode?: Prisma.EnumAutomationModeFieldUpdateOperationsInput | $Enums.AutomationMode
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  maxOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1149,6 +1204,7 @@ export type DeviceSelect<
     mqttTopic?: boolean
     automationMode?: boolean
     isActive?: boolean
+    maxOnSeconds?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     controller?: boolean | Prisma.ControllerDefaultArgs<ExtArgs>
@@ -1172,6 +1228,7 @@ export type DeviceSelectCreateManyAndReturn<
     mqttTopic?: boolean
     automationMode?: boolean
     isActive?: boolean
+    maxOnSeconds?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     controller?: boolean | Prisma.ControllerDefaultArgs<ExtArgs>
@@ -1191,6 +1248,7 @@ export type DeviceSelectUpdateManyAndReturn<
     mqttTopic?: boolean
     automationMode?: boolean
     isActive?: boolean
+    maxOnSeconds?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     controller?: boolean | Prisma.ControllerDefaultArgs<ExtArgs>
@@ -1207,6 +1265,7 @@ export type DeviceSelectScalar = {
   mqttTopic?: boolean
   automationMode?: boolean
   isActive?: boolean
+  maxOnSeconds?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
@@ -1222,6 +1281,7 @@ export type DeviceOmit<
   | 'mqttTopic'
   | 'automationMode'
   | 'isActive'
+  | 'maxOnSeconds'
   | 'createdAt'
   | 'updatedAt',
   ExtArgs['result']['device']
@@ -1266,6 +1326,7 @@ export type $DevicePayload<
       mqttTopic: string
       automationMode: $Enums.AutomationMode
       isActive: boolean
+      maxOnSeconds: number | null
       createdAt: Date
       updatedAt: Date
     },
@@ -1866,6 +1927,7 @@ export interface DeviceFieldRefs {
   readonly mqttTopic: Prisma.FieldRef<'Device', 'String'>
   readonly automationMode: Prisma.FieldRef<'Device', 'AutomationMode'>
   readonly isActive: Prisma.FieldRef<'Device', 'Boolean'>
+  readonly maxOnSeconds: Prisma.FieldRef<'Device', 'Int'>
   readonly createdAt: Prisma.FieldRef<'Device', 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<'Device', 'DateTime'>
 }

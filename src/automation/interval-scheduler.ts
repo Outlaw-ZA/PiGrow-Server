@@ -90,10 +90,10 @@ export class IntervalScheduler {
           enabled: true,
           condition: 'INTERVAL',
           // LIGHT devices are not eligible for automation rules; this filter
-          // is defensive in case a stale row exists from before that constraint.
+          // Is defensive in case a stale row exists from before that constraint.
           device: { type: { not: 'LIGHT' } },
           OR: [
-            { growPhaseId: activePhase.id, growCycleId: null },
+            { growCycleId: null, growPhaseId: activePhase.id },
             { growCycleId: cycle.id, growPhaseId: null },
           ],
           AND: [{ OR: [{ period }, { period: null }] }],
@@ -128,9 +128,6 @@ export class IntervalScheduler {
         }
 
         const mode = rule.device.automationMode
-        if (mode === 'MANUAL') {
-          continue
-        }
 
         const onMs = rule.intervalOnSeconds * 1000
         const cycleMs = rule.intervalCycleSeconds * 1000

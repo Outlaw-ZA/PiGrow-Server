@@ -1,5 +1,6 @@
 import { mqttClient } from '../mqtt/client.js'
 import { prisma } from '../prisma.js'
+import { DEVICE_STATE_CHANGED, deviceEvents } from '../events.js'
 
 /**
  * Issue an automated device command and persist a DeviceStateLog row.
@@ -44,6 +45,8 @@ export async function issueAutoCommand(
       data: { action, deviceId, reason, source: 'AUTO' },
     }),
   ])
+
+  deviceEvents.emit(DEVICE_STATE_CHANGED, { deviceId, isActive: action === 'ON' })
 
   mqttClient.publish(
     `devices/${deviceId}/commands`,

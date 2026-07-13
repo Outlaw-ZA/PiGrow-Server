@@ -52,6 +52,36 @@ export class AutomationScheduler {
 
   // Exposed for tests and manual invocation.
   async tick(now: Date = new Date()) {
+    // (0) Max-run-time enforcement: force-OFF any device that has been ON
+    //     Longer than its maxOnSeconds ceiling, regardless of automation state.
+    //     This is the independent backstop that prevents a stuck sensor or
+    //     A rule logic error from cooking a tent.
+    {
+      const overrunDevices = await prisma.device.findMany({
+        select: { id: true, maxOnSeconds: true },
+        where: {
+          isActive: true,
+          maxOnSeconds: { not: null },
+        },
+      })
+      for (const dev of overrunDevices) {
+        const lastLog = await prisma.deviceStateLog.findFirst({
+          orderBy: { createdAt: 'desc' },
+          select: { createdAt: true },
+          where: { action: 'ON', deviceId: dev.id },
+        })
+        if (
+          lastLog &&
+          now.getTime() - lastLog.createdAt.getTime() > (dev.maxOnSeconds as number) * 1000
+        ) {
+          console.log(
+            `[scheduler] max-run-time exceeded for device ${dev.id} (limit ${dev.maxOnSeconds}s); force-OFF`,
+          )
+          await issueAutoCommand(dev.id, 'OFF', `max-run-time ${dev.maxOnSeconds}s exceeded`)
+        }
+      }
+    }
+
     const activeCycles = await prisma.growCycle.findMany({
       include: {
         controller: {
@@ -98,6 +128,17 @@ export class AutomationScheduler {
           console.log(
             `[scheduler] cycle=${cycle.id} phase=${activePhase.id} device=${device.id} action=${lightAction} (${period})`,
           )
+        } else {
+          // Hysteresis prevented a duplicate command, but we still write a log
+          // Entry so the device state history chart shows the state at each tick.
+          await prisma.deviceStateLog.create({
+            data: {
+              action: lightAction,
+              deviceId: device.id,
+              reason: `${period === 'DAY' ? 'day cycle tick' : 'night cycle tick'} (phase ${activePhase.id})`,
+              source: 'AUTO',
+            },
+          })
         }
       }
 
@@ -109,7 +150,7 @@ export class AutomationScheduler {
         where: {
           AND: [{ OR: [{ period }, { period: null }] }],
           OR: [
-            { growPhaseId: activePhase.id, growCycleId: null },
+            { growCycleId: null, growPhaseId: activePhase.id },
             { growCycleId: cycle.id, growPhaseId: null },
           ],
           condition: { in: ['ALWAYS_ON', 'ALWAYS_OFF'] },
@@ -124,9 +165,6 @@ export class AutomationScheduler {
         if (rule.device.type === 'LIGHT') {
           continue
         } // Defensive — LIGHTs are ineligible
-        if (rule.device.automationMode === 'MANUAL') {
-          continue
-        }
         const target: DeviceActionLiteral = rule.condition === 'ALWAYS_ON' ? 'ON' : 'OFF'
         if (rule.device.automationMode === 'ALWAYS_ON' && target === 'OFF') {
           continue
@@ -144,6 +182,15 @@ export class AutomationScheduler {
           console.log(
             `[scheduler] cycle=${cycle.id} phase=${activePhase.id} rule=${rule.id} device=${rule.device.id} action=${target} (${rule.condition})`,
           )
+        } else {
+          await prisma.deviceStateLog.create({
+            data: {
+              action: target,
+              deviceId: rule.device.id,
+              reason: `${rule.condition} rule tick (${rule.id})`,
+              source: 'AUTO',
+            },
+          })
         }
       }
     }

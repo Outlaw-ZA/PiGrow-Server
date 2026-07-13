@@ -8,7 +8,6 @@ interface CreateSensorInput {
   controllerId: string
   name: string
   type: SensorTypeValue
-  mqttTopic: string
   pinNumbers: number[]
   protocol: SensorProtocolValue
 }
@@ -16,7 +15,6 @@ interface CreateSensorInput {
 interface UpdateSensorInput {
   name?: string
   type?: SensorTypeValue
-  mqttTopic?: string
   pinNumbers?: number[]
   protocol?: SensorProtocolValue
   lastActive?: string
@@ -58,7 +56,6 @@ export class SensorsController {
     return await this.prisma.sensor.create({
       data: {
         controllerId: body.controllerId,
-        mqttTopic: body.mqttTopic,
         name: body.name,
         pinNumbers: body.pinNumbers,
         protocol: body.protocol,
@@ -73,7 +70,7 @@ export class SensorsController {
     return await this.prisma.sensor.update({
       data: {
         ...rest,
-        ...(lastActive !== undefined ? { lastActive: new Date(lastActive) } : {}),
+        ...(lastActive === undefined ? {} : { lastActive: new Date(lastActive) }),
       },
       where: { id },
     })
