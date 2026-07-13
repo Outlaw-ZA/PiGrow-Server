@@ -63,8 +63,8 @@ export class TelemetryController {
       },
       where: {
         OR: groups.map((g) => ({
-          sensorId: g.sensorId,
           createdAt: g._max.createdAt!,
+          sensorId: g.sensorId,
         })),
         growCycleId,
       },
