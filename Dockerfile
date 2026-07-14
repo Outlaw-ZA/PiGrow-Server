@@ -31,6 +31,9 @@ WORKDIR /app
 # Set environments
 ENV NODE_ENV=production
 
+# Install timezone data for scheduler period resolution
+RUN apk add --no-cache tzdata
+
 # Copy only the necessary runtime files from the builder stage
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules

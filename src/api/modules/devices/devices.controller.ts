@@ -70,7 +70,7 @@ export class DevicesController {
   async createDevice(body: CreateDeviceInput) {
     return await this.prisma.device.create({
       data: {
-        automationMode: body.automationMode ?? 'MANUAL',
+        automationMode: body.automationMode ?? (body.type === 'LIGHT' ? 'SCHEDULED' : 'MANUAL'),
         controllerId: body.controllerId,
         isActive: body.isActive ?? true,
         maxOnSeconds: body.maxOnSeconds ?? null,
@@ -102,7 +102,8 @@ export class DevicesController {
       body.devices.map((device) =>
         this.prisma.device.create({
           data: {
-            automationMode: device.automationMode ?? 'MANUAL',
+            automationMode:
+              device.automationMode ?? (device.type === 'LIGHT' ? 'SCHEDULED' : 'MANUAL'),
             controllerId: body.controllerId,
             isActive: device.isActive ?? true,
             maxOnSeconds: device.maxOnSeconds ?? null,
@@ -163,8 +164,12 @@ export class DevicesController {
     const where: { deviceId: string; createdAt?: { gte?: Date; lte?: Date } } = { deviceId }
     if (from || to) {
       where.createdAt = {}
-      if (from) {where.createdAt.gte = new Date(from)}
-      if (to) {where.createdAt.lte = new Date(to)}
+      if (from) {
+        where.createdAt.gte = new Date(from)
+      }
+      if (to) {
+        where.createdAt.lte = new Date(to)
+      }
     }
 
     const logs = await this.prisma.deviceStateLog.findMany({

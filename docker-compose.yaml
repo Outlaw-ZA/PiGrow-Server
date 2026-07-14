@@ -24,6 +24,8 @@ services:
       - MQTT_BROKER_URL=mqtt://mqtt-broker:1883
       # PostgreSQL Connection String (using the postgres service name as host)
       - DATABASE_URL=postgresql://postgres:password@postgres-db:5432/pigrow_db
+      # Timezone for the scheduler's day/night period resolution
+      - TZ=Africa/Johannesburg
     restart: unless-stopped
     depends_on:
       - mqtt-broker

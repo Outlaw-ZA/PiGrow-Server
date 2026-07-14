@@ -52,7 +52,7 @@ io.on('connection', (socket) => {
   console.log(`💻 Frontend Client Connected: ${socket.id}`)
 
   // Listen for commands coming FROM the frontend dashboard to control the Pi
-  socket.on('ui_command', (data) => {
+  socket.on('ui_command', async (data, ack) => {
     console.log('Command received from UI dashboard:', data)
 
     // Validate deviceId is a UUID before it becomes an MQTT topic,
@@ -62,10 +62,32 @@ io.on('connection', (socket) => {
       !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.deviceId)
     ) {
       console.warn(`[ui_command] Invalid deviceId: ${data?.deviceId}`)
+      if (typeof ack === 'function') {
+        ack({ ok: false })
+      }
       return
     }
     if (data?.action !== 'ON' && data?.action !== 'OFF') {
       console.warn(`[ui_command] Invalid action: ${data?.action}`)
+      if (typeof ack === 'function') {
+        ack({ ok: false })
+      }
+      return
+    }
+
+    // Look up the device pin from the DB instead of trusting the UI payload.
+    // The REST and automation paths both use the DB pin; this path was using
+    // Data.pin from the socket, which could diverge from the client's
+    // Config.yaml allowlist and cause commands to be silently dropped.
+    const device = await prisma.device.findUnique({
+      select: { pinNumber: true },
+      where: { id: data.deviceId },
+    })
+    if (!device) {
+      console.warn(`[ui_command] Unknown device: ${data.deviceId}`)
+      if (typeof ack === 'function') {
+        ack({ ok: false })
+      }
       return
     }
 
@@ -75,7 +97,7 @@ io.on('connection', (socket) => {
       targetTopic,
       JSON.stringify({
         action: data.action,
-        pin: data.pin,
+        pin: device.pinNumber,
         timestamp: Date.now(),
       }),
     )
@@ -83,24 +105,34 @@ io.on('connection', (socket) => {
     // Persist an audit log row AND update Device.isActive in a single
     // Transaction, matching the REST command path's semantics so the
     // Device's cached state stays consistent regardless of command channel.
-    prisma.$transaction([
-      prisma.deviceStateLog.create({
-        data: {
-          action: data.action,
-          deviceId: data.deviceId,
-          source: 'UI',
-        },
-      }),
-      prisma.device.update({
-        data: { isActive: data.action === 'ON' },
-        where: { id: data.deviceId },
-      }),
-    ]).catch((error) => {
-      console.error('[ui_command] Failed to persist command:', error)
-    })
+    try {
+      await prisma.$transaction([
+        prisma.deviceStateLog.create({
+          data: {
+            action: data.action,
+            deviceId: data.deviceId,
+            source: 'UI',
+          },
+        }),
+        prisma.device.update({
+          data: { isActive: data.action === 'ON' },
+          where: { id: data.deviceId },
+        }),
+      ])
 
-    // Broadcast the state change to all connected frontend clients.
-    io.emit('device_state_update', { deviceId: data.deviceId, isActive: data.action === 'ON' })
+      // Broadcast the state change to all connected frontend clients only
+      // After the DB write succeeds, preventing the UI from seeing a state
+      // That hasn't been persisted.
+      io.emit('device_state_update', { deviceId: data.deviceId, isActive: data.action === 'ON' })
+      if (typeof ack === 'function') {
+        ack({ ok: true })
+      }
+    } catch (error) {
+      console.error('[ui_command] Failed to persist command:', error)
+      if (typeof ack === 'function') {
+        ack({ ok: false })
+      }
+    }
   })
 
   socket.on('disconnect', () => console.log(`💻 Frontend Client Disconnected`))
