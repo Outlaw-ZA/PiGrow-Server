@@ -4,7 +4,7 @@
   "categories": {
     "correctness": "deny",
     "suspicious": "warn",
-    "pedantic": "warn",
+    "pedantic": "off",
     "perf": "warn",
     "style": "warn",
     "restriction": "off",
