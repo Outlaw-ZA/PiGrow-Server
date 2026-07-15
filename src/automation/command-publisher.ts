@@ -1,6 +1,8 @@
+import crypto from 'node:crypto'
 import { mqttClient } from '../mqtt/client.js'
 import { prisma } from '../prisma.js'
 import { DEVICE_STATE_CHANGED, deviceEvents } from '../events.js'
+import { commandTracker } from './command-tracker.js'
 
 /**
  * Issue an automated device command and persist a DeviceStateLog row.
@@ -46,12 +48,16 @@ export async function issueAutoCommand(
     }),
   ])
 
+  const commandId = crypto.randomUUID()
+  commandTracker.track(commandId, deviceId, action)
+
   deviceEvents.emit(DEVICE_STATE_CHANGED, { deviceId, isActive: action === 'ON' })
 
   mqttClient.publish(
     `devices/${deviceId}/commands`,
     JSON.stringify({
       action,
+      commandId,
       pin: device.pinNumber,
       timestamp: Date.now(),
     }),

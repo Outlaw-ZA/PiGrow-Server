@@ -1,5 +1,6 @@
 import { prisma } from '../prisma.js'
 import { DEVICE_STATE_CHANGED, deviceEvents } from '../events.js'
+import { commandTracker } from '../automation/command-tracker.js'
 
 /**
  * Handles `devices/<deviceId>/state` MQTT messages published by the Pi.
@@ -33,6 +34,15 @@ export async function handleDeviceState(topic: string, messageBuffer: Buffer): P
     if (payload?.action !== 'ON' && payload?.action !== 'OFF') {
       console.warn(`[device-state] Unknown action "${payload?.action}" on ${topic}`)
       return
+    }
+
+    // Confirm any tracked command that matches this state report.
+    const commandId =
+      typeof payload === 'object' && payload !== null
+        ? (payload as Record<string, unknown>).commandId
+        : undefined
+    if (typeof commandId === 'string') {
+      commandTracker.confirm(commandId)
     }
 
     const device = await prisma.device.findUnique({

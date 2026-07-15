@@ -2,6 +2,7 @@ import { prisma } from '../prisma.js'
 import { resolvePeriod } from './period.js'
 import { issueAutoCommand } from './command-publisher.js'
 import { evaluateThresholds } from './evaluator.js'
+import { commandTracker } from './command-tracker.js'
 import type { DeviceAction as DeviceActionLiteral } from '../generated/client/enums.js'
 
 const TICK_MS = 60_000
@@ -42,6 +43,11 @@ export class AutomationScheduler {
     // Run once immediately so behavior is observable on dev startup, then on tick.
     void this.tick()
     this.timer = setInterval(() => void this.tick(), TICK_MS)
+
+    commandTracker.setRetryHandler(async (cmd) => {
+      await issueAutoCommand(cmd.deviceId, cmd.action, `retry (#${cmd.retries})`)
+    })
+    commandTracker.startRetryLoop()
   }
 
   stop() {
@@ -49,6 +55,7 @@ export class AutomationScheduler {
       clearInterval(this.timer)
       this.timer = null
     }
+    commandTracker.stopRetryLoop()
   }
 
   // Exposed for tests and manual invocation.
