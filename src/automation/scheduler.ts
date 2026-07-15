@@ -1,6 +1,7 @@
 import { prisma } from '../prisma.js'
 import { resolvePeriod } from './period.js'
 import { issueAutoCommand } from './command-publisher.js'
+import { evaluateThresholds } from './evaluator.js'
 import type { DeviceAction as DeviceActionLiteral } from '../generated/client/enums.js'
 
 const TICK_MS = 60_000
@@ -190,6 +191,52 @@ export class AutomationScheduler {
               reason: `${rule.condition} rule tick (${rule.id})`,
               source: 'AUTO',
             },
+          })
+        }
+      }
+
+      // (3) Re-evaluate threshold rules using the latest telemetry per sensor type.
+      //     This provides a safety net if the real-time evaluator (triggered by MQTT)
+      //     Misses a condition — e.g., dropped MQTT message, stale sensor, or race.
+      {
+        const sensors = await prisma.sensor.findMany({
+          include: {
+            controller: {
+              select: {
+                growCycles: { select: { id: true }, take: 1, where: { isActive: true } },
+                id: true,
+              },
+            },
+          },
+          where: { controllerId: cycle.controller.id },
+        })
+
+        for (const sensor of sensors) {
+          const activeCycle = sensor.controller.growCycles[0]
+          if (!activeCycle) {
+            continue
+          }
+
+          const latest = await prisma.telemetry.findFirst({
+            orderBy: { createdAt: 'desc' },
+            select: { sensorType: true, value: true },
+            where: { growCycleId: activeCycle.id, sensorId: sensor.id },
+          })
+          if (!latest) {
+            continue
+          }
+
+          await evaluateThresholds({
+            growCycleId: activeCycle.id,
+            now,
+            sensorId: sensor.id,
+            sensorType: latest.sensorType,
+            value: latest.value,
+          }).catch((error: Error) => {
+            console.error(
+              `[scheduler] Threshold re-evaluation failed for sensor ${sensor.id}:`,
+              error,
+            )
           })
         }
       }
