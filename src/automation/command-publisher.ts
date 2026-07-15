@@ -16,6 +16,7 @@ export async function issueAutoCommand(
   deviceId: string,
   action: 'ON' | 'OFF',
   reason: string,
+  options?: { force?: boolean },
 ): Promise<{ issued: boolean; reason: string }> {
   const device = await prisma.device.findUnique({
     select: { id: true, isActive: true, pinNumber: true },
@@ -28,13 +29,35 @@ export async function issueAutoCommand(
   // Hysteresis: if the device's most recent state log already records this action,
   // Skip the command. This applies across all sources (MANUAL, AUTO, UI) so an
   // Operator's manual toggle is respected by the automation engine.
-  const last = await prisma.deviceStateLog.findFirst({
-    orderBy: { createdAt: 'desc' },
-    select: { action: true },
-    where: { deviceId },
-  })
-  if (last?.action === action) {
-    return { issued: false, reason: 'device already in this state' }
+  // When force=true (retry path), skip hysteresis — the DB state is already correct,
+  // We just need to re-deliver the MQTT message.
+  if (!options?.force) {
+    const last = await prisma.deviceStateLog.findFirst({
+      orderBy: { createdAt: 'desc' },
+      select: { action: true },
+      where: { deviceId },
+    })
+    if (last?.action === action) {
+      return { issued: false, reason: 'device already in this state' }
+    }
+  }
+
+  if (options?.force) {
+    // Retry path: DB already reflects the desired state. Just re-send MQTT.
+    const commandId = crypto.randomUUID()
+    commandTracker.track(commandId, deviceId, action)
+
+    mqttClient.publish(
+      `devices/${deviceId}/commands`,
+      JSON.stringify({
+        action,
+        commandId,
+        pin: device.pinNumber,
+        timestamp: Date.now(),
+      }),
+    )
+
+    return { issued: true, reason: `${reason} (force)` }
   }
 
   // Persist state transition + audit row in a single transaction.

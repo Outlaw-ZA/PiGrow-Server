@@ -18,6 +18,7 @@ import { MQTT_BROKER_URL, mqttClient } from './mqtt/client.js'
 import { prisma } from './prisma.js'
 import { automationScheduler } from './automation/scheduler.js'
 import { intervalScheduler } from './automation/interval-scheduler.js'
+import { commandTracker } from './automation/command-tracker.js'
 import { DEVICE_STATE_CHANGED, deviceEvents } from './events.js'
 
 // 1. Initialize Fastify and register CORS for the Frontend
@@ -142,6 +143,16 @@ io.on('connection', (socket) => {
 // All connected frontend clients via Socket.IO.
 deviceEvents.on(DEVICE_STATE_CHANGED, (data: { deviceId: string; isActive: boolean }) => {
   io.emit('device_state_update', data)
+
+  // Heuristic confirmation: any state change event for a device might indicate
+  // That a tracked command was processed. Find unconfirmed commands for this
+  // Device and mark them confirmed, regardless of commandId.
+  const unconfirmed = commandTracker.getUnconfirmed()
+  for (const cmd of unconfirmed) {
+    if (cmd.deviceId === data.deviceId) {
+      commandTracker.confirm(cmd.commandId)
+    }
+  }
 })
 
 // Dynamic Topic Registry Map

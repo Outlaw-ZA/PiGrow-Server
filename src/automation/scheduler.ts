@@ -45,7 +45,7 @@ export class AutomationScheduler {
     this.timer = setInterval(() => void this.tick(), TICK_MS)
 
     commandTracker.setRetryHandler(async (cmd) => {
-      await issueAutoCommand(cmd.deviceId, cmd.action, `retry (#${cmd.retries})`)
+      await issueAutoCommand(cmd.deviceId, cmd.action, `retry (#${cmd.retries})`, { force: true })
     })
     commandTracker.startRetryLoop()
   }
