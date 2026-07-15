@@ -160,7 +160,7 @@ export class DevicesController {
     deviceId: string,
     query: { from?: string; to?: string; limit?: number },
   ) {
-    const { from, to, limit = 500 } = query
+    const { from, to, limit = 2000 } = query
     const where: { deviceId: string; createdAt?: { gte?: Date; lte?: Date } } = { deviceId }
     if (from || to) {
       where.createdAt = {}

@@ -130,10 +130,8 @@ export const DeviceStateLogQuerySchema = Type.Object({
   from: Type.Optional(
     Type.String({ description: 'ISO 8601 start (inclusive)', format: 'date-time' }),
   ),
-  limit: Type.Optional(Type.Integer({ default: 500, maximum: 2000 })),
-  to: Type.Optional(
-    Type.String({ description: 'ISO 8601 end (inclusive)', format: 'date-time' }),
-  ),
+  limit: Type.Optional(Type.Integer({ default: 2000, maximum: 2000 })),
+  to: Type.Optional(Type.String({ description: 'ISO 8601 end (inclusive)', format: 'date-time' })),
 })
 
 export { ErrorSchema }
