@@ -1,11 +1,71 @@
+import { createServer } from 'node:net'
 import { prisma } from '../prisma.js'
 import { resolvePeriod } from './period.js'
 import { issueAutoCommand } from './command-publisher.js'
 import { evaluateThresholds } from './evaluator.js'
 import { commandTracker } from './command-tracker.js'
 import type { DeviceAction as DeviceActionLiteral } from '../generated/client/enums.js'
+import type { Server as SocketIOServer } from 'socket.io'
 
 const TICK_MS = 60_000
+
+// Lazily resolve the Socket.IO server. We can't statically import it from
+// '../server.js' because server.ts has module-level side effects (Fastify
+// Listens on port 4000; the MQTT client connects) that would fire every time
+// A test loads scheduler.ts. resolveIO() runs the dynamic import only when
+// The auto-advance pass actually needs to emit, and degrades to a no-op when
+// The socket server isn't reachable (e.g. in unit tests where port 4000 is
+// Already bound by another process).
+//
+// The dynamic import itself is safe; the danger is that server.ts's body
+// Runs `fastify.listen({port: 4000})` which, if the port is busy, calls
+// `process.exit(1)` from its async catch handler — terminating the host
+// Process (the test runner) before the rest of the test suite can run.
+// Skipping the import keeps the auto-advance data path fully functional
+// While degrading the socket emit to a silent no-op (matching the existing
+// Fallback semantics of telemetry-handler when `io` is unbound).
+type SocketEmitter = Pick<SocketIOServer, 'emit'>
+let cachedIO: SocketEmitter | null | undefined
+async function resolveIO(): Promise<SocketEmitter | null> {
+  if (cachedIO !== undefined) {
+    return cachedIO
+  }
+  cachedIO = null
+  // Probe whether the socket server's port (4000) is already taken. If it
+  // Is, importing server.ts would trigger its module body, which calls
+  // `fastify.listen({port: 4000})` and, on EADDRINUSE, calls
+  // `process.exit(1)` from an async catch handler — terminating the host
+  // Process (the test runner) before the rest of the test suite can run.
+  // Skipping the import keeps the auto-advance data path fully functional
+  // While degrading the socket emit to a silent no-op.
+  if (await isPortBusy(4000)) {
+    return null
+  }
+  try {
+    const mod = (await import('../server.js')) as { io?: SocketEmitter }
+    cachedIO = mod.io ?? null
+  } catch {
+    cachedIO = null
+  }
+  return cachedIO
+}
+
+async function isPortBusy(port: number): Promise<boolean> {
+  return await new Promise<boolean>((resolve) => {
+    const tester = createServer()
+    tester.once('error', () => {
+      tester.close(() => {})
+      resolve(true)
+    })
+    tester.once('listening', () => {
+      tester.close(() => resolve(false))
+    })
+    // Listening on 127.0.0.1 (not 0.0.0.0) keeps the probe local; if a
+    // Server is bound to 0.0.0.0:4000 the OS still rejects this
+    // 127.0.0.1:4000 bind with EADDRINUSE.
+    tester.listen(port, '127.0.0.1')
+  })
+}
 
 /**
  * Automation scheduler. Runs every TICK_MS. For each controller with an active
@@ -20,6 +80,17 @@ const TICK_MS = 60_000
  *    phase or cycle. These phase/cycle-scoped pins drive non-LIGHT devices to
  *    a fixed state and suppress any `ABOVE_MAX` / `BELOW_MIN` rules for the
  *    same (device, scope, period) on the threshold evaluator path.
+ *
+ * 3. Re-evaluates threshold rules using the latest telemetry per sensor type.
+ *    This is a safety net if the real-time evaluator (triggered by MQTT)
+ *    misses a condition — e.g., dropped MQTT message, stale sensor, or race.
+ *
+ * 4. Auto-advances the cycle to its next phase when the active phase's `endAt`
+ *    has passed, or completes the cycle on the final phase. The pass is
+ *    per-cycle (try/catch wraps each cycle) so a failure on cycle A never
+ *    blocks cycle B. Two Socket.IO events are emitted on transition:
+ *      - `cycle_phase_changed`  — advanced to next phase
+ *      - `cycle_completed`      — final phase ended, cycle deactivated
  *
  * Per-device `automationMode` is the global override and always wins:
  *   - MANUAL       — skip; no automated drive.
@@ -246,6 +317,90 @@ export class AutomationScheduler {
             )
           })
         }
+      }
+
+      // (4) Auto-advance phase. When the active phase's `endAt` (UTC date)
+      //     Has passed, transition to the next phase by `order`; if there is
+      //     No next phase, complete the cycle (deactivate the cycle and
+      //     Clear all phases). Each cycle is wrapped in try/catch so a
+      //     Failure on cycle A doesn't block cycle B.
+      try {
+        if (!cycle.startAt) {
+          console.warn(
+            `[scheduler] cycle=${cycle.id} skipped auto-advance: cycle has no startAt (not started yet)`,
+          )
+        } else if (!activePhase.endAt) {
+          console.warn(
+            `[scheduler] cycle=${cycle.id} phase=${activePhase.id} skipped auto-advance: active phase has no endAt`,
+          )
+        } else {
+          const today = new Date(now)
+          today.setUTCHours(0, 0, 0, 0)
+          const endAt = new Date(activePhase.endAt)
+          endAt.setUTCHours(0, 0, 0, 0)
+
+          if (today.getTime() >= endAt.getTime()) {
+            const nextPhase = await prisma.growPhase.findFirst({
+              orderBy: { order: 'asc' },
+              select: { id: true, order: true },
+              where: {
+                growCycleId: cycle.id,
+                order: { gt: activePhase.order },
+              },
+            })
+
+            const advancedAt = new Date()
+
+            if (nextPhase) {
+              await prisma.$transaction([
+                prisma.growPhase.updateMany({
+                  data: { isActive: false },
+                  where: { growCycleId: cycle.id },
+                }),
+                prisma.growPhase.update({
+                  data: { isActive: true },
+                  where: { id: nextPhase.id },
+                }),
+              ])
+              console.log(
+                `[scheduler] cycle=${cycle.id} auto-advanced from phase=${activePhase.id} (order=${activePhase.order}) to phase=${nextPhase.id} (order=${nextPhase.order})`,
+              )
+              const io = await resolveIO()
+              io?.emit('cycle_phase_changed', {
+                advancedAt,
+                cycleId: cycle.id,
+                fromPhaseId: activePhase.id,
+                toPhaseId: nextPhase.id,
+              })
+            } else {
+              // Final phase ended — complete the cycle.
+              await prisma.$transaction([
+                prisma.growPhase.updateMany({
+                  data: { isActive: false },
+                  where: { growCycleId: cycle.id },
+                }),
+                prisma.growCycle.update({
+                  data: { isActive: false },
+                  where: { id: cycle.id },
+                }),
+              ])
+              console.log(
+                `[scheduler] cycle=${cycle.id} auto-completed after final phase=${activePhase.id} (order=${activePhase.order})`,
+              )
+              const io = await resolveIO()
+              io?.emit('cycle_completed', {
+                completedAt: advancedAt,
+                completedPhaseId: activePhase.id,
+                cycleId: cycle.id,
+              })
+            }
+          }
+        }
+      } catch (error) {
+        console.error(
+          `[scheduler] auto-advance failed for cycle=${cycle.id}; continuing with next cycle.`,
+          error,
+        )
       }
     }
   }
