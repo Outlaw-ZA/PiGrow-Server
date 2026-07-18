@@ -1,71 +1,12 @@
-import { createServer } from 'node:net'
 import { prisma } from '../prisma.js'
 import { resolvePeriod } from './period.js'
 import { issueAutoCommand } from './command-publisher.js'
 import { evaluateThresholds } from './evaluator.js'
 import { commandTracker } from './command-tracker.js'
+import { getSocketEmitter } from './socket-emitter.js'
 import type { DeviceAction as DeviceActionLiteral } from '../generated/client/enums.js'
-import type { Server as SocketIOServer } from 'socket.io'
 
 const TICK_MS = 60_000
-
-// Lazily resolve the Socket.IO server. We can't statically import it from
-// '../server.js' because server.ts has module-level side effects (Fastify
-// Listens on port 4000; the MQTT client connects) that would fire every time
-// A test loads scheduler.ts. resolveIO() runs the dynamic import only when
-// The auto-advance pass actually needs to emit, and degrades to a no-op when
-// The socket server isn't reachable (e.g. in unit tests where port 4000 is
-// Already bound by another process).
-//
-// The dynamic import itself is safe; the danger is that server.ts's body
-// Runs `fastify.listen({port: 4000})` which, if the port is busy, calls
-// `process.exit(1)` from its async catch handler — terminating the host
-// Process (the test runner) before the rest of the test suite can run.
-// Skipping the import keeps the auto-advance data path fully functional
-// While degrading the socket emit to a silent no-op (matching the existing
-// Fallback semantics of telemetry-handler when `io` is unbound).
-type SocketEmitter = Pick<SocketIOServer, 'emit'>
-let cachedIO: SocketEmitter | null | undefined
-async function resolveIO(): Promise<SocketEmitter | null> {
-  if (cachedIO !== undefined) {
-    return cachedIO
-  }
-  cachedIO = null
-  // Probe whether the socket server's port (4000) is already taken. If it
-  // Is, importing server.ts would trigger its module body, which calls
-  // `fastify.listen({port: 4000})` and, on EADDRINUSE, calls
-  // `process.exit(1)` from an async catch handler — terminating the host
-  // Process (the test runner) before the rest of the test suite can run.
-  // Skipping the import keeps the auto-advance data path fully functional
-  // While degrading the socket emit to a silent no-op.
-  if (await isPortBusy(4000)) {
-    return null
-  }
-  try {
-    const mod = (await import('../server.js')) as { io?: SocketEmitter }
-    cachedIO = mod.io ?? null
-  } catch {
-    cachedIO = null
-  }
-  return cachedIO
-}
-
-async function isPortBusy(port: number): Promise<boolean> {
-  return await new Promise<boolean>((resolve) => {
-    const tester = createServer()
-    tester.once('error', () => {
-      tester.close(() => {})
-      resolve(true)
-    })
-    tester.once('listening', () => {
-      tester.close(() => resolve(false))
-    })
-    // Listening on 127.0.0.1 (not 0.0.0.0) keeps the probe local; if a
-    // Server is bound to 0.0.0.0:4000 the OS still rejects this
-    // 127.0.0.1:4000 bind with EADDRINUSE.
-    tester.listen(port, '127.0.0.1')
-  })
-}
 
 /**
  * Automation scheduler. Runs every TICK_MS. For each controller with an active
@@ -365,7 +306,7 @@ export class AutomationScheduler {
               console.log(
                 `[scheduler] cycle=${cycle.id} auto-advanced from phase=${activePhase.id} (order=${activePhase.order}) to phase=${nextPhase.id} (order=${nextPhase.order})`,
               )
-              const io = await resolveIO()
+              const io = await getSocketEmitter()
               io?.emit('cycle_phase_changed', {
                 advancedAt,
                 cycleId: cycle.id,
@@ -387,7 +328,7 @@ export class AutomationScheduler {
               console.log(
                 `[scheduler] cycle=${cycle.id} auto-completed after final phase=${activePhase.id} (order=${activePhase.order})`,
               )
-              const io = await resolveIO()
+              const io = await getSocketEmitter()
               io?.emit('cycle_completed', {
                 completedAt: advancedAt,
                 completedPhaseId: activePhase.id,
