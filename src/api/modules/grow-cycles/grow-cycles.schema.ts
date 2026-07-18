@@ -104,6 +104,24 @@ export const GrowCycleParamsIdSchema = Type.Object({
   }),
 })
 
+export const ExtendActivePhaseSchema = Type.Object({
+  days: Type.Integer({
+    description: 'Whole days to add to the currently active phase',
+    maximum: 90,
+    minimum: 1,
+  }),
+})
+
+export const ExtendActivePhaseErrorSchema = Type.Object({
+  code: Type.Union([
+    Type.Literal('CYCLE_NOT_ACTIVE'),
+    Type.Literal('CYCLE_NOT_STARTED'),
+    Type.Literal('NO_ACTIVE_PHASE'),
+    Type.Literal('PHASE_LOST_RACE'),
+  ]),
+  error: Type.String(),
+})
+
 export const SkipPhaseQuerySchema = Type.Object({
   today: Type.Optional(
     Type.String({

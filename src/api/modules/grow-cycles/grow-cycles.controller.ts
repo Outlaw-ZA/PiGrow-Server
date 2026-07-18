@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify'
+import { getSocketEmitter } from '../../../automation/socket-emitter.js'
 
 export class SkipPhaseError extends Error {
   constructor(message: string) {
@@ -11,6 +12,22 @@ export class ControllerBusyError extends Error {
   constructor(message: string) {
     super(message)
     this.name = 'ControllerBusyError'
+  }
+}
+
+export type ExtendPhaseErrorCode =
+  | 'CYCLE_NOT_ACTIVE'
+  | 'CYCLE_NOT_STARTED'
+  | 'NO_ACTIVE_PHASE'
+  | 'PHASE_LOST_RACE'
+
+export class ExtendPhaseError extends Error {
+  constructor(
+    message: string,
+    public readonly code: ExtendPhaseErrorCode,
+  ) {
+    super(message)
+    this.name = 'ExtendPhaseError'
   }
 }
 
@@ -232,7 +249,84 @@ export class GrowCyclesController {
     return this.getGrowCycleById(id)
   }
 
-  // 7. END GROW
+  // 7. EXTEND ACTIVE PHASE (atomic)
+  async extendActivePhase(id: string, days: number) {
+    const extension = await this.prisma.$transaction(async (tx: any) => {
+      const cycle = await tx.growCycle.findUniqueOrThrow({
+        include: {
+          phases: {
+            orderBy: { order: 'asc' },
+          },
+        },
+        where: { id },
+      })
+
+      if (!cycle.isActive) {
+        throw new ExtendPhaseError('Grow cycle is not active', 'CYCLE_NOT_ACTIVE')
+      }
+      if (!cycle.startAt) {
+        throw new ExtendPhaseError('Grow cycle has not started yet', 'CYCLE_NOT_STARTED')
+      }
+
+      const active = cycle.phases.find((phase: { isActive: boolean }) => phase.isActive)
+      if (!active) {
+        throw new ExtendPhaseError('No active phase to extend', 'NO_ACTIVE_PHASE')
+      }
+
+      this.recalculatePhaseDates(cycle.phases, cycle.startAt)
+      const beforeEndAt = this.formatDateOnly(active.endAt)
+      active.durationDays += days
+      this.recalculatePhaseDates(cycle.phases, cycle.startAt)
+
+      const durationUpdate = await tx.growPhase.updateMany({
+        data: { durationDays: { increment: days } },
+        where: { id: active.id, isActive: true },
+      })
+      if (durationUpdate.count !== 1) {
+        throw new ExtendPhaseError(
+          'Active phase was lost to a concurrent transition',
+          'PHASE_LOST_RACE',
+        )
+      }
+
+      await Promise.all(
+        cycle.phases.map((phase: { id: string; startAt: Date; endAt: Date }) =>
+          tx.growPhase.update({
+            data: {
+              endAt: phase.endAt,
+              startAt: phase.startAt,
+            },
+            where: { id: phase.id },
+          }),
+        ),
+      )
+
+      const lastPhase = cycle.phases[cycle.phases.length - 1]
+      return {
+        afterEndAt: this.formatDateOnly(active.endAt),
+        beforeEndAt,
+        cycleId: id,
+        newEstimatedHarvestDate: this.formatDateOnly(lastPhase?.endAt ?? null),
+        phaseId: active.id,
+      }
+    })
+
+    const extendedAt = new Date().toISOString()
+    const io = await getSocketEmitter()
+    io?.emit('cycle_phase_extended', {
+      afterEndAt: extension.afterEndAt,
+      beforeEndAt: extension.beforeEndAt,
+      cycleId: extension.cycleId,
+      daysAdded: days,
+      extendedAt,
+      newEstimatedHarvestDate: extension.newEstimatedHarvestDate,
+      phaseId: extension.phaseId,
+    })
+
+    return this.getGrowCycleById(id)
+  }
+
+  // 8. END GROW
   async endGrow(id: string, todayOverride?: string) {
     const cycle = await this.prisma.growCycle.findUniqueOrThrow({
       include: {

@@ -3,12 +3,15 @@ import { Type } from '@sinclair/typebox'
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox'
 import {
   ControllerBusyError,
+  ExtendPhaseError,
   GrowCyclesController,
   SkipPhaseError,
 } from './grow-cycles.controller.js'
 import {
   CreateGrowCycleSchema,
   ErrorSchema,
+  ExtendActivePhaseErrorSchema,
+  ExtendActivePhaseSchema,
   GrowCycleArrayResponseSchema,
   GrowCycleDetailResponseSchema,
   GrowCycleParamsIdSchema,
@@ -204,7 +207,49 @@ export default async function growCycleRoutes(server: FastifyInstance) {
     },
   )
 
-  // 7. END GROW (atomic)
+  // 7. EXTEND ACTIVE PHASE (atomic)
+  router.post(
+    '/api/grow-cycles/:id/extend-active-phase',
+    {
+      schema: {
+        body: ExtendActivePhaseSchema,
+        description:
+          "Atomically extends the active phase and shifts every subsequent phase's dates.",
+        params: GrowCycleParamsIdSchema,
+        response: {
+          200: GrowCycleDetailResponseSchema,
+          400: ErrorSchema,
+          404: ErrorSchema,
+          409: ExtendActivePhaseErrorSchema,
+        },
+        summary: 'Extend the currently active grow phase',
+        tags: ['GrowCycles'],
+      },
+    },
+    async (request, reply) => {
+      try {
+        return cast<typeof GrowCycleDetailResponseSchema.static>(
+          await controller.extendActivePhase(request.params.id, request.body.days),
+        )
+      } catch (error) {
+        if (error instanceof ExtendPhaseError) {
+          return reply.code(409).send({ code: error.code, error: error.message })
+        }
+        if (
+          typeof error === 'object' &&
+          error !== null &&
+          'code' in error &&
+          (error as { code: string }).code === 'P2025'
+        ) {
+          return reply.code(404).send({ error: 'Grow cycle record not found' })
+        }
+        router.log.error(error)
+        return reply.code(400).send({ error: 'Failed to extend active grow phase' })
+      }
+    },
+  )
+
+  // 8. END GROW (atomic)
   router.post(
     '/api/grow-cycles/:id/end-grow',
     {
