@@ -195,6 +195,47 @@ describe('Controller provisioning API', () => {
     assert.ok(discoveryService.getAll().filter(({ ip }) => ip === '127.0.0.10').length <= 8)
   })
 
+  test('capacity eviction retains the evicted MAC source binding through the quiet TTL', async () => {
+    // Seed the cache deterministically via a test seam (UDP bursts are
+    // Lossy and can't reliably fill to MAX_SIGHTINGS). Victim source holds
+    // 8 (max per-source), strictly larger than the 248 single-entry fill
+    // Sources, so global fair eviction deterministically targets the victim.
+    // The evicted MAC's sighting is removed but its source binding must
+    // Persist: a different-IP chosen-PIN beacon is rejected, the genuine
+    // Same-IP beacon re-installs.
+    discoveryService.clearForTesting()
+    const victimMac = (n: number) => `AA:BB:CC:DD:EE:2${n.toString(16)}`
+    for (let n = 0; n < 8; n += 1) {
+      discoveryService.__seedForTesting(victimMac(n), '127.0.0.21', '202020')
+    }
+    for (let i = 0; i < 248; i += 1) {
+      const suffix = i.toString(16).toUpperCase().padStart(2, '0')
+      discoveryService.__seedForTesting(`02:00:00:00:00:${suffix}`, `127.0.0.${i + 1}`)
+    }
+    assert.equal(discoveryService.getAll().length, 256)
+
+    // Capacity pressure: a 257th beacon triggers global eviction from the
+    // Strictly-largest victim source.
+    await sendBeacon(
+      createBeacon({ mac: '02:00:00:00:01:00', serial: 'PIGROW-TRIGGER' }),
+      '127.0.0.29',
+    )
+    await new Promise((resolve) => setTimeout(resolve, 50))
+
+    const evicted = [0, 1, 2, 3, 4, 5, 6, 7]
+      .map(victimMac)
+      .find((mac) => !discoveryService.getByMac(mac))
+    assert.ok(evicted, 'expected at least one victim MAC to be capacity-evicted')
+
+    await sendBeacon(createBeacon({ claimPin: '999999', mac: evicted }), '127.0.0.250')
+    await new Promise((resolve) => setTimeout(resolve, 30))
+    assert.equal(discoveryService.getByMac(evicted), undefined)
+
+    await sendBeacon(createBeacon({ claimPin: '303030', mac: evicted }), '127.0.0.21')
+    await waitForPin('303030', evicted)
+    assert.equal(discoveryService.getByMac(evicted)?.ip, '127.0.0.21')
+  })
+
   test('discovery rejects oversized hardware manifests', async () => {
     const sensor = createBeacon().hwManifest.sensors[0]
     await sendBeacon(

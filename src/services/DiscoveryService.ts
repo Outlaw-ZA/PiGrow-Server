@@ -169,6 +169,33 @@ export class DiscoveryService {
     this.sourceBindings.clear()
   }
 
+  clearForTesting(): void {
+    this.claiming.clear()
+    this.consumed.clear()
+    this.sightings.clear()
+    this.sourceBindings.clear()
+  }
+
+  __seedForTesting(mac: string, sourceIp: string, claimPin = '000000'): void {
+    const now = Date.now()
+    this.sourceBindings.set(mac, { ip: sourceIp, lastSeenAt: now })
+    this.sightings.set(mac, {
+      beacon: {
+        claimPin,
+        fwVersion: '0.0.0',
+        hwManifest: { relays: [], sensors: [] },
+        ip: sourceIp,
+        mac,
+        pinExpiresAt: now + 300_000,
+        schema: 1,
+        serial: `SEED-${mac}`,
+      },
+      failedAttempts: 0,
+      ip: sourceIp,
+      seenAt: now,
+    })
+  }
+
   getAll(): DiscoveredController[] {
     this.sweep()
     return [...this.sightings.values()].map(({ beacon, ip }) => ({
@@ -317,7 +344,9 @@ export class DiscoveryService {
         return false
       }
       this.sightings.delete(oldestFromSource[0])
-      this.sourceBindings.delete(oldestFromSource[0])
+      // Retain the evicted MAC's source binding through its 120s quiet TTL
+      // (expired by sweep()) so a different-IP neighbor cannot take over the
+      // Freed slot with a chosen PIN; the genuine source can re-install.
     }
 
     if (this.sightings.size < MAX_SIGHTINGS) {
@@ -341,7 +370,8 @@ export class DiscoveryService {
       // oxlint-disable-next-line unicorn/no-array-sort
       .sort((left, right) => left[1].seenAt - right[1].seenAt)[0]
     this.sightings.delete(oldestFromLargestSource[0])
-    this.sourceBindings.delete(oldestFromLargestSource[0])
+    // Retain the evicted MAC's source binding through its 120s quiet TTL
+    // (expired by sweep()) — see per-source eviction note above.
     return true
   }
 
