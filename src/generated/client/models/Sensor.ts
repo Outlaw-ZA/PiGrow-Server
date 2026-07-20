@@ -587,10 +587,6 @@ export type EnumSensorProtocolFieldUpdateOperationsInput = {
   set?: $Enums.SensorProtocol
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type SensorCreateNestedOneWithoutTelemetryInput = {
   create?: Prisma.XOR<
     Prisma.SensorCreateWithoutTelemetryInput,

@@ -12,14 +12,27 @@ datasource db {
 // PHYSICAL INFRASTRUCTURE LAYER
 // ==========================================
 
+enum DeviceProvisionState {
+  UNCLAIMED
+  ACTIVE
+  INACTIVE
+}
+
 model Controller {
-  id         String   @id @default(uuid())
-  macAddress String   @unique // Unique identifier for the Raspberry Pi
-  ipAddress  String
-  name       String // e.g., "Tent 1 Pi", "Clone Rack Pi"
-  status     String   @default("OFFLINE") // ONLINE, OFFLINE, ERROR
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id               String               @id @default(uuid())
+  macAddress       String               @unique // Unique identifier for the Raspberry Pi
+  ipAddress        String
+  name             String // e.g., "Tent 1 Pi", "Clone Rack Pi"
+  status           String               @default("OFFLINE") // ONLINE, OFFLINE, ERROR
+  provisionState   DeviceProvisionState @default(ACTIVE)
+  deviceSerial     String?
+  claimPinHash     String?
+  pinExpiresAt     DateTime?
+  lastBeaconAt     DateTime?
+  mqttUsername     String?              @unique
+  mqttPasswordHash String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
 
   growCycles GrowCycle[] // A Pi can run sequential cycles over its lifetime
   sensors    Sensor[] // Sensors wired to this physical Pi hub
@@ -40,6 +53,8 @@ enum SensorProtocol {
   SPI
   UART
   RS485
+  GPIO
+  ONE_WIRE
 }
 
 model Sensor {

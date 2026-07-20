@@ -82,6 +82,13 @@ export const ControllerScalarFieldEnum = {
   ipAddress: 'ipAddress',
   name: 'name',
   status: 'status',
+  provisionState: 'provisionState',
+  deviceSerial: 'deviceSerial',
+  claimPinHash: 'claimPinHash',
+  pinExpiresAt: 'pinExpiresAt',
+  lastBeaconAt: 'lastBeaconAt',
+  mqttUsername: 'mqttUsername',
+  mqttPasswordHash: 'mqttPasswordHash',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
 } as const

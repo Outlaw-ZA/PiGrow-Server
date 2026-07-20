@@ -8,6 +8,14 @@
  * 🟢 You can import this file directly.
  */
 
+export const DeviceProvisionState = {
+  UNCLAIMED: 'UNCLAIMED',
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE',
+} as const
+
+export type DeviceProvisionState = (typeof DeviceProvisionState)[keyof typeof DeviceProvisionState]
+
 export const SensorType = {
   HUMIDITY: 'HUMIDITY',
   TEMPERATURE: 'TEMPERATURE',
@@ -24,6 +32,8 @@ export const SensorProtocol = {
   SPI: 'SPI',
   UART: 'UART',
   RS485: 'RS485',
+  GPIO: 'GPIO',
+  ONE_WIRE: 'ONE_WIRE',
 } as const
 
 export type SensorProtocol = (typeof SensorProtocol)[keyof typeof SensorProtocol]

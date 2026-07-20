@@ -1211,6 +1211,13 @@ export const ControllerScalarFieldEnum = {
   ipAddress: 'ipAddress',
   name: 'name',
   status: 'status',
+  provisionState: 'provisionState',
+  deviceSerial: 'deviceSerial',
+  claimPinHash: 'claimPinHash',
+  pinExpiresAt: 'pinExpiresAt',
+  lastBeaconAt: 'lastBeaconAt',
+  mqttUsername: 'mqttUsername',
+  mqttPasswordHash: 'mqttPasswordHash',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
 } as const
@@ -1391,6 +1398,22 @@ export type StringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 
  * Reference to a field of type 'String[]'
  */
 export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'String[]'>
+
+/**
+ * Reference to a field of type 'DeviceProvisionState'
+ */
+export type EnumDeviceProvisionStateFieldRefInput<$PrismaModel> = FieldRefInputType<
+  $PrismaModel,
+  'DeviceProvisionState'
+>
+
+/**
+ * Reference to a field of type 'DeviceProvisionState[]'
+ */
+export type ListEnumDeviceProvisionStateFieldRefInput<$PrismaModel> = FieldRefInputType<
+  $PrismaModel,
+  'DeviceProvisionState[]'
+>
 
 /**
  * Reference to a field of type 'DateTime'

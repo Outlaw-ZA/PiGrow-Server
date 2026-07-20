@@ -15,6 +15,8 @@ const SensorProtocolSchema = Type.Union([
   Type.Literal('SPI'),
   Type.Literal('UART'),
   Type.Literal('RS485'),
+  Type.Literal('GPIO'),
+  Type.Literal('ONE_WIRE'),
 ])
 
 const PeriodSchema = Type.Union([Type.Literal('DAY'), Type.Literal('NIGHT')])

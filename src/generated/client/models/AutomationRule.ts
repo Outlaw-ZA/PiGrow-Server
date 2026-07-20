@@ -935,10 +935,6 @@ export type EnumDeviceActionFieldUpdateOperationsInput = {
   set?: $Enums.DeviceAction
 }
 
-export type NullableStringFieldUpdateOperationsInput = {
-  set?: string | null
-}
-
 export type AutomationRuleCreateWithoutDeviceInput = {
   id?: string
   watchedSensorType?: $Enums.SensorType | null

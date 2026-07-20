@@ -1,0 +1,2 @@
+ALTER TYPE "SensorProtocol" ADD VALUE 'GPIO';
+ALTER TYPE "SensorProtocol" ADD VALUE 'ONE_WIRE';

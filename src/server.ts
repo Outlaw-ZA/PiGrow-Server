@@ -14,12 +14,14 @@ import controllerRoutes from './api/modules/controllers/controllers.route.js'
 import deviceRoutes from './api/modules/devices/devices.routes.js'
 import sensorRoutes from './api/modules/sensors/sensors.routes.js'
 import telemetryRoutes from './api/modules/telemetry/telemetry.routes.js'
+import provisioningRoutes from './api/modules/provisioning/provisioning.routes.js'
 import { MQTT_BROKER_URL, mqttClient } from './mqtt/client.js'
 import { prisma } from './prisma.js'
 import { automationScheduler } from './automation/scheduler.js'
 import { intervalScheduler } from './automation/interval-scheduler.js'
 import { commandTracker } from './automation/command-tracker.js'
 import { DEVICE_STATE_CHANGED, deviceEvents } from './events.js'
+import { discoveryService } from './services/DiscoveryService.js'
 
 // 1. Initialize Fastify and register CORS for the Frontend
 const fastify = Fastify({
@@ -197,6 +199,7 @@ await fastify.register(controllerRoutes)
 await fastify.register(deviceRoutes)
 await fastify.register(sensorRoutes)
 await fastify.register(telemetryRoutes)
+await fastify.register(provisioningRoutes)
 
 // 5. Start the automation scheduler (60s tick)
 automationScheduler.start()
@@ -208,9 +211,13 @@ intervalScheduler.start()
 const stopInterval = () => intervalScheduler.stop()
 fastify.addHook('onClose', stopInterval)
 
+const stopDiscovery = () => discoveryService.stop()
+fastify.addHook('onClose', stopDiscovery)
+
 // 6. Start Fastify (Listen on Port 4000 for both REST and Socket.io traffic)
 const start = async () => {
   try {
+    await discoveryService.start()
     await fastify.listen({ host: '0.0.0.0', port: 4000 })
     console.log('🚀 Unified Server engine listening on port 4000')
   } catch (error) {
