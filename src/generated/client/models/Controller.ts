@@ -31,7 +31,6 @@ export type ControllerMinAggregateOutputType = {
   status: string | null
   provisionState: $Enums.DeviceProvisionState | null
   deviceSerial: string | null
-  claimPinHash: string | null
   pinExpiresAt: Date | null
   lastBeaconAt: Date | null
   mqttUsername: string | null
@@ -48,7 +47,6 @@ export type ControllerMaxAggregateOutputType = {
   status: string | null
   provisionState: $Enums.DeviceProvisionState | null
   deviceSerial: string | null
-  claimPinHash: string | null
   pinExpiresAt: Date | null
   lastBeaconAt: Date | null
   mqttUsername: string | null
@@ -65,7 +63,6 @@ export type ControllerCountAggregateOutputType = {
   status: number
   provisionState: number
   deviceSerial: number
-  claimPinHash: number
   pinExpiresAt: number
   lastBeaconAt: number
   mqttUsername: number
@@ -83,7 +80,6 @@ export type ControllerMinAggregateInputType = {
   status?: true
   provisionState?: true
   deviceSerial?: true
-  claimPinHash?: true
   pinExpiresAt?: true
   lastBeaconAt?: true
   mqttUsername?: true
@@ -100,7 +96,6 @@ export type ControllerMaxAggregateInputType = {
   status?: true
   provisionState?: true
   deviceSerial?: true
-  claimPinHash?: true
   pinExpiresAt?: true
   lastBeaconAt?: true
   mqttUsername?: true
@@ -117,7 +112,6 @@ export type ControllerCountAggregateInputType = {
   status?: true
   provisionState?: true
   deviceSerial?: true
-  claimPinHash?: true
   pinExpiresAt?: true
   lastBeaconAt?: true
   mqttUsername?: true
@@ -210,7 +204,6 @@ export type ControllerGroupByOutputType = {
   status: string
   provisionState: $Enums.DeviceProvisionState
   deviceSerial: string | null
-  claimPinHash: string | null
   pinExpiresAt: Date | null
   lastBeaconAt: Date | null
   mqttUsername: string | null
@@ -245,7 +238,6 @@ export type ControllerWhereInput = {
   status?: Prisma.StringFilter<'Controller'> | string
   provisionState?: Prisma.EnumDeviceProvisionStateFilter<'Controller'> | $Enums.DeviceProvisionState
   deviceSerial?: Prisma.StringNullableFilter<'Controller'> | string | null
-  claimPinHash?: Prisma.StringNullableFilter<'Controller'> | string | null
   pinExpiresAt?: Prisma.DateTimeNullableFilter<'Controller'> | Date | string | null
   lastBeaconAt?: Prisma.DateTimeNullableFilter<'Controller'> | Date | string | null
   mqttUsername?: Prisma.StringNullableFilter<'Controller'> | string | null
@@ -265,7 +257,6 @@ export type ControllerOrderByWithRelationInput = {
   status?: Prisma.SortOrder
   provisionState?: Prisma.SortOrder
   deviceSerial?: Prisma.SortOrderInput | Prisma.SortOrder
-  claimPinHash?: Prisma.SortOrderInput | Prisma.SortOrder
   pinExpiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastBeaconAt?: Prisma.SortOrderInput | Prisma.SortOrder
   mqttUsername?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -292,7 +283,6 @@ export type ControllerWhereUniqueInput = Prisma.AtLeast<
       | Prisma.EnumDeviceProvisionStateFilter<'Controller'>
       | $Enums.DeviceProvisionState
     deviceSerial?: Prisma.StringNullableFilter<'Controller'> | string | null
-    claimPinHash?: Prisma.StringNullableFilter<'Controller'> | string | null
     pinExpiresAt?: Prisma.DateTimeNullableFilter<'Controller'> | Date | string | null
     lastBeaconAt?: Prisma.DateTimeNullableFilter<'Controller'> | Date | string | null
     mqttPasswordHash?: Prisma.StringNullableFilter<'Controller'> | string | null
@@ -313,7 +303,6 @@ export type ControllerOrderByWithAggregationInput = {
   status?: Prisma.SortOrder
   provisionState?: Prisma.SortOrder
   deviceSerial?: Prisma.SortOrderInput | Prisma.SortOrder
-  claimPinHash?: Prisma.SortOrderInput | Prisma.SortOrder
   pinExpiresAt?: Prisma.SortOrderInput | Prisma.SortOrder
   lastBeaconAt?: Prisma.SortOrderInput | Prisma.SortOrder
   mqttUsername?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -342,7 +331,6 @@ export type ControllerScalarWhereWithAggregatesInput = {
     | Prisma.EnumDeviceProvisionStateWithAggregatesFilter<'Controller'>
     | $Enums.DeviceProvisionState
   deviceSerial?: Prisma.StringNullableWithAggregatesFilter<'Controller'> | string | null
-  claimPinHash?: Prisma.StringNullableWithAggregatesFilter<'Controller'> | string | null
   pinExpiresAt?: Prisma.DateTimeNullableWithAggregatesFilter<'Controller'> | Date | string | null
   lastBeaconAt?: Prisma.DateTimeNullableWithAggregatesFilter<'Controller'> | Date | string | null
   mqttUsername?: Prisma.StringNullableWithAggregatesFilter<'Controller'> | string | null
@@ -359,7 +347,6 @@ export type ControllerCreateInput = {
   status?: string
   provisionState?: $Enums.DeviceProvisionState
   deviceSerial?: string | null
-  claimPinHash?: string | null
   pinExpiresAt?: Date | string | null
   lastBeaconAt?: Date | string | null
   mqttUsername?: string | null
@@ -379,7 +366,6 @@ export type ControllerUncheckedCreateInput = {
   status?: string
   provisionState?: $Enums.DeviceProvisionState
   deviceSerial?: string | null
-  claimPinHash?: string | null
   pinExpiresAt?: Date | string | null
   lastBeaconAt?: Date | string | null
   mqttUsername?: string | null
@@ -401,7 +387,6 @@ export type ControllerUpdateInput = {
     | Prisma.EnumDeviceProvisionStateFieldUpdateOperationsInput
     | $Enums.DeviceProvisionState
   deviceSerial?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  claimPinHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pinExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastBeaconAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mqttUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -423,7 +408,6 @@ export type ControllerUncheckedUpdateInput = {
     | Prisma.EnumDeviceProvisionStateFieldUpdateOperationsInput
     | $Enums.DeviceProvisionState
   deviceSerial?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  claimPinHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pinExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastBeaconAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mqttUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -443,7 +427,6 @@ export type ControllerCreateManyInput = {
   status?: string
   provisionState?: $Enums.DeviceProvisionState
   deviceSerial?: string | null
-  claimPinHash?: string | null
   pinExpiresAt?: Date | string | null
   lastBeaconAt?: Date | string | null
   mqttUsername?: string | null
@@ -462,7 +445,6 @@ export type ControllerUpdateManyMutationInput = {
     | Prisma.EnumDeviceProvisionStateFieldUpdateOperationsInput
     | $Enums.DeviceProvisionState
   deviceSerial?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  claimPinHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pinExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastBeaconAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mqttUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -481,7 +463,6 @@ export type ControllerUncheckedUpdateManyInput = {
     | Prisma.EnumDeviceProvisionStateFieldUpdateOperationsInput
     | $Enums.DeviceProvisionState
   deviceSerial?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  claimPinHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pinExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastBeaconAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mqttUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -498,7 +479,6 @@ export type ControllerCountOrderByAggregateInput = {
   status?: Prisma.SortOrder
   provisionState?: Prisma.SortOrder
   deviceSerial?: Prisma.SortOrder
-  claimPinHash?: Prisma.SortOrder
   pinExpiresAt?: Prisma.SortOrder
   lastBeaconAt?: Prisma.SortOrder
   mqttUsername?: Prisma.SortOrder
@@ -515,7 +495,6 @@ export type ControllerMaxOrderByAggregateInput = {
   status?: Prisma.SortOrder
   provisionState?: Prisma.SortOrder
   deviceSerial?: Prisma.SortOrder
-  claimPinHash?: Prisma.SortOrder
   pinExpiresAt?: Prisma.SortOrder
   lastBeaconAt?: Prisma.SortOrder
   mqttUsername?: Prisma.SortOrder
@@ -532,7 +511,6 @@ export type ControllerMinOrderByAggregateInput = {
   status?: Prisma.SortOrder
   provisionState?: Prisma.SortOrder
   deviceSerial?: Prisma.SortOrder
-  claimPinHash?: Prisma.SortOrder
   pinExpiresAt?: Prisma.SortOrder
   lastBeaconAt?: Prisma.SortOrder
   mqttUsername?: Prisma.SortOrder
@@ -652,7 +630,6 @@ export type ControllerCreateWithoutSensorsInput = {
   status?: string
   provisionState?: $Enums.DeviceProvisionState
   deviceSerial?: string | null
-  claimPinHash?: string | null
   pinExpiresAt?: Date | string | null
   lastBeaconAt?: Date | string | null
   mqttUsername?: string | null
@@ -671,7 +648,6 @@ export type ControllerUncheckedCreateWithoutSensorsInput = {
   status?: string
   provisionState?: $Enums.DeviceProvisionState
   deviceSerial?: string | null
-  claimPinHash?: string | null
   pinExpiresAt?: Date | string | null
   lastBeaconAt?: Date | string | null
   mqttUsername?: string | null
@@ -720,7 +696,6 @@ export type ControllerUpdateWithoutSensorsInput = {
     | Prisma.EnumDeviceProvisionStateFieldUpdateOperationsInput
     | $Enums.DeviceProvisionState
   deviceSerial?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  claimPinHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pinExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastBeaconAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mqttUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -741,7 +716,6 @@ export type ControllerUncheckedUpdateWithoutSensorsInput = {
     | Prisma.EnumDeviceProvisionStateFieldUpdateOperationsInput
     | $Enums.DeviceProvisionState
   deviceSerial?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  claimPinHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pinExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastBeaconAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mqttUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -760,7 +734,6 @@ export type ControllerCreateWithoutDevicesInput = {
   status?: string
   provisionState?: $Enums.DeviceProvisionState
   deviceSerial?: string | null
-  claimPinHash?: string | null
   pinExpiresAt?: Date | string | null
   lastBeaconAt?: Date | string | null
   mqttUsername?: string | null
@@ -779,7 +752,6 @@ export type ControllerUncheckedCreateWithoutDevicesInput = {
   status?: string
   provisionState?: $Enums.DeviceProvisionState
   deviceSerial?: string | null
-  claimPinHash?: string | null
   pinExpiresAt?: Date | string | null
   lastBeaconAt?: Date | string | null
   mqttUsername?: string | null
@@ -828,7 +800,6 @@ export type ControllerUpdateWithoutDevicesInput = {
     | Prisma.EnumDeviceProvisionStateFieldUpdateOperationsInput
     | $Enums.DeviceProvisionState
   deviceSerial?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  claimPinHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pinExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastBeaconAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mqttUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -849,7 +820,6 @@ export type ControllerUncheckedUpdateWithoutDevicesInput = {
     | Prisma.EnumDeviceProvisionStateFieldUpdateOperationsInput
     | $Enums.DeviceProvisionState
   deviceSerial?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  claimPinHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pinExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastBeaconAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mqttUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -868,7 +838,6 @@ export type ControllerCreateWithoutGrowCyclesInput = {
   status?: string
   provisionState?: $Enums.DeviceProvisionState
   deviceSerial?: string | null
-  claimPinHash?: string | null
   pinExpiresAt?: Date | string | null
   lastBeaconAt?: Date | string | null
   mqttUsername?: string | null
@@ -887,7 +856,6 @@ export type ControllerUncheckedCreateWithoutGrowCyclesInput = {
   status?: string
   provisionState?: $Enums.DeviceProvisionState
   deviceSerial?: string | null
-  claimPinHash?: string | null
   pinExpiresAt?: Date | string | null
   lastBeaconAt?: Date | string | null
   mqttUsername?: string | null
@@ -936,7 +904,6 @@ export type ControllerUpdateWithoutGrowCyclesInput = {
     | Prisma.EnumDeviceProvisionStateFieldUpdateOperationsInput
     | $Enums.DeviceProvisionState
   deviceSerial?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  claimPinHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pinExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastBeaconAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mqttUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -957,7 +924,6 @@ export type ControllerUncheckedUpdateWithoutGrowCyclesInput = {
     | Prisma.EnumDeviceProvisionStateFieldUpdateOperationsInput
     | $Enums.DeviceProvisionState
   deviceSerial?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  claimPinHash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   pinExpiresAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   lastBeaconAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   mqttUsername?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1036,7 +1002,6 @@ export type ControllerSelect<
     status?: boolean
     provisionState?: boolean
     deviceSerial?: boolean
-    claimPinHash?: boolean
     pinExpiresAt?: boolean
     lastBeaconAt?: boolean
     mqttUsername?: boolean
@@ -1062,7 +1027,6 @@ export type ControllerSelectCreateManyAndReturn<
     status?: boolean
     provisionState?: boolean
     deviceSerial?: boolean
-    claimPinHash?: boolean
     pinExpiresAt?: boolean
     lastBeaconAt?: boolean
     mqttUsername?: boolean
@@ -1084,7 +1048,6 @@ export type ControllerSelectUpdateManyAndReturn<
     status?: boolean
     provisionState?: boolean
     deviceSerial?: boolean
-    claimPinHash?: boolean
     pinExpiresAt?: boolean
     lastBeaconAt?: boolean
     mqttUsername?: boolean
@@ -1103,7 +1066,6 @@ export type ControllerSelectScalar = {
   status?: boolean
   provisionState?: boolean
   deviceSerial?: boolean
-  claimPinHash?: boolean
   pinExpiresAt?: boolean
   lastBeaconAt?: boolean
   mqttUsername?: boolean
@@ -1122,7 +1084,6 @@ export type ControllerOmit<
   | 'status'
   | 'provisionState'
   | 'deviceSerial'
-  | 'claimPinHash'
   | 'pinExpiresAt'
   | 'lastBeaconAt'
   | 'mqttUsername'
@@ -1164,7 +1125,6 @@ export type $ControllerPayload<
       status: string
       provisionState: $Enums.DeviceProvisionState
       deviceSerial: string | null
-      claimPinHash: string | null
       pinExpiresAt: Date | null
       lastBeaconAt: Date | null
       mqttUsername: string | null
@@ -1780,7 +1740,6 @@ export interface ControllerFieldRefs {
   readonly status: Prisma.FieldRef<'Controller', 'String'>
   readonly provisionState: Prisma.FieldRef<'Controller', 'DeviceProvisionState'>
   readonly deviceSerial: Prisma.FieldRef<'Controller', 'String'>
-  readonly claimPinHash: Prisma.FieldRef<'Controller', 'String'>
   readonly pinExpiresAt: Prisma.FieldRef<'Controller', 'DateTime'>
   readonly lastBeaconAt: Prisma.FieldRef<'Controller', 'DateTime'>
   readonly mqttUsername: Prisma.FieldRef<'Controller', 'String'>

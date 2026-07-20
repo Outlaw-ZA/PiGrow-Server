@@ -1213,7 +1213,6 @@ export const ControllerScalarFieldEnum = {
   status: 'status',
   provisionState: 'provisionState',
   deviceSerial: 'deviceSerial',
-  claimPinHash: 'claimPinHash',
   pinExpiresAt: 'pinExpiresAt',
   lastBeaconAt: 'lastBeaconAt',
   mqttUsername: 'mqttUsername',

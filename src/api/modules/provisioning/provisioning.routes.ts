@@ -40,6 +40,8 @@ export default async function provisioningRoutes(server: FastifyInstance) {
           400: ErrorSchema,
           401: ErrorSchema,
           404: ErrorSchema,
+          409: ErrorSchema,
+          429: ErrorSchema,
         },
         summary: 'Claim and provision a discovered controller',
         tags: ['Controllers'],
@@ -54,6 +56,9 @@ export default async function provisioningRoutes(server: FastifyInstance) {
           .send(cast<typeof ClaimResponseSchema.static>({ controller: result.controller }))
       } catch (error) {
         if (error instanceof ProvisioningError) {
+          if (error.statusCode === 429 && error.retryAfterSeconds) {
+            reply.header('Retry-After', error.retryAfterSeconds)
+          }
           return reply.code(error.statusCode).send({ error: error.message })
         }
         server.log.error(error)

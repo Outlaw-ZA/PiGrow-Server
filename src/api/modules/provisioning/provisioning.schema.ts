@@ -34,14 +34,12 @@ const NullableString = Type.Union([Type.String(), Type.Null()])
 const NullableDateTime = Type.Union([Type.String({ format: 'date-time' }), Type.Null()])
 
 const ProvisionedControllerSchema = Type.Object({
-  claimPinHash: NullableString,
   createdAt: Type.String({ format: 'date-time' }),
   deviceSerial: NullableString,
   id: Type.String({ format: 'uuid' }),
   ipAddress: Type.String(),
   lastBeaconAt: NullableDateTime,
   macAddress: Type.String(),
-  mqttPasswordHash: NullableString,
   mqttUsername: NullableString,
   name: Type.String(),
   pinExpiresAt: NullableDateTime,

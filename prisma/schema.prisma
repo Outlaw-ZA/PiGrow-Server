@@ -26,7 +26,6 @@ model Controller {
   status           String               @default("OFFLINE") // ONLINE, OFFLINE, ERROR
   provisionState   DeviceProvisionState @default(ACTIVE)
   deviceSerial     String?
-  claimPinHash     String?
   pinExpiresAt     DateTime?
   lastBeaconAt     DateTime?
   mqttUsername     String?              @unique

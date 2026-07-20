@@ -7,8 +7,8 @@ import type {
   SensorType,
 } from '../../../generated/client/enums.js'
 import { MQTT_BROKER_URL, mqttClient } from '../../../mqtt/client.js'
-import { discoveryService } from '../../../services/DiscoveryService.js';
-import type { ManifestRelay, ManifestSensor } from '../../../services/DiscoveryService.js';
+import { discoveryService } from '../../../services/DiscoveryService.js'
+import type { ManifestRelay, ManifestSensor } from '../../../services/DiscoveryService.js'
 
 const DEFAULT_MAX_ON_SECONDS = 7200
 const SERVER_HTTP_URL = process.env.SERVER_HTTP_URL || 'http://localhost:4000'
@@ -48,7 +48,8 @@ interface ClaimInput {
 export class ProvisioningError extends Error {
   constructor(
     message: string,
-    readonly statusCode: 400 | 401 | 404,
+    readonly statusCode: 400 | 401 | 404 | 409 | 429,
+    readonly retryAfterSeconds?: number,
   ) {
     super(message)
   }
@@ -126,11 +127,24 @@ export class ProvisioningController {
   }
 
   async claim(body: ClaimInput) {
-    const sighting = discoveryService.getByMac(body.mac)
-    if (!sighting) {throw new ProvisioningError('Controller not found in discovery cache', 404)}
+    const lease = discoveryService.beginClaim(body.mac)
+    if (lease.status === 'missing') {
+      throw new ProvisioningError('Controller not found in discovery cache', 404)
+    }
+    if (lease.status === 'conflict') {
+      throw new ProvisioningError('Controller claim already consumed or in progress', 409)
+    }
+    if (lease.status === 'limited') {
+      throw new ProvisioningError('Too many failed claim attempts', 429, lease.retryAfterSeconds)
+    }
+    const { sighting } = lease
 
     const pinMatches = matchesClaimPin(body.claimPin, sighting.beacon.claimPin)
     if (!pinMatches || sighting.beacon.pinExpiresAt <= Date.now()) {
+      if (!pinMatches) {
+        discoveryService.recordFailedAttempt(body.mac)
+      }
+      discoveryService.releaseClaim(body.mac)
       throw new ProvisioningError('Claim PIN is invalid or expired', 401)
     }
 
@@ -140,104 +154,111 @@ export class ProvisioningController {
     const lastBeaconAt = new Date(pairedAt)
     const normalizedMac = sighting.beacon.mac
 
-    const result = await this.prisma.$transaction(async (tx) => {
-      const existing = await tx.controller.findUnique({
-        select: { id: true },
-        where: { macAddress: normalizedMac },
-      })
-
-      const controller = existing
-        ? await tx.controller.update({
-            data: {
-              claimPinHash: null,
-              deviceSerial: sighting.beacon.serial,
-              lastBeaconAt,
-              name: body.name,
-              pinExpiresAt: null,
-              provisionState: 'ACTIVE',
-            },
-            where: { macAddress: normalizedMac },
-          })
-        : await tx.controller.create({
-            data: {
-              claimPinHash: null,
-              deviceSerial: sighting.beacon.serial,
-              ipAddress: sighting.ip,
-              lastBeaconAt,
-              macAddress: normalizedMac,
-              name: body.name,
-              pinExpiresAt: null,
-              provisionState: 'ACTIVE',
-              status: 'OFFLINE',
-            },
-          })
-
-      for (const sensor of sighting.beacon.hwManifest.sensors) {
-        const type = normalizeSensorType(sensor.type)
-        const protocol = normalizeSensorProtocol(sensor.protocol)
-        const pinNumbers = sensorPins(sensor)
-        const existingSensor = await tx.sensor.findFirst({
+    let result
+    try {
+      result = await this.prisma.$transaction(async (tx) => {
+        const existing = await tx.controller.findUnique({
           select: { id: true },
-          where: {
-            controllerId: controller.id,
-            name: sensor.type,
-            pinNumbers: { equals: pinNumbers },
-            protocol,
-            type,
-          },
+          where: { macAddress: normalizedMac },
         })
 
-        if (existingSensor) {
-          await tx.sensor.update({
-            data: { name: sensor.type, pinNumbers, protocol, type },
-            where: { id: existingSensor.id },
-          })
-        } else {
-          await tx.sensor.create({
-            data: {
+        const controller = existing
+          ? await tx.controller.update({
+              data: {
+                deviceSerial: sighting.beacon.serial,
+                lastBeaconAt,
+                name: body.name,
+                pinExpiresAt: null,
+                provisionState: 'ACTIVE',
+              },
+              where: { macAddress: normalizedMac },
+            })
+          : await tx.controller.create({
+              data: {
+                deviceSerial: sighting.beacon.serial,
+                ipAddress: sighting.ip,
+                lastBeaconAt,
+                macAddress: normalizedMac,
+                name: body.name,
+                pinExpiresAt: null,
+                provisionState: 'ACTIVE',
+                status: 'OFFLINE',
+              },
+            })
+
+        for (const sensor of sighting.beacon.hwManifest.sensors) {
+          const type = normalizeSensorType(sensor.type)
+          const protocol = normalizeSensorProtocol(sensor.protocol)
+          const pinNumbers = sensorPins(sensor)
+          const existingSensor = await tx.sensor.findFirst({
+            select: { id: true },
+            where: {
               controllerId: controller.id,
-              id: randomUUID(),
-              name: sensor.type,
-              pinNumbers,
+              pinNumbers: { equals: pinNumbers },
               protocol,
               type,
             },
           })
-        }
-      }
 
-      for (const relay of sighting.beacon.hwManifest.relays) {
-        const type = normalizeDeviceType(relay.type)
-        const data = {
-          automationMode: defaultAutomationMode(type),
-          isActive: false,
-          maxOnSeconds: DEFAULT_MAX_ON_SECONDS,
-          name: relay.name ?? defaultRelayName(relay),
-          pinNumber: relay.pin,
-          type,
+          if (existingSensor) {
+            await tx.sensor.update({
+              data: { pinNumbers, protocol, type },
+              where: { id: existingSensor.id },
+            })
+          } else {
+            await tx.sensor.create({
+              data: {
+                controllerId: controller.id,
+                id: randomUUID(),
+                name: sensor.type,
+                pinNumbers,
+                protocol,
+                type,
+              },
+            })
+          }
         }
-        const existingDevice = await tx.device.findFirst({
-          select: { id: true },
-          where: { controllerId: controller.id, pinNumber: relay.pin },
+
+        for (const relay of sighting.beacon.hwManifest.relays) {
+          const type = normalizeDeviceType(relay.type)
+          const data = {
+            automationMode: defaultAutomationMode(type),
+            isActive: false,
+            maxOnSeconds: DEFAULT_MAX_ON_SECONDS,
+            name: relay.name ?? defaultRelayName(relay),
+            pinNumber: relay.pin,
+            type,
+          }
+          const existingDevice = await tx.device.findFirst({
+            select: { id: true },
+            where: { controllerId: controller.id, pinNumber: relay.pin },
+          })
+
+          if (existingDevice) {
+            await tx.device.update({ data, where: { id: existingDevice.id } })
+          } else {
+            await tx.device.create({
+              data: { ...data, controllerId: controller.id, id: randomUUID() },
+            })
+          }
+        }
+
+        const mqttUsername = `pigrow-${controller.id}`
+        const claimedController = await tx.controller.update({
+          data: { mqttPasswordHash, mqttUsername },
+          where: { id: controller.id },
         })
 
-        if (existingDevice) {
-          await tx.device.update({ data, where: { id: existingDevice.id } })
-        } else {
-          await tx.device.create({
-            data: { ...data, controllerId: controller.id, id: randomUUID() },
-          })
-        }
-      }
-
-      const mqttUsername = `pigrow-${controller.id}`
-      const claimedController = await tx.controller.update({
-        data: { mqttPasswordHash, mqttUsername },
-        where: { id: controller.id },
+        return { controller: claimedController, created: !existing }
       })
+    } catch (error) {
+      discoveryService.releaseClaim(normalizedMac)
+      throw error
+    }
 
-      return { controller: claimedController, created: !existing }
-    })
+    if (!discoveryService.consume(normalizedMac)) {
+      throw new ProvisioningError('Controller claim already consumed or in progress', 409)
+    }
 
     mqttClient.publish(
       `provision/${normalizedMac}/claim`,
