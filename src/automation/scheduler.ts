@@ -151,14 +151,28 @@ export class AutomationScheduler {
         } else {
           // Hysteresis prevented a duplicate command, but we still write a log
           // Entry so the device state history chart shows the state at each tick.
-          await prisma.deviceStateLog.create({
-            data: {
-              action: lightAction,
-              deviceId: device.id,
-              reason: `${period === 'DAY' ? 'day cycle tick' : 'night cycle tick'} (phase ${activePhase.id})`,
-              source: 'AUTO',
-            },
-          })
+          // Skip — don't crash the whole scheduler — if the device was deleted
+          // Between the cycle load and this write (P2003 FK violation).
+          try {
+            await prisma.deviceStateLog.create({
+              data: {
+                action: lightAction,
+                deviceId: device.id,
+                reason: `${period === 'DAY' ? 'day cycle tick' : 'night cycle tick'} (phase ${activePhase.id})`,
+                source: 'AUTO',
+              },
+            })
+          } catch (error) {
+            if (
+              typeof error === 'object' &&
+              error !== null &&
+              'code' in error &&
+              (error as { code: string }).code === 'P2003'
+            ) {
+              continue
+            }
+            throw error
+          }
         }
       }
 
@@ -203,14 +217,28 @@ export class AutomationScheduler {
             `[scheduler] cycle=${cycle.id} phase=${activePhase.id} rule=${rule.id} device=${rule.device.id} action=${target} (${rule.condition})`,
           )
         } else {
-          await prisma.deviceStateLog.create({
-            data: {
-              action: target,
-              deviceId: rule.device.id,
-              reason: `${rule.condition} rule tick (${rule.id})`,
-              source: 'AUTO',
-            },
-          })
+          // Same defensive skip as the LIGHT cycle tick write above: the rule
+          // Device may have been deleted between the load and this write.
+          try {
+            await prisma.deviceStateLog.create({
+              data: {
+                action: target,
+                deviceId: rule.device.id,
+                reason: `${rule.condition} rule tick (${rule.id})`,
+                source: 'AUTO',
+              },
+            })
+          } catch (error) {
+            if (
+              typeof error === 'object' &&
+              error !== null &&
+              'code' in error &&
+              (error as { code: string }).code === 'P2003'
+            ) {
+              continue
+            }
+            throw error
+          }
         }
       }
 

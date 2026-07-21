@@ -4,6 +4,7 @@ import { createTestApp, teardownTestApp } from '../test-helper.js'
 import { resolvePeriod } from '../../../automation/period.js'
 import { evaluateThresholds } from '../../../automation/evaluator.js'
 import { lightScheduler } from '../../../automation/scheduler.js'
+import { mqttClient } from '../../../mqtt/client.js'
 
 describe('Automation engine', () => {
   let prismaClient: any
@@ -23,6 +24,18 @@ describe('Automation engine', () => {
     testApp = server
     // The server is needed only to boot the prisma plugin decoration.
     // It is closed in `after` via teardownTestApp.
+
+    // Disconnect MQTT so a shared dev broker / running prod server
+    // + PiGrow daemon on this host cannot echo back our scheduler
+    // Commands as state reports and pollute the assertions. Tests in
+    // This file exercise the scheduler's DB writes only; they do not
+    // Need a real MQTT round trip. `force: true` lets the call land
+    // Even if the broker never came up.
+    try {
+      mqttClient.end(true)
+    } catch {
+      // Ignore — best effort.
+    }
 
     const controller = await prisma.controller.create({
       data: {
@@ -1038,34 +1051,34 @@ describe('Automation engine', () => {
               phases: {
                 create: [
                   {
+                    dayDurationMinutes: 1080,
+                    dayStartMinutes: 360,
+                    durationDays: 7,
+                    endAt: new Date('2026-01-08T00:00:00Z'),
+                    isActive: true,
                     name: 'Seedling',
                     order: 1,
-                    durationDays: 7,
-                    isActive: true,
                     startAt: new Date('2026-01-01T00:00:00Z'),
-                    endAt: new Date('2026-01-08T00:00:00Z'),
-                    dayStartMinutes: 360,
-                    dayDurationMinutes: 1080,
                   },
                   {
+                    dayDurationMinutes: 1080,
+                    dayStartMinutes: 360,
+                    durationDays: 30,
+                    endAt: new Date('2026-02-07T00:00:00Z'),
+                    isActive: false,
                     name: 'Veg',
                     order: 2,
-                    durationDays: 30,
-                    isActive: false,
                     startAt: new Date('2026-01-08T00:00:00Z'),
-                    endAt: new Date('2026-02-07T00:00:00Z'),
-                    dayStartMinutes: 360,
-                    dayDurationMinutes: 1080,
                   },
                   {
+                    dayDurationMinutes: 1080,
+                    dayStartMinutes: 360,
+                    durationDays: 60,
+                    endAt: new Date('2026-04-08T00:00:00Z'),
+                    isActive: false,
                     name: 'Flower',
                     order: 3,
-                    durationDays: 60,
-                    isActive: false,
                     startAt: new Date('2026-02-07T00:00:00Z'),
-                    endAt: new Date('2026-04-08T00:00:00Z'),
-                    dayStartMinutes: 360,
-                    dayDurationMinutes: 1080,
                   },
                 ],
               },
@@ -1319,17 +1332,17 @@ describe('Automation engine', () => {
             create: {
               isActive: true,
               name: 'Second Cycle (auto-advance test)',
-              // startAt null -> pass will warn + skip, never throw.
+              // StartAt null -> pass will warn + skip, never throw.
               phases: {
                 create: {
+                  dayDurationMinutes: 1080,
+                  dayStartMinutes: 360,
+                  durationDays: 7,
+                  endAt: new Date('2026-01-08T00:00:00Z'),
+                  isActive: true,
                   name: 'Solo Phase',
                   order: 1,
-                  durationDays: 7,
-                  isActive: true,
                   startAt: new Date('2026-01-01T00:00:00Z'),
-                  endAt: new Date('2026-01-08T00:00:00Z'),
-                  dayStartMinutes: 360,
-                  dayDurationMinutes: 1080,
                 },
               },
             },

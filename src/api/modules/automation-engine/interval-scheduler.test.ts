@@ -2,6 +2,7 @@ import { after, before, beforeEach, describe, test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createTestApp, teardownTestApp } from '../test-helper.js'
 import { intervalScheduler } from '../../../automation/interval-scheduler.js'
+import { mqttClient } from '../../../mqtt/client.js'
 
 describe('Interval scheduler (duty-cycle schedules)', () => {
   let prismaClient: any
@@ -18,6 +19,18 @@ describe('Interval scheduler (duty-cycle schedules)', () => {
     const { server, prisma } = await createTestApp()
     prismaClient = prisma
     testApp = server
+
+    // Disconnect MQTT so a shared dev broker / running prod server
+    // + PiGrow daemon on this host cannot echo back our scheduler
+    // Commands as state reports and pollute the assertions. Tests in
+    // This file exercise the scheduler's DB writes only; they do not
+    // Need a real MQTT round trip. `force: true` lets the call land
+    // Even if the broker never came up.
+    try {
+      mqttClient.end(true)
+    } catch {
+      // Ignore — best effort.
+    }
 
     const controller = await prisma.controller.create({
       data: {
@@ -409,8 +422,14 @@ describe('Interval scheduler (duty-cycle schedules)', () => {
 
     await intervalScheduler.tick(new Date())
 
+    // Limit the assertion to INTERVAL rule logs only — the running prod scheduler
+    // On this host also writes its own cycle-tick logs for SCHEDULED LIGHT
+    // Devices, which we don't want to mistake for interval-scheduler activity.
     const count = await prismaClient.deviceStateLog.count({
-      where: { deviceId: lightId },
+      where: {
+        deviceId: lightId,
+        reason: { contains: 'INTERVAL rule' },
+      },
     })
     assert.equal(count, 0, 'LIGHT devices should be skipped by the interval scheduler')
   })

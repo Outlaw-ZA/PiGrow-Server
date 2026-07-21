@@ -51,7 +51,12 @@ describe('Devices API Feature Module', () => {
     assert.equal(response.statusCode, 201)
     assert.equal(body.controllerId, testControllerId)
     assert.equal(body.pinNumber, 4)
-    assert.equal(body.automationMode, 'MANUAL')
+    // LIGHT now defaults to SCHEDULED (so the grow-phase clock drives it
+    // Without the user picking an automation mode first). Non-LIGHT types
+    // Still default to MANUAL — see the second test in this file for the
+    // Explicit batch path with EXHAUST_FAN (default MANUAL) + HEATER
+    // (default THRESHOLD).
+    assert.equal(body.automationMode, 'SCHEDULED')
     assert.equal(body.isActive, true)
   })
 
@@ -139,7 +144,12 @@ describe('Devices API Feature Module', () => {
 
     // Log from before the time range
     await prismaClient.deviceStateLog.create({
-      data: { action: 'ON', createdAt: new Date(Date.now() - 86_400_000), deviceId: list.id, source: 'MANUAL' },
+      data: {
+        action: 'ON',
+        createdAt: new Date(Date.now() - 86_400_000),
+        deviceId: list.id,
+        source: 'MANUAL',
+      },
     })
 
     const from = new Date(Date.now() - 3_600_000).toISOString()

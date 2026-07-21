@@ -61,15 +61,31 @@ export async function issueAutoCommand(
   }
 
   // Persist state transition + audit row in a single transaction.
-  await prisma.$transaction([
-    prisma.device.update({
-      data: { isActive: action === 'ON' },
-      where: { id: deviceId },
-    }),
-    prisma.deviceStateLog.create({
-      data: { action, deviceId, reason, source: 'AUTO' },
-    }),
-  ])
+  // Race-resilient: if the device was deleted between the findUnique above
+  // And the update here (e.g. a concurrent admin delete or a parallel test
+  // Teardown running against the same Postgres), Prisma throws P2025 (update
+  // Target not found) or P2003 (FK constraint violated). In either case the
+  // Command can no longer apply — return a no-op without crashing the caller.
+  try {
+    await prisma.$transaction([
+      prisma.device.update({
+        data: { isActive: action === 'ON' },
+        where: { id: deviceId },
+      }),
+      prisma.deviceStateLog.create({
+        data: { action, deviceId, reason, source: 'AUTO' },
+      }),
+    ])
+  } catch (error) {
+    const code =
+      typeof error === 'object' && error !== null && 'code' in error
+        ? (error as { code: string }).code
+        : ''
+    if (code === 'P2025' || code === 'P2003') {
+      return { issued: false, reason: 'device disappeared mid-command' }
+    }
+    throw error
+  }
 
   const commandId = crypto.randomUUID()
   commandTracker.track(commandId, deviceId, action)
