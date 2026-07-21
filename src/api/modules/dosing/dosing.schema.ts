@@ -25,3 +25,14 @@ export type WarningCode = (typeof WARNING_CODES)[number]
 export function getWarningCodes(): readonly WarningCode[] {
   return WARNING_CODES
 }
+
+export const DosingPreviewRequestSchema = Type.Object({
+  period: DayNightPeriodSchema,
+  reservoirLiters: Type.Number({ minimum: 0, maximum: 100000 }),
+})
+
+export const DosingPreviewResponseSchema = Type.Object({
+  mlByNutrientId: Type.Record(Type.String(), Type.Number()),
+  totalMl: Type.Number(),
+  warnings: Type.Array(WarningCodeSchema),
+})

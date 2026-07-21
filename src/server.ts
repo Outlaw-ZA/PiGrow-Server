@@ -17,6 +17,7 @@ import telemetryRoutes from './api/modules/telemetry/telemetry.routes.js'
 import provisioningRoutes from './api/modules/provisioning/provisioning.routes.js'
 import nutrientsRoutes from './api/modules/nutrients/nutrients.routes.js'
 import phaseNutrientsRoutes from './api/modules/phase-nutrients/phase-nutrients.routes.js'
+import dosingRoutes from './api/modules/dosing/dosing.routes.js'
 import { MQTT_BROKER_URL, mqttClient } from './mqtt/client.js'
 import { prisma } from './prisma.js'
 import { automationScheduler } from './automation/scheduler.js'
@@ -204,6 +205,7 @@ await fastify.register(telemetryRoutes)
 await fastify.register(provisioningRoutes)
 await fastify.register(nutrientsRoutes)
 await fastify.register(phaseNutrientsRoutes)
+await fastify.register(dosingRoutes)
 
 // 5. Start the automation scheduler (60s tick)
 automationScheduler.start()
