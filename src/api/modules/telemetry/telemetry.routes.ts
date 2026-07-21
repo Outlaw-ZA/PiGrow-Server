@@ -44,10 +44,11 @@ export default async function telemetryRoutes(server: FastifyInstance) {
     '/api/telemetry/grow-cycle/:growCycleId/latest',
     {
       schema: {
-        description: 'Returns the most recent telemetry row per physical sensor on the cycle.',
+        description:
+          'Returns the most recent telemetry row per (sensor, sensorType) pair on the cycle. A multi-type sensor such as TEMP_HUMIDITY yields one row per emitted type.',
         params: TelemetryParamsGrowCycleIdSchema,
         response: { 200: TelemetryArrayResponseSchema, 400: ErrorSchema },
-        summary: 'Latest reading per physical sensor',
+        summary: 'Latest reading per sensor type',
         tags: ['Telemetry'],
       },
     },
