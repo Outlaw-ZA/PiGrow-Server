@@ -157,7 +157,8 @@ describe('Dosing preview API', () => {
         nutrientId: nutrientAId,
       },
     })
-    const body = JSON.parse((await preview(phase.id, { period: 'DAY', reservoirLiters: 5 })).body)
+    const res = await preview(phase.id, { period: 'DAY', reservoirLiters: 5 })
+    const body = JSON.parse(res.body)
     assert.ok(body.warnings.includes('NO_PH_BANDS'))
   })
 
@@ -165,7 +166,8 @@ describe('Dosing preview API', () => {
     const phase = await createPhase('Mismatch')
     await addEnvironment(phase.id, 'DAY', { phMax: 6.5, phMin: 5.5, phTarget: 6 })
     await addEnvironment(phase.id, 'NIGHT', { phMax: 6.8, phMin: 5.8, phTarget: 6.3 })
-    const body = JSON.parse((await preview(phase.id, { period: 'DAY', reservoirLiters: 5 })).body)
+    const res = await preview(phase.id, { period: 'DAY', reservoirLiters: 5 })
+    const body = JSON.parse(res.body)
     assert.ok(body.warnings.includes('PH_DAY_NIGHT_MISMATCH'))
   })
 })
