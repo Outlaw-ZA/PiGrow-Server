@@ -35,19 +35,13 @@ export class TelemetryController {
     })
   }
 
-  // 2. READ LATEST READING PER (sensor, sensorType) PAIR
+  // 2. READ LATEST READING PER SENSOR (newest reading per physical sensor)
   async getLatestByGrowCycleId(growCycleId: string) {
-    // Group by (sensorId, sensorType) to find the latest createdAt per pair.
-    // The MQTT handler persists an entire payload inside one
-    // prisma.$transaction(), and Postgres TIMESTAMP(3) truncates
-    // sub-millisecond precision — rows from one delivery frequently share
-    // a createdAt. The follow-up must therefore pick exactly one row per
-    // group with a deterministic tiebreaker (id desc) rather than match
-    // on (sensorId, sensorType, createdAt) in an OR, which would return
-    // every tied row.
+    // Use groupBy to get the most recent createdAt per sensorId, avoiding
+    // An unbounded full-table scan that the previous in-memory dedup caused.
     const groups = await this.prisma.telemetry.groupBy({
       _max: { createdAt: true },
-      by: ['sensorId', 'sensorType'],
+      by: ['sensorId'],
       where: { growCycleId },
     })
 
@@ -55,35 +49,25 @@ export class TelemetryController {
       return []
     }
 
-    const sensorSelect = {
-      select: {
-        id: true,
-        name: true,
-        protocol: true,
-        type: true,
-      },
-    }
-
-    const rows = await Promise.all(
-      groups.map((g) =>
-        this.prisma.telemetry.findFirst({
-          include: { sensor: sensorSelect },
-          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-          where: {
-            growCycleId,
-            sensorId: g.sensorId,
-            sensorType: g.sensorType,
+    // Fetch the full reading row for each (sensorId, createdAt) pair.
+    const readings = await this.prisma.telemetry.findMany({
+      include: {
+        sensor: {
+          select: {
+            id: true,
+            name: true,
+            protocol: true,
+            type: true,
           },
-        }),
-      ),
-    )
-
-    const readings = rows.filter((r): r is NonNullable<typeof r> => r !== null)
-    readings.sort((a, b) => {
-      if (a.sensorId !== b.sensorId) {
-        return a.sensorId < b.sensorId ? -1 : 1
-      }
-      return a.sensorType < b.sensorType ? -1 : a.sensorType > b.sensorType ? 1 : 0
+        },
+      },
+      where: {
+        OR: groups.map((g) => ({
+          createdAt: g._max.createdAt!,
+          sensorId: g.sensorId,
+        })),
+        growCycleId,
+      },
     })
 
     return readings
