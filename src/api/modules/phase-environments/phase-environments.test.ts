@@ -98,6 +98,69 @@ describe('Phase Environments API Feature Module', () => {
     assert.equal(body.night, null)
   })
 
+  test('PUT /grow-phases/:id/environment/DAY - Should round-trip pH band fields', async () => {
+    const response = await app.inject({
+      method: 'PUT',
+      payload: {
+        co2Max: 1200,
+        co2Min: 600,
+        co2Target: 800,
+        humidityMax: 75,
+        humidityMin: 50,
+        humidityTarget: 60,
+        phMax: 6.2,
+        phMin: 5.8,
+        phTarget: 6,
+        tempMax: 28,
+        tempMin: 20,
+        tempTarget: 24,
+      },
+      url: `/api/grow-phases/${phaseId}/environment/DAY`,
+    })
+
+    assert.equal(response.statusCode, 200)
+
+    const fetched = await app.inject({
+      method: 'GET',
+      url: `/api/grow-phases/${phaseId}/environment`,
+    })
+    const body = JSON.parse(fetched.body)
+    assert.equal(fetched.statusCode, 200)
+    assert.equal(body.day.phMin, 5.8)
+    assert.equal(body.day.phTarget, 6)
+    assert.equal(body.day.phMax, 6.2)
+  })
+
+  test('PUT /grow-phases/:id/environment/DAY - Should clear omitted pH fields', async () => {
+    const response = await app.inject({
+      method: 'PUT',
+      payload: {
+        co2Max: 1200,
+        co2Min: 600,
+        co2Target: 800,
+        humidityMax: 75,
+        humidityMin: 50,
+        humidityTarget: 60,
+        tempMax: 28,
+        tempMin: 20,
+        tempTarget: 24,
+      },
+      url: `/api/grow-phases/${phaseId}/environment/DAY`,
+    })
+
+    assert.equal(response.statusCode, 200)
+
+    const fetched = await app.inject({
+      method: 'GET',
+      url: `/api/grow-phases/${phaseId}/environment`,
+    })
+    const body = JSON.parse(fetched.body)
+    assert.equal(fetched.statusCode, 200)
+    assert.equal(body.day.phMin, null)
+    assert.equal(body.day.phTarget, null)
+    assert.equal(body.day.phMax, null)
+  })
+
   test('PUT /grow-phases/:id/environment/NIGHT - Should upsert a NIGHT threshold set with lower temp', async () => {
     const response = await app.inject({
       method: 'PUT',

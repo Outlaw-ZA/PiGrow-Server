@@ -4,7 +4,7 @@ import { PhaseEnvironmentSchema } from './phase-environment-schema.js'
 
 describe('PhaseEnvironmentSchema', () => {
   it('has the same properties as the prior inline definitions', () => {
-    const properties = Object.keys(PhaseEnvironmentSchema.properties).slice().sort()
+    const properties = [...Object.keys(PhaseEnvironmentSchema.properties)].slice().sort()
     const expected = [
       'co2Max',
       'co2Min',
@@ -16,6 +16,9 @@ describe('PhaseEnvironmentSchema', () => {
       'humidityTarget',
       'id',
       'period',
+      'phMax',
+      'phMin',
+      'phTarget',
       'tempMax',
       'tempMin',
       'tempTarget',
@@ -26,7 +29,14 @@ describe('PhaseEnvironmentSchema', () => {
     assert.deepEqual(properties, expected)
   })
 
-  it('has exactly 14 properties', () => {
-    assert.equal(Object.keys(PhaseEnvironmentSchema.properties).length, 14)
+  it('has exactly 17 properties', () => {
+    assert.equal(Object.keys(PhaseEnvironmentSchema.properties).length, 17)
+  })
+
+  it('includes the pH band fields', () => {
+    const properties = Object.keys(PhaseEnvironmentSchema.properties)
+    assert.ok(properties.includes('phMin'))
+    assert.ok(properties.includes('phTarget'))
+    assert.ok(properties.includes('phMax'))
   })
 })
