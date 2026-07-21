@@ -11,6 +11,7 @@ import growCycleRoutes from './grow-cycles/grow-cycles.routes.js'
 import sensorRoutes from './sensors/sensors.routes.js'
 import telemetryRoutes from './telemetry/telemetry.routes.js'
 import provisioningRoutes from './provisioning/provisioning.routes.js'
+import nutrientsRoutes from './nutrients/nutrients.routes.js'
 import { closeDatabase, prisma } from '../../prisma.js'
 import { endMqtt } from '../../mqtt/client.js'
 import swaggerPlugin from '../../plugins/swagger.js'
@@ -44,6 +45,7 @@ export async function createTestApp() {
   await server.register(sensorRoutes)
   await server.register(telemetryRoutes)
   await server.register(provisioningRoutes)
+  await server.register(nutrientsRoutes)
 
   await server.ready()
 

@@ -15,6 +15,7 @@ import deviceRoutes from './api/modules/devices/devices.routes.js'
 import sensorRoutes from './api/modules/sensors/sensors.routes.js'
 import telemetryRoutes from './api/modules/telemetry/telemetry.routes.js'
 import provisioningRoutes from './api/modules/provisioning/provisioning.routes.js'
+import nutrientsRoutes from './api/modules/nutrients/nutrients.routes.js'
 import { MQTT_BROKER_URL, mqttClient } from './mqtt/client.js'
 import { prisma } from './prisma.js'
 import { automationScheduler } from './automation/scheduler.js'
@@ -200,6 +201,7 @@ await fastify.register(deviceRoutes)
 await fastify.register(sensorRoutes)
 await fastify.register(telemetryRoutes)
 await fastify.register(provisioningRoutes)
+await fastify.register(nutrientsRoutes)
 
 // 5. Start the automation scheduler (60s tick)
 automationScheduler.start()
