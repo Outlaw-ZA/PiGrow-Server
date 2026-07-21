@@ -16,6 +16,16 @@ const ManifestRelaySchema = Type.Object({
   type: Type.String(),
 })
 
+const ClaimedSensorSchema = Type.Object({
+  ...ManifestSensorSchema.properties,
+  id: Type.String({ format: 'uuid' }),
+})
+
+const ClaimedDeviceSchema = Type.Object({
+  ...ManifestRelaySchema.properties,
+  id: Type.String({ format: 'uuid' }),
+})
+
 const HardwareManifestSchema = Type.Object({
   relays: Type.Array(ManifestRelaySchema),
   sensors: Type.Array(ManifestSensorSchema),
@@ -65,6 +75,8 @@ export const ClaimBodySchema = Type.Object({
 
 export const ClaimResponseSchema = Type.Object({
   controller: ProvisionedControllerSchema,
+  devices: Type.Array(ClaimedDeviceSchema),
+  sensors: Type.Array(ClaimedSensorSchema),
 })
 
 export { ErrorSchema }

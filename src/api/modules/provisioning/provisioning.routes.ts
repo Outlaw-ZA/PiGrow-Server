@@ -51,9 +51,13 @@ export default async function provisioningRoutes(server: FastifyInstance) {
       try {
         const result = await controller.claim(request.body)
         const statusCode = result.created ? 201 : 200
-        return reply
-          .code(statusCode)
-          .send(cast<typeof ClaimResponseSchema.static>({ controller: result.controller }))
+        return reply.code(statusCode).send(
+          cast<typeof ClaimResponseSchema.static>({
+            controller: result.controller,
+            devices: result.devices,
+            sensors: result.sensors,
+          }),
+        )
       } catch (error) {
         if (error instanceof ProvisioningError) {
           if (error.statusCode === 429 && error.retryAfterSeconds) {

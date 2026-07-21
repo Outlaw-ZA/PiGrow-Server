@@ -7,6 +7,7 @@ import type { ProvisionBeacon } from '../../../services/DiscoveryService.js'
 import { mqttClient } from '../../../mqtt/client.js'
 
 const MAC = 'AA:BB:CC:DD:EE:FF'
+const EMPTY_MAC = 'AA:BB:CC:DD:EE:0F'
 const POISON_MAC = 'AA:BB:CC:DD:EE:10'
 const CAP_MAC = 'AA:BB:CC:DD:EE:11'
 const STRICT_MAC = 'AA:BB:CC:DD:EE:12'
@@ -90,7 +91,9 @@ describe('Controller provisioning API', () => {
     const testApp = await createTestApp()
     app = testApp.server
     prismaClient = testApp.prisma
-    await prismaClient.controller.deleteMany({ where: { macAddress: MAC } })
+    await prismaClient.controller.deleteMany({
+      where: { macAddress: { in: [MAC, EMPTY_MAC] } },
+    })
     originalPublish = mqttClient.publish
     ;(mqttClient as any).publish = (
       topic: string,
@@ -108,7 +111,9 @@ describe('Controller provisioning API', () => {
   after(async () => {
     discoveryService.stop()
     ;(mqttClient as any).publish = originalPublish
-    await prismaClient.controller.deleteMany({ where: { macAddress: MAC } })
+    await prismaClient.controller.deleteMany({
+      where: { macAddress: { in: [MAC, EMPTY_MAC] } },
+    })
     await teardownTestApp(app)
   })
 
@@ -277,6 +282,24 @@ describe('Controller provisioning API', () => {
       where: { macAddress: MAC },
     })
     assert.equal(body.controller.id, controller.id)
+    assert.deepEqual(body.sensors, [
+      {
+        i2cAddr: 118,
+        i2cBus: 1,
+        id: controller.sensors[0].id,
+        interval: 30,
+        protocol: 'I2C',
+        type: 'TEMP_HUMIDITY',
+      },
+    ])
+    assert.deepEqual(body.devices, [
+      {
+        id: controller.devices[0].id,
+        name: 'Main Light',
+        pin: 17,
+        type: 'LIGHT',
+      },
+    ])
     assert.equal(Object.hasOwn(body.controller, 'claimPinHash'), false)
     assert.equal(Object.hasOwn(body.controller, 'mqttPasswordHash'), false)
     assert.equal(controller.name, 'Research Tent')
@@ -343,6 +366,8 @@ describe('Controller provisioning API', () => {
       process.env.SERVER_HTTP_URL || 'http://localhost:4000',
     )
     assert.equal(typeof claimResponse.pairedAt, 'number')
+    assert.deepEqual(claimResponse.sensors, body.sensors)
+    assert.deepEqual(claimResponse.devices, body.devices)
     assert.ok(!JSON.stringify(controller).includes(claimResponse.mqttPassword))
   })
 
@@ -587,5 +612,32 @@ describe('Controller provisioning API', () => {
       where: { macAddress: MAC },
     })
     assert.notEqual(afterConcurrent.mqttPasswordHash, before.mqttPasswordHash)
+  })
+
+  test('POST /api/controllers/claim returns empty hardware arrays for an empty manifest', async () => {
+    const beforePublishCount = published.length
+    await sendBeacon(
+      createBeacon({
+        claimPin: '101010',
+        hwManifest: { relays: [], sensors: [] },
+        mac: EMPTY_MAC,
+      }),
+    )
+    await waitForPin('101010', EMPTY_MAC)
+
+    const response = await app.inject({
+      method: 'POST',
+      payload: { claimPin: '101010', mac: EMPTY_MAC, name: 'Empty Controller' },
+      url: '/api/controllers/claim',
+    })
+
+    assert.equal(response.statusCode, 201)
+    const body = JSON.parse(response.body)
+    assert.deepEqual(body.sensors, [])
+    assert.deepEqual(body.devices, [])
+    assert.equal(published.length, beforePublishCount + 1)
+    const claimResponse = JSON.parse(published.at(-1)?.payload ?? '')
+    assert.deepEqual(claimResponse.sensors, [])
+    assert.deepEqual(claimResponse.devices, [])
   })
 })

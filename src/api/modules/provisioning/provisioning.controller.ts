@@ -45,6 +45,15 @@ interface ClaimInput {
   name: string
 }
 
+interface ClaimedSensor extends ManifestSensor {
+  id: string
+}
+
+interface ClaimedDevice extends ManifestRelay {
+  id: string
+  name: string
+}
+
 export class ProvisioningError extends Error {
   constructor(
     message: string,
@@ -186,6 +195,7 @@ export class ProvisioningController {
               },
             })
 
+        const sensors: ClaimedSensor[] = []
         for (const sensor of sighting.beacon.hwManifest.sensors) {
           const type = normalizeSensorType(sensor.type)
           const protocol = normalizeSensorProtocol(sensor.protocol)
@@ -200,25 +210,30 @@ export class ProvisioningController {
             },
           })
 
-          if (existingSensor) {
-            await tx.sensor.update({
-              data: { pinNumbers, protocol, type },
-              where: { id: existingSensor.id },
-            })
-          } else {
-            await tx.sensor.create({
-              data: {
-                controllerId: controller.id,
-                id: randomUUID(),
-                name: sensor.type,
-                pinNumbers,
-                protocol,
-                type,
-              },
-            })
-          }
+          const claimedSensor = existingSensor
+            ? await tx.sensor.update({
+                data: { pinNumbers, protocol, type },
+                where: { id: existingSensor.id },
+              })
+            : await tx.sensor.create({
+                data: {
+                  controllerId: controller.id,
+                  id: randomUUID(),
+                  name: sensor.type,
+                  pinNumbers,
+                  protocol,
+                  type,
+                },
+              })
+          sensors.push({
+            ...sensor,
+            id: claimedSensor.id,
+            protocol: claimedSensor.protocol,
+            type: claimedSensor.type,
+          })
         }
 
+        const devices: ClaimedDevice[] = []
         for (const relay of sighting.beacon.hwManifest.relays) {
           const type = normalizeDeviceType(relay.type)
           const data = {
@@ -234,13 +249,17 @@ export class ProvisioningController {
             where: { controllerId: controller.id, pinNumber: relay.pin },
           })
 
-          if (existingDevice) {
-            await tx.device.update({ data, where: { id: existingDevice.id } })
-          } else {
-            await tx.device.create({
-              data: { ...data, controllerId: controller.id, id: randomUUID() },
-            })
-          }
+          const claimedDevice = existingDevice
+            ? await tx.device.update({ data, where: { id: existingDevice.id } })
+            : await tx.device.create({
+                data: { ...data, controllerId: controller.id, id: randomUUID() },
+              })
+          devices.push({
+            id: claimedDevice.id,
+            name: claimedDevice.name,
+            pin: claimedDevice.pinNumber,
+            type: claimedDevice.type,
+          })
         }
 
         const mqttUsername = `pigrow-${controller.id}`
@@ -249,7 +268,7 @@ export class ProvisioningController {
           where: { id: controller.id },
         })
 
-        return { controller: claimedController, created: !existing }
+        return { controller: claimedController, created: !existing, devices, sensors }
       })
     } catch (error) {
       discoveryService.releaseClaim(normalizedMac)
@@ -265,11 +284,13 @@ export class ProvisioningController {
       JSON.stringify({
         controllerId: result.controller.id,
         controllerMac: normalizedMac,
+        devices: result.devices,
         mqttBrokerUrl: MQTT_BROKER_URL,
         mqttPassword,
         mqttUsername: result.controller.mqttUsername,
         pairedAt,
         schema: 1,
+        sensors: result.sensors,
         serverHttpUrl: SERVER_HTTP_URL,
       }),
       { qos: 1, retain: false },
