@@ -4,7 +4,7 @@ import { PhaseEnvironmentSchema } from './phase-environment-schema.js'
 
 describe('PhaseEnvironmentSchema', () => {
   it('has the same properties as the prior inline definitions', () => {
-    const properties = Object.keys(PhaseEnvironmentSchema.properties).slice().toSorted()
+    const properties = Object.keys(PhaseEnvironmentSchema.properties).slice().sort()
     const expected = [
       'co2Max',
       'co2Min',
@@ -22,7 +22,7 @@ describe('PhaseEnvironmentSchema', () => {
       'updatedAt',
     ]
       .slice()
-      .toSorted()
+      .sort()
     assert.deepEqual(properties, expected)
   })
 
