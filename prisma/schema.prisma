@@ -169,6 +169,7 @@ model GrowPhase {
   growCycle        GrowCycle         @relation(fields: [growCycleId], references: [id], onDelete: Cascade)
   environments     PhaseEnvironment[] // Per-period (DAY/NIGHT) threshold sets
   automationRules  AutomationRule[] // Phase-scoped rules
+  phaseNutrients  PhaseNutrient[]
 }
 
 // Per-phase, per-period environmental thresholds. Empty fields are
@@ -186,6 +187,9 @@ model PhaseEnvironment {
   co2Min         Float?
   co2Max         Float?
   co2Target      Float?
+  phMin          Float?
+  phTarget       Float?
+  phMax          Float?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
@@ -282,6 +286,39 @@ model DeviceThresholdHold {
   updatedAt  DateTime @updatedAt
 
   device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// NUTRIENT DOSING LAYER
+// ==========================================
+
+model Nutrient {
+  id        String   @id @default(uuid())
+  name      String
+  brand     String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  phaseNutrients PhaseNutrient[]
+
+  @@unique([name, brand], map: "nutrient_name_brand_unique")
+}
+
+model PhaseNutrient {
+  id              String        @id @default(uuid())
+  growPhaseId     String
+  nutrientId      String
+  doseMlPerL      Float
+  sortOrder       Int           @default(0)
+  appliesToPeriod DayNightPeriod
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  growPhase GrowPhase @relation(fields: [growPhaseId], references: [id], onDelete: Cascade)
+  nutrient  Nutrient  @relation(fields: [nutrientId], references: [id], onDelete: Restrict)
+
+  @@unique([growPhaseId, nutrientId, appliesToPeriod], map: "phase_nutrient_unique")
 }
 
 // ==========================================

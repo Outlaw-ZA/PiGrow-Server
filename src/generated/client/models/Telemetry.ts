@@ -562,14 +562,6 @@ export type TelemetryUncheckedUpdateManyWithoutGrowCycleNestedInput = {
   deleteMany?: Prisma.TelemetryScalarWhereInput | Prisma.TelemetryScalarWhereInput[]
 }
 
-export type FloatFieldUpdateOperationsInput = {
-  set?: number
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type TelemetryCreateWithoutSensorInput = {
   id?: string
   sensorType: $Enums.SensorType

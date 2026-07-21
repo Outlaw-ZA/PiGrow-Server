@@ -57,6 +57,8 @@ export const ModelName = {
   AutomationRule: 'AutomationRule',
   DeviceStateLog: 'DeviceStateLog',
   DeviceThresholdHold: 'DeviceThresholdHold',
+  Nutrient: 'Nutrient',
+  PhaseNutrient: 'PhaseNutrient',
   Telemetry: 'Telemetry',
 } as const
 
@@ -172,6 +174,9 @@ export const PhaseEnvironmentScalarFieldEnum = {
   co2Min: 'co2Min',
   co2Max: 'co2Max',
   co2Target: 'co2Target',
+  phMin: 'phMin',
+  phTarget: 'phTarget',
+  phMax: 'phMax',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
 } as const
@@ -221,6 +226,32 @@ export const DeviceThresholdHoldScalarFieldEnum = {
 
 export type DeviceThresholdHoldScalarFieldEnum =
   (typeof DeviceThresholdHoldScalarFieldEnum)[keyof typeof DeviceThresholdHoldScalarFieldEnum]
+
+export const NutrientScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  brand: 'brand',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+} as const
+
+export type NutrientScalarFieldEnum =
+  (typeof NutrientScalarFieldEnum)[keyof typeof NutrientScalarFieldEnum]
+
+export const PhaseNutrientScalarFieldEnum = {
+  id: 'id',
+  growPhaseId: 'growPhaseId',
+  nutrientId: 'nutrientId',
+  doseMlPerL: 'doseMlPerL',
+  sortOrder: 'sortOrder',
+  appliesToPeriod: 'appliesToPeriod',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+} as const
+
+export type PhaseNutrientScalarFieldEnum =
+  (typeof PhaseNutrientScalarFieldEnum)[keyof typeof PhaseNutrientScalarFieldEnum]
 
 export const TelemetryScalarFieldEnum = {
   id: 'id',

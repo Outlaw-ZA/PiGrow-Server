@@ -90,6 +90,16 @@ export type DeviceStateLog = Prisma.DeviceStateLogModel
  */
 export type DeviceThresholdHold = Prisma.DeviceThresholdHoldModel
 /**
+ * Model Nutrient
+ *
+ */
+export type Nutrient = Prisma.NutrientModel
+/**
+ * Model PhaseNutrient
+ *
+ */
+export type PhaseNutrient = Prisma.PhaseNutrientModel
+/**
  * Model Telemetry
  *
  */

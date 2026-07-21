@@ -36,6 +36,9 @@ export type PhaseEnvironmentAvgAggregateOutputType = {
   co2Min: number | null
   co2Max: number | null
   co2Target: number | null
+  phMin: number | null
+  phTarget: number | null
+  phMax: number | null
 }
 
 export type PhaseEnvironmentSumAggregateOutputType = {
@@ -48,6 +51,9 @@ export type PhaseEnvironmentSumAggregateOutputType = {
   co2Min: number | null
   co2Max: number | null
   co2Target: number | null
+  phMin: number | null
+  phTarget: number | null
+  phMax: number | null
 }
 
 export type PhaseEnvironmentMinAggregateOutputType = {
@@ -63,6 +69,9 @@ export type PhaseEnvironmentMinAggregateOutputType = {
   co2Min: number | null
   co2Max: number | null
   co2Target: number | null
+  phMin: number | null
+  phTarget: number | null
+  phMax: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -80,6 +89,9 @@ export type PhaseEnvironmentMaxAggregateOutputType = {
   co2Min: number | null
   co2Max: number | null
   co2Target: number | null
+  phMin: number | null
+  phTarget: number | null
+  phMax: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -97,6 +109,9 @@ export type PhaseEnvironmentCountAggregateOutputType = {
   co2Min: number
   co2Max: number
   co2Target: number
+  phMin: number
+  phTarget: number
+  phMax: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -112,6 +127,9 @@ export type PhaseEnvironmentAvgAggregateInputType = {
   co2Min?: true
   co2Max?: true
   co2Target?: true
+  phMin?: true
+  phTarget?: true
+  phMax?: true
 }
 
 export type PhaseEnvironmentSumAggregateInputType = {
@@ -124,6 +142,9 @@ export type PhaseEnvironmentSumAggregateInputType = {
   co2Min?: true
   co2Max?: true
   co2Target?: true
+  phMin?: true
+  phTarget?: true
+  phMax?: true
 }
 
 export type PhaseEnvironmentMinAggregateInputType = {
@@ -139,6 +160,9 @@ export type PhaseEnvironmentMinAggregateInputType = {
   co2Min?: true
   co2Max?: true
   co2Target?: true
+  phMin?: true
+  phTarget?: true
+  phMax?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -156,6 +180,9 @@ export type PhaseEnvironmentMaxAggregateInputType = {
   co2Min?: true
   co2Max?: true
   co2Target?: true
+  phMin?: true
+  phTarget?: true
+  phMax?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -173,6 +200,9 @@ export type PhaseEnvironmentCountAggregateInputType = {
   co2Min?: true
   co2Max?: true
   co2Target?: true
+  phMin?: true
+  phTarget?: true
+  phMax?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -282,6 +312,9 @@ export type PhaseEnvironmentGroupByOutputType = {
   co2Min: number | null
   co2Max: number | null
   co2Target: number | null
+  phMin: number | null
+  phTarget: number | null
+  phMax: number | null
   createdAt: Date
   updatedAt: Date
   _count: PhaseEnvironmentCountAggregateOutputType | null
@@ -320,6 +353,9 @@ export type PhaseEnvironmentWhereInput = {
   co2Min?: Prisma.FloatNullableFilter<'PhaseEnvironment'> | number | null
   co2Max?: Prisma.FloatNullableFilter<'PhaseEnvironment'> | number | null
   co2Target?: Prisma.FloatNullableFilter<'PhaseEnvironment'> | number | null
+  phMin?: Prisma.FloatNullableFilter<'PhaseEnvironment'> | number | null
+  phTarget?: Prisma.FloatNullableFilter<'PhaseEnvironment'> | number | null
+  phMax?: Prisma.FloatNullableFilter<'PhaseEnvironment'> | number | null
   createdAt?: Prisma.DateTimeFilter<'PhaseEnvironment'> | Date | string
   updatedAt?: Prisma.DateTimeFilter<'PhaseEnvironment'> | Date | string
   growPhase?: Prisma.XOR<Prisma.GrowPhaseScalarRelationFilter, Prisma.GrowPhaseWhereInput>
@@ -338,6 +374,9 @@ export type PhaseEnvironmentOrderByWithRelationInput = {
   co2Min?: Prisma.SortOrderInput | Prisma.SortOrder
   co2Max?: Prisma.SortOrderInput | Prisma.SortOrder
   co2Target?: Prisma.SortOrderInput | Prisma.SortOrder
+  phMin?: Prisma.SortOrderInput | Prisma.SortOrder
+  phTarget?: Prisma.SortOrderInput | Prisma.SortOrder
+  phMax?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   growPhase?: Prisma.GrowPhaseOrderByWithRelationInput
@@ -361,6 +400,9 @@ export type PhaseEnvironmentWhereUniqueInput = Prisma.AtLeast<
     co2Min?: Prisma.FloatNullableFilter<'PhaseEnvironment'> | number | null
     co2Max?: Prisma.FloatNullableFilter<'PhaseEnvironment'> | number | null
     co2Target?: Prisma.FloatNullableFilter<'PhaseEnvironment'> | number | null
+    phMin?: Prisma.FloatNullableFilter<'PhaseEnvironment'> | number | null
+    phTarget?: Prisma.FloatNullableFilter<'PhaseEnvironment'> | number | null
+    phMax?: Prisma.FloatNullableFilter<'PhaseEnvironment'> | number | null
     createdAt?: Prisma.DateTimeFilter<'PhaseEnvironment'> | Date | string
     updatedAt?: Prisma.DateTimeFilter<'PhaseEnvironment'> | Date | string
     growPhase?: Prisma.XOR<Prisma.GrowPhaseScalarRelationFilter, Prisma.GrowPhaseWhereInput>
@@ -381,6 +423,9 @@ export type PhaseEnvironmentOrderByWithAggregationInput = {
   co2Min?: Prisma.SortOrderInput | Prisma.SortOrder
   co2Max?: Prisma.SortOrderInput | Prisma.SortOrder
   co2Target?: Prisma.SortOrderInput | Prisma.SortOrder
+  phMin?: Prisma.SortOrderInput | Prisma.SortOrder
+  phTarget?: Prisma.SortOrderInput | Prisma.SortOrder
+  phMax?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.PhaseEnvironmentCountOrderByAggregateInput
@@ -410,6 +455,9 @@ export type PhaseEnvironmentScalarWhereWithAggregatesInput = {
   co2Min?: Prisma.FloatNullableWithAggregatesFilter<'PhaseEnvironment'> | number | null
   co2Max?: Prisma.FloatNullableWithAggregatesFilter<'PhaseEnvironment'> | number | null
   co2Target?: Prisma.FloatNullableWithAggregatesFilter<'PhaseEnvironment'> | number | null
+  phMin?: Prisma.FloatNullableWithAggregatesFilter<'PhaseEnvironment'> | number | null
+  phTarget?: Prisma.FloatNullableWithAggregatesFilter<'PhaseEnvironment'> | number | null
+  phMax?: Prisma.FloatNullableWithAggregatesFilter<'PhaseEnvironment'> | number | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<'PhaseEnvironment'> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<'PhaseEnvironment'> | Date | string
 }
@@ -426,6 +474,9 @@ export type PhaseEnvironmentCreateInput = {
   co2Min?: number | null
   co2Max?: number | null
   co2Target?: number | null
+  phMin?: number | null
+  phTarget?: number | null
+  phMax?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   growPhase: Prisma.GrowPhaseCreateNestedOneWithoutEnvironmentsInput
@@ -444,6 +495,9 @@ export type PhaseEnvironmentUncheckedCreateInput = {
   co2Min?: number | null
   co2Max?: number | null
   co2Target?: number | null
+  phMin?: number | null
+  phTarget?: number | null
+  phMax?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -460,6 +514,9 @@ export type PhaseEnvironmentUpdateInput = {
   co2Min?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   co2Max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   co2Target?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phTarget?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMax?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   growPhase?: Prisma.GrowPhaseUpdateOneRequiredWithoutEnvironmentsNestedInput
@@ -478,6 +535,9 @@ export type PhaseEnvironmentUncheckedUpdateInput = {
   co2Min?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   co2Max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   co2Target?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phTarget?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMax?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -495,6 +555,9 @@ export type PhaseEnvironmentCreateManyInput = {
   co2Min?: number | null
   co2Max?: number | null
   co2Target?: number | null
+  phMin?: number | null
+  phTarget?: number | null
+  phMax?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -511,6 +574,9 @@ export type PhaseEnvironmentUpdateManyMutationInput = {
   co2Min?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   co2Max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   co2Target?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phTarget?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMax?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -528,6 +594,9 @@ export type PhaseEnvironmentUncheckedUpdateManyInput = {
   co2Min?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   co2Max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   co2Target?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phTarget?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMax?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -560,6 +629,9 @@ export type PhaseEnvironmentCountOrderByAggregateInput = {
   co2Min?: Prisma.SortOrder
   co2Max?: Prisma.SortOrder
   co2Target?: Prisma.SortOrder
+  phMin?: Prisma.SortOrder
+  phTarget?: Prisma.SortOrder
+  phMax?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -574,6 +646,9 @@ export type PhaseEnvironmentAvgOrderByAggregateInput = {
   co2Min?: Prisma.SortOrder
   co2Max?: Prisma.SortOrder
   co2Target?: Prisma.SortOrder
+  phMin?: Prisma.SortOrder
+  phTarget?: Prisma.SortOrder
+  phMax?: Prisma.SortOrder
 }
 
 export type PhaseEnvironmentMaxOrderByAggregateInput = {
@@ -589,6 +664,9 @@ export type PhaseEnvironmentMaxOrderByAggregateInput = {
   co2Min?: Prisma.SortOrder
   co2Max?: Prisma.SortOrder
   co2Target?: Prisma.SortOrder
+  phMin?: Prisma.SortOrder
+  phTarget?: Prisma.SortOrder
+  phMax?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -606,6 +684,9 @@ export type PhaseEnvironmentMinOrderByAggregateInput = {
   co2Min?: Prisma.SortOrder
   co2Max?: Prisma.SortOrder
   co2Target?: Prisma.SortOrder
+  phMin?: Prisma.SortOrder
+  phTarget?: Prisma.SortOrder
+  phMax?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -620,6 +701,9 @@ export type PhaseEnvironmentSumOrderByAggregateInput = {
   co2Min?: Prisma.SortOrder
   co2Max?: Prisma.SortOrder
   co2Target?: Prisma.SortOrder
+  phMin?: Prisma.SortOrder
+  phTarget?: Prisma.SortOrder
+  phMax?: Prisma.SortOrder
 }
 
 export type PhaseEnvironmentCreateNestedManyWithoutGrowPhaseInput = {
@@ -732,6 +816,9 @@ export type PhaseEnvironmentCreateWithoutGrowPhaseInput = {
   co2Min?: number | null
   co2Max?: number | null
   co2Target?: number | null
+  phMin?: number | null
+  phTarget?: number | null
+  phMax?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -748,6 +835,9 @@ export type PhaseEnvironmentUncheckedCreateWithoutGrowPhaseInput = {
   co2Min?: number | null
   co2Max?: number | null
   co2Target?: number | null
+  phMin?: number | null
+  phTarget?: number | null
+  phMax?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -811,6 +901,9 @@ export type PhaseEnvironmentScalarWhereInput = {
   co2Min?: Prisma.FloatNullableFilter<'PhaseEnvironment'> | number | null
   co2Max?: Prisma.FloatNullableFilter<'PhaseEnvironment'> | number | null
   co2Target?: Prisma.FloatNullableFilter<'PhaseEnvironment'> | number | null
+  phMin?: Prisma.FloatNullableFilter<'PhaseEnvironment'> | number | null
+  phTarget?: Prisma.FloatNullableFilter<'PhaseEnvironment'> | number | null
+  phMax?: Prisma.FloatNullableFilter<'PhaseEnvironment'> | number | null
   createdAt?: Prisma.DateTimeFilter<'PhaseEnvironment'> | Date | string
   updatedAt?: Prisma.DateTimeFilter<'PhaseEnvironment'> | Date | string
 }
@@ -827,6 +920,9 @@ export type PhaseEnvironmentCreateManyGrowPhaseInput = {
   co2Min?: number | null
   co2Max?: number | null
   co2Target?: number | null
+  phMin?: number | null
+  phTarget?: number | null
+  phMax?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -843,6 +939,9 @@ export type PhaseEnvironmentUpdateWithoutGrowPhaseInput = {
   co2Min?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   co2Max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   co2Target?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phTarget?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMax?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -859,6 +958,9 @@ export type PhaseEnvironmentUncheckedUpdateWithoutGrowPhaseInput = {
   co2Min?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   co2Max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   co2Target?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phTarget?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMax?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -875,6 +977,9 @@ export type PhaseEnvironmentUncheckedUpdateManyWithoutGrowPhaseInput = {
   co2Min?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   co2Max?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   co2Target?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phTarget?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMax?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -895,6 +1000,9 @@ export type PhaseEnvironmentSelect<
     co2Min?: boolean
     co2Max?: boolean
     co2Target?: boolean
+    phMin?: boolean
+    phTarget?: boolean
+    phMax?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     growPhase?: boolean | Prisma.GrowPhaseDefaultArgs<ExtArgs>
@@ -918,6 +1026,9 @@ export type PhaseEnvironmentSelectCreateManyAndReturn<
     co2Min?: boolean
     co2Max?: boolean
     co2Target?: boolean
+    phMin?: boolean
+    phTarget?: boolean
+    phMax?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     growPhase?: boolean | Prisma.GrowPhaseDefaultArgs<ExtArgs>
@@ -941,6 +1052,9 @@ export type PhaseEnvironmentSelectUpdateManyAndReturn<
     co2Min?: boolean
     co2Max?: boolean
     co2Target?: boolean
+    phMin?: boolean
+    phTarget?: boolean
+    phMax?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     growPhase?: boolean | Prisma.GrowPhaseDefaultArgs<ExtArgs>
@@ -961,6 +1075,9 @@ export type PhaseEnvironmentSelectScalar = {
   co2Min?: boolean
   co2Max?: boolean
   co2Target?: boolean
+  phMin?: boolean
+  phTarget?: boolean
+  phMax?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
@@ -980,6 +1097,9 @@ export type PhaseEnvironmentOmit<
   | 'co2Min'
   | 'co2Max'
   | 'co2Target'
+  | 'phMin'
+  | 'phTarget'
+  | 'phMax'
   | 'createdAt'
   | 'updatedAt',
   ExtArgs['result']['phaseEnvironment']
@@ -1021,6 +1141,9 @@ export type $PhaseEnvironmentPayload<
       co2Min: number | null
       co2Max: number | null
       co2Target: number | null
+      phMin: number | null
+      phTarget: number | null
+      phMax: number | null
       createdAt: Date
       updatedAt: Date
     },
@@ -1621,6 +1744,9 @@ export interface PhaseEnvironmentFieldRefs {
   readonly co2Min: Prisma.FieldRef<'PhaseEnvironment', 'Float'>
   readonly co2Max: Prisma.FieldRef<'PhaseEnvironment', 'Float'>
   readonly co2Target: Prisma.FieldRef<'PhaseEnvironment', 'Float'>
+  readonly phMin: Prisma.FieldRef<'PhaseEnvironment', 'Float'>
+  readonly phTarget: Prisma.FieldRef<'PhaseEnvironment', 'Float'>
+  readonly phMax: Prisma.FieldRef<'PhaseEnvironment', 'Float'>
   readonly createdAt: Prisma.FieldRef<'PhaseEnvironment', 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<'PhaseEnvironment', 'DateTime'>
 }

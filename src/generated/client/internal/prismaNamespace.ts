@@ -384,6 +384,8 @@ export const ModelName = {
   AutomationRule: 'AutomationRule',
   DeviceStateLog: 'DeviceStateLog',
   DeviceThresholdHold: 'DeviceThresholdHold',
+  Nutrient: 'Nutrient',
+  PhaseNutrient: 'PhaseNutrient',
   Telemetry: 'Telemetry',
 } as const
 
@@ -414,6 +416,8 @@ export type TypeMap<
       | 'automationRule'
       | 'deviceStateLog'
       | 'deviceThresholdHold'
+      | 'nutrient'
+      | 'phaseNutrient'
       | 'telemetry'
     txIsolationLevel: TransactionIsolationLevel
   }
@@ -1092,6 +1096,156 @@ export type TypeMap<
         }
       }
     }
+    Nutrient: {
+      payload: Prisma.$NutrientPayload<ExtArgs>
+      fields: Prisma.NutrientFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.NutrientFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NutrientPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.NutrientFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NutrientPayload>
+        }
+        findFirst: {
+          args: Prisma.NutrientFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NutrientPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.NutrientFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NutrientPayload>
+        }
+        findMany: {
+          args: Prisma.NutrientFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NutrientPayload>[]
+        }
+        create: {
+          args: Prisma.NutrientCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NutrientPayload>
+        }
+        createMany: {
+          args: Prisma.NutrientCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.NutrientCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NutrientPayload>[]
+        }
+        delete: {
+          args: Prisma.NutrientDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NutrientPayload>
+        }
+        update: {
+          args: Prisma.NutrientUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NutrientPayload>
+        }
+        deleteMany: {
+          args: Prisma.NutrientDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.NutrientUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.NutrientUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NutrientPayload>[]
+        }
+        upsert: {
+          args: Prisma.NutrientUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$NutrientPayload>
+        }
+        aggregate: {
+          args: Prisma.NutrientAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateNutrient>
+        }
+        groupBy: {
+          args: Prisma.NutrientGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NutrientGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.NutrientCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.NutrientCountAggregateOutputType> | number
+        }
+      }
+    }
+    PhaseNutrient: {
+      payload: Prisma.$PhaseNutrientPayload<ExtArgs>
+      fields: Prisma.PhaseNutrientFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.PhaseNutrientFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseNutrientPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.PhaseNutrientFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseNutrientPayload>
+        }
+        findFirst: {
+          args: Prisma.PhaseNutrientFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseNutrientPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.PhaseNutrientFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseNutrientPayload>
+        }
+        findMany: {
+          args: Prisma.PhaseNutrientFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseNutrientPayload>[]
+        }
+        create: {
+          args: Prisma.PhaseNutrientCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseNutrientPayload>
+        }
+        createMany: {
+          args: Prisma.PhaseNutrientCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.PhaseNutrientCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseNutrientPayload>[]
+        }
+        delete: {
+          args: Prisma.PhaseNutrientDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseNutrientPayload>
+        }
+        update: {
+          args: Prisma.PhaseNutrientUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseNutrientPayload>
+        }
+        deleteMany: {
+          args: Prisma.PhaseNutrientDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.PhaseNutrientUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.PhaseNutrientUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseNutrientPayload>[]
+        }
+        upsert: {
+          args: Prisma.PhaseNutrientUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseNutrientPayload>
+        }
+        aggregate: {
+          args: Prisma.PhaseNutrientAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePhaseNutrient>
+        }
+        groupBy: {
+          args: Prisma.PhaseNutrientGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PhaseNutrientGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.PhaseNutrientCountArgs<ExtArgs>
+          result:
+            | runtime.Types.Utils.Optional<Prisma.PhaseNutrientCountAggregateOutputType>
+            | number
+        }
+      }
+    }
     Telemetry: {
       payload: Prisma.$TelemetryPayload<ExtArgs>
       fields: Prisma.TelemetryFieldRefs
@@ -1301,6 +1455,9 @@ export const PhaseEnvironmentScalarFieldEnum = {
   co2Min: 'co2Min',
   co2Max: 'co2Max',
   co2Target: 'co2Target',
+  phMin: 'phMin',
+  phTarget: 'phTarget',
+  phMax: 'phMax',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
 } as const
@@ -1350,6 +1507,32 @@ export const DeviceThresholdHoldScalarFieldEnum = {
 
 export type DeviceThresholdHoldScalarFieldEnum =
   (typeof DeviceThresholdHoldScalarFieldEnum)[keyof typeof DeviceThresholdHoldScalarFieldEnum]
+
+export const NutrientScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  brand: 'brand',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+} as const
+
+export type NutrientScalarFieldEnum =
+  (typeof NutrientScalarFieldEnum)[keyof typeof NutrientScalarFieldEnum]
+
+export const PhaseNutrientScalarFieldEnum = {
+  id: 'id',
+  growPhaseId: 'growPhaseId',
+  nutrientId: 'nutrientId',
+  doseMlPerL: 'doseMlPerL',
+  sortOrder: 'sortOrder',
+  appliesToPeriod: 'appliesToPeriod',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+} as const
+
+export type PhaseNutrientScalarFieldEnum =
+  (typeof PhaseNutrientScalarFieldEnum)[keyof typeof PhaseNutrientScalarFieldEnum]
 
 export const TelemetryScalarFieldEnum = {
   id: 'id',
@@ -1688,6 +1871,8 @@ export type GlobalOmitConfig = {
   automationRule?: Prisma.AutomationRuleOmit
   deviceStateLog?: Prisma.DeviceStateLogOmit
   deviceThresholdHold?: Prisma.DeviceThresholdHoldOmit
+  nutrient?: Prisma.NutrientOmit
+  phaseNutrient?: Prisma.PhaseNutrientOmit
   telemetry?: Prisma.TelemetryOmit
 }
 
