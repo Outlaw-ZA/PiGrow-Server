@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'
-import { computeDosingMl } from './calc.js'
+import { DosingCalcError, computeDosingMl } from './calc.js'
 
 const row = (
   overrides: Partial<{
@@ -52,6 +52,13 @@ describe('computeDosingMl', () => {
     assert.ok(!result.warnings.includes('NO_DAY_NUTRIENTS'))
   })
 
+  it('filters by the requested period and emits NO_DAY_NUTRIENTS when filtering produces empty', () => {
+    const result = computeDosingMl([row({ appliesToPeriod: 'NIGHT' })], 'DAY', 5)
+    assert.deepEqual(result.mlByNutrientId, {})
+    assert.ok(result.warnings.includes('NO_DAY_NUTRIENTS'))
+    assert.ok(!result.warnings.includes('NO_NIGHT_NUTRIENTS'))
+  })
+
   it('does not double-count nutrients that exist in both periods (period-filtered input only)', () => {
     const result = computeDosingMl(
       [row({ doseMlPerL: 2, nutrientId: 'a' }), row({ doseMlPerL: 3, nutrientId: 'a' })],
@@ -62,7 +69,7 @@ describe('computeDosingMl', () => {
   })
 
   it('throws a typed error for negative reservoir liters', () => {
-    assert.throws(() => computeDosingMl([], 'DAY', -1), /must be >= 0/)
+    assert.throws(() => computeDosingMl([], 'DAY', -1), DosingCalcError)
   })
 
   it('returns empty results for zero reservoir liters without warning', () => {
