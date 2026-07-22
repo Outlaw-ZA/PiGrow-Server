@@ -32,6 +32,9 @@ const GrowPhaseSchema = Type.Object({
   isActive: Type.Boolean(),
   name: Type.String(),
   order: Type.Integer(),
+  phMax: Type.Union([Type.Number(), Type.Null()]),
+  phMin: Type.Union([Type.Number(), Type.Null()]),
+  phTarget: Type.Union([Type.Number(), Type.Null()]),
   startAt: Type.Union([Type.String({ format: 'date' }), Type.Null()]),
   updatedAt: Type.String({ format: 'date-time' }),
 })

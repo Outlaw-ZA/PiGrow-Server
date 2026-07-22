@@ -17,8 +17,6 @@ describe('Phase Nutrients API Feature Module', () => {
     app = testApp.server
     prismaClient = testApp.prisma
 
-    // Clean slate — phase-nutrients module is not yet registered, so the
-    // Table may have rows from other test files. deleteMany is safe.
     await prismaClient.phaseNutrient.deleteMany()
     await prismaClient.nutrient.deleteMany({ where: { name: { startsWith: 'PNTest-' } } })
 
@@ -36,20 +34,19 @@ describe('Phase Nutrients API Feature Module', () => {
     })
     growCycleId = cycle.id
 
-    const phase = await prismaClient.growPhase.create({
-      data: { durationDays: 30, growCycleId, name: 'Veg', order: 1 },
-    })
-    growPhaseId = phase.id
+    growPhaseId = (
+      await prismaClient.growPhase.create({
+        data: { durationDays: 30, growCycleId, name: 'Veg', order: 1 },
+      })
+    ).id
+    growPhase2Id = (
+      await prismaClient.growPhase.create({
+        data: { durationDays: 14, growCycleId, name: 'Flower', order: 2 },
+      })
+    ).id
 
-    const phase2 = await prismaClient.growPhase.create({
-      data: { durationDays: 14, growCycleId, name: 'Flower', order: 2 },
-    })
-    growPhase2Id = phase2.id
-
-    const nutA = await prismaClient.nutrient.create({ data: { name: 'PNTest-A' } })
-    nutrientAId = nutA.id
-    const nutB = await prismaClient.nutrient.create({ data: { name: 'PNTest-B' } })
-    nutrientBId = nutB.id
+    nutrientAId = (await prismaClient.nutrient.create({ data: { name: 'PNTest-A' } })).id
+    nutrientBId = (await prismaClient.nutrient.create({ data: { name: 'PNTest-B' } })).id
   })
 
   after(async () => {
@@ -60,11 +57,10 @@ describe('Phase Nutrients API Feature Module', () => {
     await teardownTestApp(app)
   })
 
-  test('POST /api/grow-phases/:growPhaseId/phase-nutrients creates a row', async () => {
+  test('POST creates one phase-wide nutrient row without a period', async () => {
     const response = await app.inject({
       method: 'POST',
       payload: {
-        appliesToPeriod: 'DAY',
         doseMlPerL: 2.5,
         nutrientId: nutrientAId,
         sortOrder: 1,
@@ -76,21 +72,14 @@ describe('Phase Nutrients API Feature Module', () => {
     assert.equal(body.growPhaseId, growPhaseId)
     assert.equal(body.nutrientId, nutrientAId)
     assert.equal(body.doseMlPerL, 2.5)
-    assert.equal(body.appliesToPeriod, 'DAY')
     assert.equal(body.sortOrder, 1)
-    assert.ok(body.id)
-    assert.ok(body.createdAt)
-    assert.ok(body.updatedAt)
+    assert.ok(!('appliesToPeriod' in body))
   })
 
-  test('POST ... returns 409 on duplicate (growPhaseId, nutrientId, appliesToPeriod)', async () => {
+  test('POST returns 409 for a duplicate phase and nutrient', async () => {
     const response = await app.inject({
       method: 'POST',
-      payload: {
-        appliesToPeriod: 'DAY',
-        doseMlPerL: 2.5,
-        nutrientId: nutrientAId,
-      },
+      payload: { doseMlPerL: 3, nutrientId: nutrientAId },
       url: `/api/grow-phases/${growPhaseId}/phase-nutrients`,
     })
     assert.equal(response.statusCode, 409)
@@ -99,113 +88,56 @@ describe('Phase Nutrients API Feature Module', () => {
     assert.ok(body.existingId)
   })
 
-  test('POST ... returns 404 when growPhaseId does not exist', async () => {
+  test('POST returns 404 when growPhaseId does not exist', async () => {
     const response = await app.inject({
       method: 'POST',
-      payload: {
-        appliesToPeriod: 'DAY',
-        doseMlPerL: 1.5,
-        nutrientId: nutrientBId,
-      },
-      url: `/api/grow-phases/00000000-0000-0000-0000-000000000000/phase-nutrients`,
+      payload: { doseMlPerL: 1.5, nutrientId: nutrientBId },
+      url: '/api/grow-phases/00000000-0000-0000-0000-000000000000/phase-nutrients',
     })
     assert.equal(response.statusCode, 404)
-    const body = JSON.parse(response.body)
-    assert.equal(body.error, 'PHASE_NOT_FOUND')
+    assert.equal(JSON.parse(response.body).error, 'PHASE_NOT_FOUND')
   })
 
-  test('GET /api/grow-phases/:growPhaseId/phase-nutrients lists rows ordered DAY before NIGHT', async () => {
-    // Seed two rows for phase2; NIGHT created first so orderBy appliesToPeriod
-    // Must outrank createdAt.
-    await prismaClient.phaseNutrient.create({
-      data: {
-        appliesToPeriod: 'NIGHT',
-        doseMlPerL: 1,
-        growPhaseId: growPhase2Id,
-        nutrientId: nutrientAId,
-      },
-    })
-    await prismaClient.phaseNutrient.create({
-      data: {
-        appliesToPeriod: 'DAY',
-        doseMlPerL: 3,
-        growPhaseId: growPhase2Id,
-        nutrientId: nutrientBId,
-      },
+  test('GET lists shared rows by sort order without period filtering', async () => {
+    await prismaClient.phaseNutrient.createMany({
+      data: [
+        { doseMlPerL: 1, growPhaseId: growPhase2Id, nutrientId: nutrientAId, sortOrder: 2 },
+        { doseMlPerL: 3, growPhaseId: growPhase2Id, nutrientId: nutrientBId, sortOrder: 1 },
+      ],
     })
     const response = await app.inject({
       method: 'GET',
-      url: `/api/grow-phases/${growPhase2Id}/phase-nutrients`,
+      url: `/api/grow-phases/${growPhase2Id}/phase-nutrients?period=NIGHT`,
     })
     const body = JSON.parse(response.body)
     assert.equal(response.statusCode, 200)
-    assert.ok(Array.isArray(body))
     assert.equal(body.length, 2)
-    assert.equal(body[0].appliesToPeriod, 'DAY')
-    assert.equal(body[1].appliesToPeriod, 'NIGHT')
+    assert.deepEqual(
+      body.map((item: { nutrientId: string }) => item.nutrientId),
+      [nutrientBId, nutrientAId],
+    )
+    assert.ok(body.every((item: Record<string, unknown>) => !('appliesToPeriod' in item)))
   })
 
-  test('GET /api/grow-phases/:growPhaseId/phase-nutrients?period=DAY filters to DAY rows', async () => {
-    const response = await app.inject({
-      method: 'GET',
-      url: `/api/grow-phases/${growPhase2Id}/phase-nutrients?period=DAY`,
-    })
-    const body = JSON.parse(response.body)
-    assert.equal(response.statusCode, 200)
-    assert.equal(body.length, 1)
-    assert.equal(body[0].appliesToPeriod, 'DAY')
-  })
-
-  test('PATCH /api/grow-phases/:growPhaseId/phase-nutrients/:id updates dose and period', async () => {
+  test('PATCH updates dose and sort order without a period', async () => {
     const row = await prismaClient.phaseNutrient.create({
-      data: {
-        appliesToPeriod: 'NIGHT',
-        doseMlPerL: 1.5,
-        growPhaseId,
-        nutrientId: nutrientBId,
-      },
+      data: { doseMlPerL: 1.5, growPhaseId, nutrientId: nutrientBId },
     })
     const response = await app.inject({
       method: 'PATCH',
-      payload: { appliesToPeriod: 'DAY', doseMlPerL: 4 },
+      payload: { doseMlPerL: 4, sortOrder: 3 },
       url: `/api/grow-phases/${growPhaseId}/phase-nutrients/${row.id}`,
     })
     const body = JSON.parse(response.body)
     assert.equal(response.statusCode, 200)
-    assert.equal(body.id, row.id)
     assert.equal(body.doseMlPerL, 4)
-    assert.equal(body.appliesToPeriod, 'DAY')
+    assert.equal(body.sortOrder, 3)
+    assert.ok(!('appliesToPeriod' in body))
   })
 
-  test('PATCH ... returns 409 when period change collides with another row', async () => {
-    // Phase2 already has (phase2, nutrientB, DAY). Create (phase2, nutrientB, NIGHT)
-    // Then PATCH it to DAY — that triple is already taken.
-    const row = await prismaClient.phaseNutrient.create({
-      data: {
-        appliesToPeriod: 'NIGHT',
-        doseMlPerL: 0.5,
-        growPhaseId: growPhase2Id,
-        nutrientId: nutrientBId,
-      },
-    })
-    const response = await app.inject({
-      method: 'PATCH',
-      payload: { appliesToPeriod: 'DAY' },
-      url: `/api/grow-phases/${growPhase2Id}/phase-nutrients/${row.id}`,
-    })
-    assert.equal(response.statusCode, 409)
-    const body = JSON.parse(response.body)
-    assert.equal(body.error, 'PHASE_NUTRIENT_CONFLICT')
-  })
-
-  test('DELETE /api/grow-phases/:growPhaseId/phase-nutrients/:id removes the row', async () => {
-    const row = await prismaClient.phaseNutrient.create({
-      data: {
-        appliesToPeriod: 'NIGHT',
-        doseMlPerL: 1,
-        growPhaseId,
-        nutrientId: nutrientAId,
-      },
+  test('DELETE removes the row', async () => {
+    const row = await prismaClient.phaseNutrient.findFirstOrThrow({
+      where: { growPhaseId, nutrientId: nutrientBId },
     })
     const response = await app.inject({
       method: 'DELETE',
@@ -215,52 +147,28 @@ describe('Phase Nutrients API Feature Module', () => {
     assert.equal(await prismaClient.phaseNutrient.findUnique({ where: { id: row.id } }), null)
   })
 
-  test('DELETE ... returns 404 for non-existent id', async () => {
-    const response = await app.inject({
-      method: 'DELETE',
-      url: `/api/grow-phases/${growPhaseId}/phase-nutrients/00000000-0000-0000-0000-000000000000`,
+  test('PATCH returns 404 when the row belongs to another phase', async () => {
+    const row = await prismaClient.phaseNutrient.findFirstOrThrow({
+      where: { growPhaseId: growPhase2Id, nutrientId: nutrientAId },
     })
-    assert.equal(response.statusCode, 404)
-  })
-
-  test('PATCH ... returns 404 when row belongs to a different growPhaseId', async () => {
-    const row = await prismaClient.phaseNutrient.create({
-      data: {
-        appliesToPeriod: 'NIGHT',
-        doseMlPerL: 2.0,
-        growPhaseId,
-        nutrientId: nutrientBId,
-      },
-    })
-    // Request targets growPhase2Id but the row belongs to growPhaseId
     const response = await app.inject({
       method: 'PATCH',
       payload: { doseMlPerL: 99 },
-      url: `/api/grow-phases/${growPhase2Id}/phase-nutrients/${row.id}`,
+      url: `/api/grow-phases/${growPhaseId}/phase-nutrients/${row.id}`,
     })
     assert.equal(response.statusCode, 404)
-    const body = JSON.parse(response.body)
-    assert.equal(body.error, 'PHASE_NUTRIENT_NOT_FOUND')
+    assert.equal(JSON.parse(response.body).error, 'PHASE_NUTRIENT_NOT_FOUND')
   })
 
-  test('DELETE ... returns 404 when row belongs to a different growPhaseId', async () => {
-    // growPhaseId has no free (nutrient,period) slots — create in growPhase2Id instead.
-    // growPhase2Id has (nutrientA,NIGHT) and (nutrientB,DAY) from GET test — use nutrientA+DAY which is free there.
-    const row = await prismaClient.phaseNutrient.create({
-      data: {
-        appliesToPeriod: 'DAY',
-        doseMlPerL: 3.0,
-        growPhaseId: growPhase2Id,
-        nutrientId: nutrientAId,
-      },
+  test('DELETE returns 404 when the row belongs to another phase', async () => {
+    const row = await prismaClient.phaseNutrient.findFirstOrThrow({
+      where: { growPhaseId: growPhase2Id, nutrientId: nutrientAId },
     })
-    // Request targets growPhaseId but the row belongs to growPhase2Id
     const response = await app.inject({
       method: 'DELETE',
       url: `/api/grow-phases/${growPhaseId}/phase-nutrients/${row.id}`,
     })
     assert.equal(response.statusCode, 404)
-    const body = JSON.parse(response.body)
-    assert.equal(body.error, 'PHASE_NUTRIENT_NOT_FOUND')
+    assert.equal(JSON.parse(response.body).error, 'PHASE_NUTRIENT_NOT_FOUND')
   })
 })

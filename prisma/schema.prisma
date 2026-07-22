@@ -108,11 +108,11 @@ model Device {
   mqttTopic      String         @default("") // Deprecated — topics are derived from device ID
   automationMode AutomationMode @default(MANUAL)
   isActive       Boolean        @default(true)
-  maxOnSeconds   Int?           // Maximum continuous ON time before the engine force-OFFs; null = unlimited
+  maxOnSeconds   Int? // Maximum continuous ON time before the engine force-OFFs; null = unlimited
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
-  controller      Controller       @relation(fields: [controllerId], references: [id], onDelete: Cascade)
+  controller      Controller           @relation(fields: [controllerId], references: [id], onDelete: Cascade)
   deviceStateLogs DeviceStateLog[] // Audit trail of every ON/OFF command issued to this device
   automationRules AutomationRule[] // Rules that actuate this device
   thresholdHold   DeviceThresholdHold? // Active "threshold is asserting this device" hold; interval scheduler yields while fresh
@@ -163,19 +163,22 @@ model GrowPhase {
   // Examples: 18/6 => 360..1440; 12/12 => 360..720; all-day => 0..1440; all-night => 0..0.
   dayStartMinutes    Int       @default(360) // 06:00 by default
   dayDurationMinutes Int       @default(1080) // 18h day by default
+  phMin              Float?
+  phTarget           Float?
+  phMax              Float?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  growCycle        GrowCycle         @relation(fields: [growCycleId], references: [id], onDelete: Cascade)
-  environments     PhaseEnvironment[] // Per-period (DAY/NIGHT) threshold sets
-  automationRules  AutomationRule[] // Phase-scoped rules
+  growCycle       GrowCycle          @relation(fields: [growCycleId], references: [id], onDelete: Cascade)
+  environments    PhaseEnvironment[] // Per-period (DAY/NIGHT) threshold sets
+  automationRules AutomationRule[] // Phase-scoped rules
   phaseNutrients  PhaseNutrient[]
 }
 
 // Per-phase, per-period environmental thresholds. Empty fields are
 // considered "unconstrained" by the automation engine.
 model PhaseEnvironment {
-  id             String        @id @default(uuid())
+  id             String         @id @default(uuid())
   growPhaseId    String
   period         DayNightPeriod
   tempMin        Float?
@@ -187,11 +190,8 @@ model PhaseEnvironment {
   co2Min         Float?
   co2Max         Float?
   co2Target      Float?
-  phMin          Float?
-  phTarget       Float?
-  phMax          Float?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
   growPhase GrowPhase @relation(fields: [growPhaseId], references: [id], onDelete: Cascade)
 
@@ -231,24 +231,24 @@ enum DeviceAction {
 // cycle (rare). Exactly one of growPhaseId / growCycleId must be set — enforced
 // at the application layer.
 model AutomationRule {
-  id                String        @id @default(uuid())
-  growCycleId       String?
-  growPhaseId       String?
-  deviceId          String
-  watchedSensorType SensorType?
-  period            DayNightPeriod? // null = applies to BOTH day and night
-  condition         RuleCondition
-  action            DeviceAction
-  cooldownSeconds   Int           @default(180) // Min gap between two auto commands from this rule
+  id                   String          @id @default(uuid())
+  growCycleId          String?
+  growPhaseId          String?
+  deviceId             String
+  watchedSensorType    SensorType?
+  period               DayNightPeriod? // null = applies to BOTH day and night
+  condition            RuleCondition
+  action               DeviceAction
+  cooldownSeconds      Int             @default(180) // Min gap between two auto commands from this rule
   // INTERVAL-condition fields. For duty-cycle schedules (e.g. fan 30s ON every 5 min).
   // intervalOnSeconds is the ON pulse duration; intervalCycleSeconds is the total
   // cycle (ON + OFF). Required & valid only when condition = INTERVAL; null otherwise.
   intervalOnSeconds    Int?
   intervalCycleSeconds Int?
-  enabled           Boolean       @default(true)
-  lastTriggeredAt   DateTime?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  enabled              Boolean         @default(true)
+  lastTriggeredAt      DateTime?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
 
   device    Device     @relation(fields: [deviceId], references: [id], onDelete: Cascade)
   growCycle GrowCycle? @relation(fields: [growCycleId], references: [id], onDelete: Cascade)
@@ -263,9 +263,9 @@ model AutomationRule {
 model DeviceStateLog {
   id        String   @id @default(uuid())
   deviceId  String
-  action    String   // "ON" | "OFF"  (matches the MQTT command payload)
-  source    String   // "MANUAL" | "AUTO" | "UI" — who/what issued the command
-  reason    String?  // Optional human-readable context (e.g. threshold name, config id)
+  action    String // "ON" | "OFF"  (matches the MQTT command payload)
+  source    String // "MANUAL" | "AUTO" | "UI" — who/what issued the command
+  reason    String? // Optional human-readable context (e.g. threshold name, config id)
   createdAt DateTime @default(now())
 
   device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
@@ -280,10 +280,10 @@ model DeviceStateLog {
 // device while this hold is fresh, so a threshold rule can override an interval
 // schedule. ruleId is an audit field (no FK) so rule deletion doesn't cascade.
 model DeviceThresholdHold {
-  deviceId   String   @id
-  heldUntil  DateTime
-  ruleId     String?
-  updatedAt  DateTime @updatedAt
+  deviceId  String   @id
+  heldUntil DateTime
+  ruleId    String?
+  updatedAt DateTime @updatedAt
 
   device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
 }
@@ -306,19 +306,18 @@ model Nutrient {
 }
 
 model PhaseNutrient {
-  id              String        @id @default(uuid())
-  growPhaseId     String
-  nutrientId      String
-  doseMlPerL      Float
-  sortOrder       Int           @default(0)
-  appliesToPeriod DayNightPeriod
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id          String   @id @default(uuid())
+  growPhaseId String
+  nutrientId  String
+  doseMlPerL  Float
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   growPhase GrowPhase @relation(fields: [growPhaseId], references: [id], onDelete: Cascade)
   nutrient  Nutrient  @relation(fields: [nutrientId], references: [id], onDelete: Restrict)
 
-  @@unique([growPhaseId, nutrientId, appliesToPeriod], map: "phase_nutrient_unique")
+  @@unique([growPhaseId, nutrientId], map: "phase_nutrient_unique")
 }
 
 // ==========================================

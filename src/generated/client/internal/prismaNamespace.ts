@@ -1435,6 +1435,9 @@ export const GrowPhaseScalarFieldEnum = {
   endAt: 'endAt',
   dayStartMinutes: 'dayStartMinutes',
   dayDurationMinutes: 'dayDurationMinutes',
+  phMin: 'phMin',
+  phTarget: 'phTarget',
+  phMax: 'phMax',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
 } as const
@@ -1455,9 +1458,6 @@ export const PhaseEnvironmentScalarFieldEnum = {
   co2Min: 'co2Min',
   co2Max: 'co2Max',
   co2Target: 'co2Target',
-  phMin: 'phMin',
-  phTarget: 'phTarget',
-  phMax: 'phMax',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
 } as const
@@ -1526,7 +1526,6 @@ export const PhaseNutrientScalarFieldEnum = {
   nutrientId: 'nutrientId',
   doseMlPerL: 'doseMlPerL',
   sortOrder: 'sortOrder',
-  appliesToPeriod: 'appliesToPeriod',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
 } as const
@@ -1687,6 +1686,16 @@ export type ListEnumAutomationModeFieldRefInput<$PrismaModel> = FieldRefInputTyp
 export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
 
 /**
+ * Reference to a field of type 'Float'
+ */
+export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+
+/**
+ * Reference to a field of type 'Float[]'
+ */
+export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+
+/**
  * Reference to a field of type 'DayNightPeriod'
  */
 export type EnumDayNightPeriodFieldRefInput<$PrismaModel> = FieldRefInputType<
@@ -1701,16 +1710,6 @@ export type ListEnumDayNightPeriodFieldRefInput<$PrismaModel> = FieldRefInputTyp
   $PrismaModel,
   'DayNightPeriod[]'
 >
-
-/**
- * Reference to a field of type 'Float'
- */
-export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
-
-/**
- * Reference to a field of type 'Float[]'
- */
-export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
 
 /**
  * Reference to a field of type 'RuleCondition'

@@ -26,10 +26,9 @@ describe('Dosing preview API', () => {
       },
     })
     controllerId = controller.id
-    const cycle = await prismaClient.growCycle.create({
-      data: { controllerId, name: 'Dosing Test' },
-    })
-    growCycleId = cycle.id
+    growCycleId = (
+      await prismaClient.growCycle.create({ data: { controllerId, name: 'Dosing Test' } })
+    ).id
     nutrientAId = (await prismaClient.nutrient.create({ data: { name: 'DosingTest-A' } })).id
     nutrientBId = (await prismaClient.nutrient.create({ data: { name: 'DosingTest-B' } })).id
   })
@@ -41,38 +40,29 @@ describe('Dosing preview API', () => {
     await teardownTestApp(app)
   })
 
-  async function createPhase(name: string) {
+  async function createPhase(
+    name: string,
+    ph: { phMin?: number; phTarget?: number; phMax?: number } = {},
+  ) {
     return await prismaClient.growPhase.create({
-      data: { durationDays: 30, growCycleId, name, order: Date.now() % 100_000 },
+      data: { durationDays: 30, growCycleId, name, order: Date.now() % 100_000, ...ph },
     })
   }
 
-  async function addEnvironment(growPhaseId: string, period: 'DAY' | 'NIGHT', values = {}) {
-    return await prismaClient.phaseEnvironment.create({
-      data: { growPhaseId, period, ...values },
-    })
-  }
-
-  async function preview(growPhaseId: string, payload: Record<string, unknown>) {
+  async function preview(growPhaseId: string, reservoirLiters: number) {
     return await app.inject({
       method: 'POST',
-      payload,
+      payload: { reservoirLiters },
       url: `/api/grow-phases/${growPhaseId}/dosing/preview`,
     })
   }
 
-  test('previews one nutrient for one period', async () => {
-    const phase = await createPhase('Happy')
+  test('previews shared phase nutrients without a period', async () => {
+    const phase = await createPhase('Happy', { phMax: 6.5, phMin: 5.5, phTarget: 6 })
     await prismaClient.phaseNutrient.create({
-      data: {
-        appliesToPeriod: 'DAY',
-        doseMlPerL: 2,
-        growPhaseId: phase.id,
-        nutrientId: nutrientAId,
-      },
+      data: { doseMlPerL: 2, growPhaseId: phase.id, nutrientId: nutrientAId },
     })
-    await addEnvironment(phase.id, 'DAY', { phMax: 6.5, phMin: 5.5, phTarget: 6 })
-    const response = await preview(phase.id, { period: 'DAY', reservoirLiters: 5 })
+    const response = await preview(phase.id, 5)
     assert.equal(response.statusCode, 200)
     assert.deepEqual(JSON.parse(response.body), {
       mlByNutrientId: { [nutrientAId]: 10 },
@@ -82,92 +72,55 @@ describe('Dosing preview API', () => {
   })
 
   test('rejects a negative reservoir volume', async () => {
-    const phase = await createPhase('Negative')
-    const response = await preview(phase.id, { period: 'DAY', reservoirLiters: -1 })
+    const response = await preview((await createPhase('Negative')).id, -1)
     assert.equal(response.statusCode, 400)
   })
 
-  test('returns zero for a zero-volume reservoir when rows exist', async () => {
+  test('returns zero doses for a zero-volume reservoir', async () => {
     const phase = await createPhase('Zero')
     await prismaClient.phaseNutrient.create({
-      data: {
-        appliesToPeriod: 'DAY',
-        doseMlPerL: 2,
-        growPhaseId: phase.id,
-        nutrientId: nutrientAId,
-      },
+      data: { doseMlPerL: 2, growPhaseId: phase.id, nutrientId: nutrientAId },
     })
-    const response = await preview(phase.id, { period: 'DAY', reservoirLiters: 0 })
+    const response = await preview(phase.id, 0)
     assert.equal(response.statusCode, 200)
     assert.equal(JSON.parse(response.body).totalMl, 0)
   })
 
   test('warns when no nutrients are configured', async () => {
-    const response = await preview((await createPhase('Empty')).id, {
-      period: 'DAY',
-      reservoirLiters: 5,
-    })
+    const response = await preview((await createPhase('Empty')).id, 5)
     assert.ok(JSON.parse(response.body).warnings.includes('NO_NUTRIENTS_CONFIGURED'))
   })
 
-  test('warns when the requested period has no nutrients', async () => {
-    const phase = await createPhase('Period')
-    await prismaClient.phaseNutrient.create({
-      data: {
-        appliesToPeriod: 'DAY',
-        doseMlPerL: 2,
-        growPhaseId: phase.id,
-        nutrientId: nutrientAId,
-      },
-    })
-    const response = await preview(phase.id, { period: 'NIGHT', reservoirLiters: 5 })
-    assert.ok(JSON.parse(response.body).warnings.includes('NO_NIGHT_NUTRIENTS'))
-  })
-
-  test('returns rounded totals for multiple nutrients', async () => {
-    const phase = await createPhase('Multiple')
+  test('returns rounded totals for all shared nutrients', async () => {
+    const phase = await createPhase('Multiple', { phTarget: 6 })
     await prismaClient.phaseNutrient.createMany({
       data: [
-        {
-          appliesToPeriod: 'DAY',
-          doseMlPerL: 1.111,
-          growPhaseId: phase.id,
-          nutrientId: nutrientAId,
-        },
-        {
-          appliesToPeriod: 'DAY',
-          doseMlPerL: 2.222,
-          growPhaseId: phase.id,
-          nutrientId: nutrientBId,
-        },
+        { doseMlPerL: 1.111, growPhaseId: phase.id, nutrientId: nutrientAId },
+        { doseMlPerL: 2.222, growPhaseId: phase.id, nutrientId: nutrientBId },
       ],
     })
-    const body = JSON.parse((await preview(phase.id, { period: 'DAY', reservoirLiters: 3 })).body)
+    const body = JSON.parse((await preview(phase.id, 3)).body)
     assert.deepEqual(body.mlByNutrientId, { [nutrientAId]: 3.33, [nutrientBId]: 6.67 })
     assert.equal(body.totalMl, 10)
   })
 
-  test('warns when pH bands are absent', async () => {
+  test('derives NO_PH_BANDS from GrowPhase', async () => {
     const phase = await createPhase('No pH')
-    await prismaClient.phaseNutrient.create({
-      data: {
-        appliesToPeriod: 'DAY',
-        doseMlPerL: 2,
-        growPhaseId: phase.id,
-        nutrientId: nutrientAId,
-      },
+    await prismaClient.phaseEnvironment.create({
+      data: { growPhaseId: phase.id, period: 'DAY', tempTarget: 24 },
     })
-    const res = await preview(phase.id, { period: 'DAY', reservoirLiters: 5 })
-    const body = JSON.parse(res.body)
+    await prismaClient.phaseNutrient.create({
+      data: { doseMlPerL: 2, growPhaseId: phase.id, nutrientId: nutrientAId },
+    })
+    const body = JSON.parse((await preview(phase.id, 5)).body)
     assert.ok(body.warnings.includes('NO_PH_BANDS'))
   })
 
-  test('warns when DAY and NIGHT pH bands differ', async () => {
-    const phase = await createPhase('Mismatch')
-    await addEnvironment(phase.id, 'DAY', { phMax: 6.5, phMin: 5.5, phTarget: 6 })
-    await addEnvironment(phase.id, 'NIGHT', { phMax: 6.8, phMin: 5.8, phTarget: 6.3 })
-    const res = await preview(phase.id, { period: 'DAY', reservoirLiters: 5 })
-    const body = JSON.parse(res.body)
-    assert.ok(body.warnings.includes('PH_DAY_NIGHT_MISMATCH'))
+  test('does not emit obsolete period-specific warning codes', async () => {
+    const phase = await createPhase('Shared warnings', { phTarget: 6 })
+    const warnings = JSON.parse((await preview(phase.id, 5)).body).warnings as string[]
+    assert.ok(!warnings.includes('NO_DAY_NUTRIENTS'))
+    assert.ok(!warnings.includes('NO_NIGHT_NUTRIENTS'))
+    assert.ok(!warnings.includes('PH_DAY_NIGHT_MISMATCH'))
   })
 })

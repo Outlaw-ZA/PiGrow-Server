@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { createTestApp, teardownTestApp } from '../test-helper.js'
 
 describe('Nutrients API Feature Module', () => {
+  const nutrientNames = ['FloraGro', 'Core', 'NullBrandTest', 'Bloom', 'Unused', 'Referenced']
   let app: any
   let prismaClient: any
 
@@ -10,13 +11,17 @@ describe('Nutrients API Feature Module', () => {
     const testApp = await createTestApp()
     app = testApp.server
     prismaClient = testApp.prisma
-    await prismaClient.phaseNutrient.deleteMany()
-    await prismaClient.nutrient.deleteMany()
+    await prismaClient.phaseNutrient.deleteMany({
+      where: { nutrient: { name: { in: nutrientNames } } },
+    })
+    await prismaClient.nutrient.deleteMany({ where: { name: { in: nutrientNames } } })
   })
 
   after(async () => {
-    await prismaClient.phaseNutrient.deleteMany()
-    await prismaClient.nutrient.deleteMany()
+    await prismaClient.phaseNutrient.deleteMany({
+      where: { nutrient: { name: { in: nutrientNames } } },
+    })
+    await prismaClient.nutrient.deleteMany({ where: { name: { in: nutrientNames } } })
     await teardownTestApp(app)
   })
 
@@ -54,7 +59,9 @@ describe('Nutrients API Feature Module', () => {
 
   test('POST /api/nutrients with null brand returns 409 on duplicate', async () => {
     // First POST — no brand field, controller normalizes to null
-    const first = await prismaClient.nutrient.create({ data: { name: 'NullBrandTest', brand: null } })
+    const first = await prismaClient.nutrient.create({
+      data: { brand: null, name: 'NullBrandTest' },
+    })
     const response = await app.inject({
       method: 'POST',
       payload: { name: 'NullBrandTest' },
@@ -117,7 +124,6 @@ describe('Nutrients API Feature Module', () => {
     const nutrient = await prismaClient.nutrient.create({ data: { name: 'Referenced' } })
     await prismaClient.phaseNutrient.create({
       data: {
-        appliesToPeriod: 'DAY',
         doseMlPerL: 1,
         growPhaseId: phase.id,
         nutrientId: nutrient.id,

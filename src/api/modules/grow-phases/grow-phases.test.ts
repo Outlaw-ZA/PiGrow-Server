@@ -135,6 +135,47 @@ describe('Grow Phases API Feature Module', () => {
     assert.equal(endAtResponse.statusCode, 400)
   })
 
+  test('POST and PUT /grow-phases round-trip nullable phase-wide pH bands', async () => {
+    const createResponse = await app.inject({
+      method: 'POST',
+      payload: {
+        durationDays: 21,
+        growCycleId: testGrowCycleId,
+        name: 'Phase-wide pH',
+        order: 2,
+        phMax: 6.3,
+        phMin: 5.7,
+        phTarget: 6,
+      },
+      url: '/api/grow-phases',
+    })
+    const created = JSON.parse(createResponse.body)
+    assert.equal(createResponse.statusCode, 201)
+    assert.equal(created.phMin, 5.7)
+    assert.equal(created.phTarget, 6)
+    assert.equal(created.phMax, 6.3)
+
+    const updateResponse = await app.inject({
+      method: 'PUT',
+      payload: { phMax: null, phMin: null, phTarget: 6.1 },
+      url: `/api/grow-phases/${created.id}`,
+    })
+    const updated = JSON.parse(updateResponse.body)
+    assert.equal(updateResponse.statusCode, 200)
+    assert.equal(updated.phMin, null)
+    assert.equal(updated.phTarget, 6.1)
+    assert.equal(updated.phMax, null)
+
+    const getResponse = await app.inject({
+      method: 'GET',
+      url: `/api/grow-phases/${created.id}`,
+    })
+    assert.deepEqual(
+      (({ phMin, phTarget, phMax }) => ({ phMax, phMin, phTarget }))(JSON.parse(getResponse.body)),
+      { phMax: null, phMin: null, phTarget: 6.1 },
+    )
+  })
+
   test('PUT /grow-phases/:id - Should accept a custom dayStartMinutes / dayDurationMinutes (12/12 photoperiod)', async () => {
     const response = await app.inject({
       method: 'PUT',

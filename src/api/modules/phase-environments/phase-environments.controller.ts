@@ -11,9 +11,6 @@ interface UpsertPhaseEnvironmentInput {
   co2Min?: number | null
   co2Max?: number | null
   co2Target?: number | null
-  phMin?: number | null
-  phTarget?: number | null
-  phMax?: number | null
 }
 
 export class PhaseEnvironmentsController {
@@ -73,9 +70,6 @@ export class PhaseEnvironmentsController {
         humidityMin: body.humidityMin ?? null,
         humidityTarget: body.humidityTarget ?? null,
         period,
-        phMax: body.phMax ?? null,
-        phMin: body.phMin ?? null,
-        phTarget: body.phTarget ?? null,
         tempMax: body.tempMax ?? null,
         tempMin: body.tempMin ?? null,
         tempTarget: body.tempTarget ?? null,
@@ -87,9 +81,6 @@ export class PhaseEnvironmentsController {
         humidityMax: body.humidityMax ?? null,
         humidityMin: body.humidityMin ?? null,
         humidityTarget: body.humidityTarget ?? null,
-        phMax: body.phMax ?? null,
-        phMin: body.phMin ?? null,
-        phTarget: body.phTarget ?? null,
         tempMax: body.tempMax ?? null,
         tempMin: body.tempMin ?? null,
         tempTarget: body.tempTarget ?? null,

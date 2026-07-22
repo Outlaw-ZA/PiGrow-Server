@@ -30,6 +30,9 @@ export type GrowPhaseAvgAggregateOutputType = {
   durationDays: number | null
   dayStartMinutes: number | null
   dayDurationMinutes: number | null
+  phMin: number | null
+  phTarget: number | null
+  phMax: number | null
 }
 
 export type GrowPhaseSumAggregateOutputType = {
@@ -37,6 +40,9 @@ export type GrowPhaseSumAggregateOutputType = {
   durationDays: number | null
   dayStartMinutes: number | null
   dayDurationMinutes: number | null
+  phMin: number | null
+  phTarget: number | null
+  phMax: number | null
 }
 
 export type GrowPhaseMinAggregateOutputType = {
@@ -50,6 +56,9 @@ export type GrowPhaseMinAggregateOutputType = {
   endAt: Date | null
   dayStartMinutes: number | null
   dayDurationMinutes: number | null
+  phMin: number | null
+  phTarget: number | null
+  phMax: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -65,6 +74,9 @@ export type GrowPhaseMaxAggregateOutputType = {
   endAt: Date | null
   dayStartMinutes: number | null
   dayDurationMinutes: number | null
+  phMin: number | null
+  phTarget: number | null
+  phMax: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -80,6 +92,9 @@ export type GrowPhaseCountAggregateOutputType = {
   endAt: number
   dayStartMinutes: number
   dayDurationMinutes: number
+  phMin: number
+  phTarget: number
+  phMax: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -90,6 +105,9 @@ export type GrowPhaseAvgAggregateInputType = {
   durationDays?: true
   dayStartMinutes?: true
   dayDurationMinutes?: true
+  phMin?: true
+  phTarget?: true
+  phMax?: true
 }
 
 export type GrowPhaseSumAggregateInputType = {
@@ -97,6 +115,9 @@ export type GrowPhaseSumAggregateInputType = {
   durationDays?: true
   dayStartMinutes?: true
   dayDurationMinutes?: true
+  phMin?: true
+  phTarget?: true
+  phMax?: true
 }
 
 export type GrowPhaseMinAggregateInputType = {
@@ -110,6 +131,9 @@ export type GrowPhaseMinAggregateInputType = {
   endAt?: true
   dayStartMinutes?: true
   dayDurationMinutes?: true
+  phMin?: true
+  phTarget?: true
+  phMax?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -125,6 +149,9 @@ export type GrowPhaseMaxAggregateInputType = {
   endAt?: true
   dayStartMinutes?: true
   dayDurationMinutes?: true
+  phMin?: true
+  phTarget?: true
+  phMax?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -140,6 +167,9 @@ export type GrowPhaseCountAggregateInputType = {
   endAt?: true
   dayStartMinutes?: true
   dayDurationMinutes?: true
+  phMin?: true
+  phTarget?: true
+  phMax?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -245,6 +275,9 @@ export type GrowPhaseGroupByOutputType = {
   endAt: Date | null
   dayStartMinutes: number
   dayDurationMinutes: number
+  phMin: number | null
+  phTarget: number | null
+  phMax: number | null
   createdAt: Date
   updatedAt: Date
   _count: GrowPhaseCountAggregateOutputType | null
@@ -280,6 +313,9 @@ export type GrowPhaseWhereInput = {
   endAt?: Prisma.DateTimeNullableFilter<'GrowPhase'> | Date | string | null
   dayStartMinutes?: Prisma.IntFilter<'GrowPhase'> | number
   dayDurationMinutes?: Prisma.IntFilter<'GrowPhase'> | number
+  phMin?: Prisma.FloatNullableFilter<'GrowPhase'> | number | null
+  phTarget?: Prisma.FloatNullableFilter<'GrowPhase'> | number | null
+  phMax?: Prisma.FloatNullableFilter<'GrowPhase'> | number | null
   createdAt?: Prisma.DateTimeFilter<'GrowPhase'> | Date | string
   updatedAt?: Prisma.DateTimeFilter<'GrowPhase'> | Date | string
   growCycle?: Prisma.XOR<Prisma.GrowCycleScalarRelationFilter, Prisma.GrowCycleWhereInput>
@@ -299,6 +335,9 @@ export type GrowPhaseOrderByWithRelationInput = {
   endAt?: Prisma.SortOrderInput | Prisma.SortOrder
   dayStartMinutes?: Prisma.SortOrder
   dayDurationMinutes?: Prisma.SortOrder
+  phMin?: Prisma.SortOrderInput | Prisma.SortOrder
+  phTarget?: Prisma.SortOrderInput | Prisma.SortOrder
+  phMax?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   growCycle?: Prisma.GrowCycleOrderByWithRelationInput
@@ -322,6 +361,9 @@ export type GrowPhaseWhereUniqueInput = Prisma.AtLeast<
     endAt?: Prisma.DateTimeNullableFilter<'GrowPhase'> | Date | string | null
     dayStartMinutes?: Prisma.IntFilter<'GrowPhase'> | number
     dayDurationMinutes?: Prisma.IntFilter<'GrowPhase'> | number
+    phMin?: Prisma.FloatNullableFilter<'GrowPhase'> | number | null
+    phTarget?: Prisma.FloatNullableFilter<'GrowPhase'> | number | null
+    phMax?: Prisma.FloatNullableFilter<'GrowPhase'> | number | null
     createdAt?: Prisma.DateTimeFilter<'GrowPhase'> | Date | string
     updatedAt?: Prisma.DateTimeFilter<'GrowPhase'> | Date | string
     growCycle?: Prisma.XOR<Prisma.GrowCycleScalarRelationFilter, Prisma.GrowCycleWhereInput>
@@ -343,6 +385,9 @@ export type GrowPhaseOrderByWithAggregationInput = {
   endAt?: Prisma.SortOrderInput | Prisma.SortOrder
   dayStartMinutes?: Prisma.SortOrder
   dayDurationMinutes?: Prisma.SortOrder
+  phMin?: Prisma.SortOrderInput | Prisma.SortOrder
+  phTarget?: Prisma.SortOrderInput | Prisma.SortOrder
+  phMax?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.GrowPhaseCountOrderByAggregateInput
@@ -370,6 +415,9 @@ export type GrowPhaseScalarWhereWithAggregatesInput = {
   endAt?: Prisma.DateTimeNullableWithAggregatesFilter<'GrowPhase'> | Date | string | null
   dayStartMinutes?: Prisma.IntWithAggregatesFilter<'GrowPhase'> | number
   dayDurationMinutes?: Prisma.IntWithAggregatesFilter<'GrowPhase'> | number
+  phMin?: Prisma.FloatNullableWithAggregatesFilter<'GrowPhase'> | number | null
+  phTarget?: Prisma.FloatNullableWithAggregatesFilter<'GrowPhase'> | number | null
+  phMax?: Prisma.FloatNullableWithAggregatesFilter<'GrowPhase'> | number | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<'GrowPhase'> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<'GrowPhase'> | Date | string
 }
@@ -384,6 +432,9 @@ export type GrowPhaseCreateInput = {
   endAt?: Date | string | null
   dayStartMinutes?: number
   dayDurationMinutes?: number
+  phMin?: number | null
+  phTarget?: number | null
+  phMax?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   growCycle: Prisma.GrowCycleCreateNestedOneWithoutPhasesInput
@@ -403,6 +454,9 @@ export type GrowPhaseUncheckedCreateInput = {
   endAt?: Date | string | null
   dayStartMinutes?: number
   dayDurationMinutes?: number
+  phMin?: number | null
+  phTarget?: number | null
+  phMax?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   environments?: Prisma.PhaseEnvironmentUncheckedCreateNestedManyWithoutGrowPhaseInput
@@ -420,6 +474,9 @@ export type GrowPhaseUpdateInput = {
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  phMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phTarget?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMax?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   growCycle?: Prisma.GrowCycleUpdateOneRequiredWithoutPhasesNestedInput
@@ -439,6 +496,9 @@ export type GrowPhaseUncheckedUpdateInput = {
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  phMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phTarget?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMax?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   environments?: Prisma.PhaseEnvironmentUncheckedUpdateManyWithoutGrowPhaseNestedInput
@@ -457,6 +517,9 @@ export type GrowPhaseCreateManyInput = {
   endAt?: Date | string | null
   dayStartMinutes?: number
   dayDurationMinutes?: number
+  phMin?: number | null
+  phTarget?: number | null
+  phMax?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -471,6 +534,9 @@ export type GrowPhaseUpdateManyMutationInput = {
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  phMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phTarget?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMax?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -486,6 +552,9 @@ export type GrowPhaseUncheckedUpdateManyInput = {
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  phMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phTarget?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMax?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -511,6 +580,9 @@ export type GrowPhaseCountOrderByAggregateInput = {
   endAt?: Prisma.SortOrder
   dayStartMinutes?: Prisma.SortOrder
   dayDurationMinutes?: Prisma.SortOrder
+  phMin?: Prisma.SortOrder
+  phTarget?: Prisma.SortOrder
+  phMax?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -520,6 +592,9 @@ export type GrowPhaseAvgOrderByAggregateInput = {
   durationDays?: Prisma.SortOrder
   dayStartMinutes?: Prisma.SortOrder
   dayDurationMinutes?: Prisma.SortOrder
+  phMin?: Prisma.SortOrder
+  phTarget?: Prisma.SortOrder
+  phMax?: Prisma.SortOrder
 }
 
 export type GrowPhaseMaxOrderByAggregateInput = {
@@ -533,6 +608,9 @@ export type GrowPhaseMaxOrderByAggregateInput = {
   endAt?: Prisma.SortOrder
   dayStartMinutes?: Prisma.SortOrder
   dayDurationMinutes?: Prisma.SortOrder
+  phMin?: Prisma.SortOrder
+  phTarget?: Prisma.SortOrder
+  phMax?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -548,6 +626,9 @@ export type GrowPhaseMinOrderByAggregateInput = {
   endAt?: Prisma.SortOrder
   dayStartMinutes?: Prisma.SortOrder
   dayDurationMinutes?: Prisma.SortOrder
+  phMin?: Prisma.SortOrder
+  phTarget?: Prisma.SortOrder
+  phMax?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -557,6 +638,9 @@ export type GrowPhaseSumOrderByAggregateInput = {
   durationDays?: Prisma.SortOrder
   dayStartMinutes?: Prisma.SortOrder
   dayDurationMinutes?: Prisma.SortOrder
+  phMin?: Prisma.SortOrder
+  phTarget?: Prisma.SortOrder
+  phMax?: Prisma.SortOrder
 }
 
 export type GrowPhaseScalarRelationFilter = {
@@ -655,6 +739,14 @@ export type GrowPhaseUncheckedUpdateManyWithoutGrowCycleNestedInput = {
   deleteMany?: Prisma.GrowPhaseScalarWhereInput | Prisma.GrowPhaseScalarWhereInput[]
 }
 
+export type NullableFloatFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type GrowPhaseCreateNestedOneWithoutEnvironmentsInput = {
   create?: Prisma.XOR<
     Prisma.GrowPhaseCreateWithoutEnvironmentsInput,
@@ -745,6 +837,9 @@ export type GrowPhaseCreateWithoutGrowCycleInput = {
   endAt?: Date | string | null
   dayStartMinutes?: number
   dayDurationMinutes?: number
+  phMin?: number | null
+  phTarget?: number | null
+  phMax?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   environments?: Prisma.PhaseEnvironmentCreateNestedManyWithoutGrowPhaseInput
@@ -762,6 +857,9 @@ export type GrowPhaseUncheckedCreateWithoutGrowCycleInput = {
   endAt?: Date | string | null
   dayStartMinutes?: number
   dayDurationMinutes?: number
+  phMin?: number | null
+  phTarget?: number | null
+  phMax?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   environments?: Prisma.PhaseEnvironmentUncheckedCreateNestedManyWithoutGrowPhaseInput
@@ -824,6 +922,9 @@ export type GrowPhaseScalarWhereInput = {
   endAt?: Prisma.DateTimeNullableFilter<'GrowPhase'> | Date | string | null
   dayStartMinutes?: Prisma.IntFilter<'GrowPhase'> | number
   dayDurationMinutes?: Prisma.IntFilter<'GrowPhase'> | number
+  phMin?: Prisma.FloatNullableFilter<'GrowPhase'> | number | null
+  phTarget?: Prisma.FloatNullableFilter<'GrowPhase'> | number | null
+  phMax?: Prisma.FloatNullableFilter<'GrowPhase'> | number | null
   createdAt?: Prisma.DateTimeFilter<'GrowPhase'> | Date | string
   updatedAt?: Prisma.DateTimeFilter<'GrowPhase'> | Date | string
 }
@@ -838,6 +939,9 @@ export type GrowPhaseCreateWithoutEnvironmentsInput = {
   endAt?: Date | string | null
   dayStartMinutes?: number
   dayDurationMinutes?: number
+  phMin?: number | null
+  phTarget?: number | null
+  phMax?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   growCycle: Prisma.GrowCycleCreateNestedOneWithoutPhasesInput
@@ -856,6 +960,9 @@ export type GrowPhaseUncheckedCreateWithoutEnvironmentsInput = {
   endAt?: Date | string | null
   dayStartMinutes?: number
   dayDurationMinutes?: number
+  phMin?: number | null
+  phTarget?: number | null
+  phMax?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   automationRules?: Prisma.AutomationRuleUncheckedCreateNestedManyWithoutGrowPhaseInput
@@ -900,6 +1007,9 @@ export type GrowPhaseUpdateWithoutEnvironmentsInput = {
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  phMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phTarget?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMax?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   growCycle?: Prisma.GrowCycleUpdateOneRequiredWithoutPhasesNestedInput
@@ -918,6 +1028,9 @@ export type GrowPhaseUncheckedUpdateWithoutEnvironmentsInput = {
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  phMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phTarget?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMax?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   automationRules?: Prisma.AutomationRuleUncheckedUpdateManyWithoutGrowPhaseNestedInput
@@ -934,6 +1047,9 @@ export type GrowPhaseCreateWithoutAutomationRulesInput = {
   endAt?: Date | string | null
   dayStartMinutes?: number
   dayDurationMinutes?: number
+  phMin?: number | null
+  phTarget?: number | null
+  phMax?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   growCycle: Prisma.GrowCycleCreateNestedOneWithoutPhasesInput
@@ -952,6 +1068,9 @@ export type GrowPhaseUncheckedCreateWithoutAutomationRulesInput = {
   endAt?: Date | string | null
   dayStartMinutes?: number
   dayDurationMinutes?: number
+  phMin?: number | null
+  phTarget?: number | null
+  phMax?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   environments?: Prisma.PhaseEnvironmentUncheckedCreateNestedManyWithoutGrowPhaseInput
@@ -996,6 +1115,9 @@ export type GrowPhaseUpdateWithoutAutomationRulesInput = {
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  phMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phTarget?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMax?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   growCycle?: Prisma.GrowCycleUpdateOneRequiredWithoutPhasesNestedInput
@@ -1014,6 +1136,9 @@ export type GrowPhaseUncheckedUpdateWithoutAutomationRulesInput = {
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  phMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phTarget?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMax?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   environments?: Prisma.PhaseEnvironmentUncheckedUpdateManyWithoutGrowPhaseNestedInput
@@ -1030,6 +1155,9 @@ export type GrowPhaseCreateWithoutPhaseNutrientsInput = {
   endAt?: Date | string | null
   dayStartMinutes?: number
   dayDurationMinutes?: number
+  phMin?: number | null
+  phTarget?: number | null
+  phMax?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   growCycle: Prisma.GrowCycleCreateNestedOneWithoutPhasesInput
@@ -1048,6 +1176,9 @@ export type GrowPhaseUncheckedCreateWithoutPhaseNutrientsInput = {
   endAt?: Date | string | null
   dayStartMinutes?: number
   dayDurationMinutes?: number
+  phMin?: number | null
+  phTarget?: number | null
+  phMax?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
   environments?: Prisma.PhaseEnvironmentUncheckedCreateNestedManyWithoutGrowPhaseInput
@@ -1092,6 +1223,9 @@ export type GrowPhaseUpdateWithoutPhaseNutrientsInput = {
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  phMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phTarget?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMax?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   growCycle?: Prisma.GrowCycleUpdateOneRequiredWithoutPhasesNestedInput
@@ -1110,6 +1244,9 @@ export type GrowPhaseUncheckedUpdateWithoutPhaseNutrientsInput = {
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  phMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phTarget?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMax?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   environments?: Prisma.PhaseEnvironmentUncheckedUpdateManyWithoutGrowPhaseNestedInput
@@ -1126,6 +1263,9 @@ export type GrowPhaseCreateManyGrowCycleInput = {
   endAt?: Date | string | null
   dayStartMinutes?: number
   dayDurationMinutes?: number
+  phMin?: number | null
+  phTarget?: number | null
+  phMax?: number | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1140,6 +1280,9 @@ export type GrowPhaseUpdateWithoutGrowCycleInput = {
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  phMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phTarget?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMax?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   environments?: Prisma.PhaseEnvironmentUpdateManyWithoutGrowPhaseNestedInput
@@ -1157,6 +1300,9 @@ export type GrowPhaseUncheckedUpdateWithoutGrowCycleInput = {
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  phMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phTarget?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMax?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   environments?: Prisma.PhaseEnvironmentUncheckedUpdateManyWithoutGrowPhaseNestedInput
@@ -1174,6 +1320,9 @@ export type GrowPhaseUncheckedUpdateManyWithoutGrowCycleInput = {
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  phMin?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phTarget?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  phMax?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1249,6 +1398,9 @@ export type GrowPhaseSelect<
     endAt?: boolean
     dayStartMinutes?: boolean
     dayDurationMinutes?: boolean
+    phMin?: boolean
+    phTarget?: boolean
+    phMax?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     growCycle?: boolean | Prisma.GrowCycleDefaultArgs<ExtArgs>
@@ -1274,6 +1426,9 @@ export type GrowPhaseSelectCreateManyAndReturn<
     endAt?: boolean
     dayStartMinutes?: boolean
     dayDurationMinutes?: boolean
+    phMin?: boolean
+    phTarget?: boolean
+    phMax?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     growCycle?: boolean | Prisma.GrowCycleDefaultArgs<ExtArgs>
@@ -1295,6 +1450,9 @@ export type GrowPhaseSelectUpdateManyAndReturn<
     endAt?: boolean
     dayStartMinutes?: boolean
     dayDurationMinutes?: boolean
+    phMin?: boolean
+    phTarget?: boolean
+    phMax?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     growCycle?: boolean | Prisma.GrowCycleDefaultArgs<ExtArgs>
@@ -1313,6 +1471,9 @@ export type GrowPhaseSelectScalar = {
   endAt?: boolean
   dayStartMinutes?: boolean
   dayDurationMinutes?: boolean
+  phMin?: boolean
+  phTarget?: boolean
+  phMax?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
@@ -1330,6 +1491,9 @@ export type GrowPhaseOmit<
   | 'endAt'
   | 'dayStartMinutes'
   | 'dayDurationMinutes'
+  | 'phMin'
+  | 'phTarget'
+  | 'phMax'
   | 'createdAt'
   | 'updatedAt',
   ExtArgs['result']['growPhase']
@@ -1376,6 +1540,9 @@ export type $GrowPhasePayload<
       endAt: Date | null
       dayStartMinutes: number
       dayDurationMinutes: number
+      phMin: number | null
+      phTarget: number | null
+      phMax: number | null
       createdAt: Date
       updatedAt: Date
     },
@@ -2001,6 +2168,9 @@ export interface GrowPhaseFieldRefs {
   readonly endAt: Prisma.FieldRef<'GrowPhase', 'DateTime'>
   readonly dayStartMinutes: Prisma.FieldRef<'GrowPhase', 'Int'>
   readonly dayDurationMinutes: Prisma.FieldRef<'GrowPhase', 'Int'>
+  readonly phMin: Prisma.FieldRef<'GrowPhase', 'Float'>
+  readonly phTarget: Prisma.FieldRef<'GrowPhase', 'Float'>
+  readonly phMax: Prisma.FieldRef<'GrowPhase', 'Float'>
   readonly createdAt: Prisma.FieldRef<'GrowPhase', 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<'GrowPhase', 'DateTime'>
 }

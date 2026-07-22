@@ -20,9 +20,6 @@ export default async function phaseNutrientsRoutes(app: FastifyInstance) {
     {
       schema: {
         params: Type.Object({ growPhaseId: Type.String() }),
-        querystring: Type.Object({
-          period: Type.Optional(Type.Union([Type.Literal('DAY'), Type.Literal('NIGHT')])),
-        }),
         response: {
           200: Type.Array(PhaseNutrientSchema),
           500: ErrorResponseSchema,
@@ -33,7 +30,7 @@ export default async function phaseNutrientsRoutes(app: FastifyInstance) {
       try {
         return reply.send(
           cast<(typeof PhaseNutrientSchema.static)[]>(
-            await controller.list(request.params.growPhaseId, request.query.period),
+            await controller.list(request.params.growPhaseId),
           ),
         )
       } catch (error) {

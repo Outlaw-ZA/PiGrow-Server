@@ -224,7 +224,10 @@ export default async function deviceRoutes(server: FastifyInstance) {
           await controller.getDeviceStateLogs(request.params.id, request.query),
         )
       } catch (error) {
-        server.log.error({ deviceId: request.params.id, err: error }, 'Device state log query failed')
+        server.log.error(
+          { deviceId: request.params.id, err: error },
+          'Device state log query failed',
+        )
         return reply.code(404).send({ error: 'Device state log query failed' })
       }
     },

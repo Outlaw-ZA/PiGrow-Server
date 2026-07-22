@@ -15,6 +15,9 @@ export const GrowPhaseResponseSchema = Type.Object({
   isActive: Type.Boolean(),
   name: Type.String(),
   order: Type.Integer(),
+  phMax: Type.Union([Type.Number(), Type.Null()]),
+  phMin: Type.Union([Type.Number(), Type.Null()]),
+  phTarget: Type.Union([Type.Number(), Type.Null()]),
   startAt: Type.Union([Type.String({ format: 'date' }), Type.Null()]),
   updatedAt: Type.String({ format: 'date-time' }),
 })
@@ -68,6 +71,15 @@ export const CreateGrowPhaseSchema = Type.Object({
     description: 'The sequential execution order index (e.g., 1, 2, 3)',
     minimum: 1,
   }),
+  phMax: Type.Optional(
+    Type.Union([Type.Number({ maximum: 14, minimum: 0, multipleOf: 0.01 }), Type.Null()]),
+  ),
+  phMin: Type.Optional(
+    Type.Union([Type.Number({ maximum: 14, minimum: 0, multipleOf: 0.01 }), Type.Null()]),
+  ),
+  phTarget: Type.Optional(
+    Type.Union([Type.Number({ maximum: 14, minimum: 0, multipleOf: 0.01 }), Type.Null()]),
+  ),
   startAt: Type.Optional(
     Type.String({
       description: 'Date (YYYY-MM-DD) when this phase actively started execution',
@@ -84,6 +96,15 @@ export const UpdateGrowPhaseSchema = Type.Object({
   isActive: Type.Optional(Type.Boolean()),
   name: Type.Optional(Type.String({ maxLength: 100 })),
   order: Type.Optional(Type.Integer({ minimum: 1 })),
+  phMax: Type.Optional(
+    Type.Union([Type.Number({ maximum: 14, minimum: 0, multipleOf: 0.01 }), Type.Null()]),
+  ),
+  phMin: Type.Optional(
+    Type.Union([Type.Number({ maximum: 14, minimum: 0, multipleOf: 0.01 }), Type.Null()]),
+  ),
+  phTarget: Type.Optional(
+    Type.Union([Type.Number({ maximum: 14, minimum: 0, multipleOf: 0.01 }), Type.Null()]),
+  ),
   startAt: Type.Optional(Type.String({ format: 'date' })),
 })
 

@@ -61,7 +61,12 @@ export default async function nutrientsRoutes(app: FastifyInstance) {
       schema: {
         body: UpdateNutrientSchema,
         params: Type.Object({ id: Type.String() }),
-        response: { 200: NutrientSchema, 404: ErrorResponseSchema, 409: NutrientConflictResponseSchema, 500: ErrorResponseSchema },
+        response: {
+          200: NutrientSchema,
+          404: ErrorResponseSchema,
+          409: NutrientConflictResponseSchema,
+          500: ErrorResponseSchema,
+        },
       },
     },
     async (request, reply) => {
@@ -71,11 +76,11 @@ export default async function nutrientsRoutes(app: FastifyInstance) {
             await controller.update(request.params.id, request.body),
           ),
         )
-      } catch (err) {
-        if (err instanceof NutrientsError) {
-          return reply.code(err.statusCode).send({ error: err.message })
+      } catch (error) {
+        if (error instanceof NutrientsError) {
+          return reply.code(error.statusCode).send({ error: error.message })
         }
-        throw err
+        throw error
       }
     },
   )

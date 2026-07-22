@@ -41,7 +41,6 @@ export type PhaseNutrientMinAggregateOutputType = {
   nutrientId: string | null
   doseMlPerL: number | null
   sortOrder: number | null
-  appliesToPeriod: $Enums.DayNightPeriod | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -52,7 +51,6 @@ export type PhaseNutrientMaxAggregateOutputType = {
   nutrientId: string | null
   doseMlPerL: number | null
   sortOrder: number | null
-  appliesToPeriod: $Enums.DayNightPeriod | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -63,7 +61,6 @@ export type PhaseNutrientCountAggregateOutputType = {
   nutrientId: number
   doseMlPerL: number
   sortOrder: number
-  appliesToPeriod: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -85,7 +82,6 @@ export type PhaseNutrientMinAggregateInputType = {
   nutrientId?: true
   doseMlPerL?: true
   sortOrder?: true
-  appliesToPeriod?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -96,7 +92,6 @@ export type PhaseNutrientMaxAggregateInputType = {
   nutrientId?: true
   doseMlPerL?: true
   sortOrder?: true
-  appliesToPeriod?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -107,7 +102,6 @@ export type PhaseNutrientCountAggregateInputType = {
   nutrientId?: true
   doseMlPerL?: true
   sortOrder?: true
-  appliesToPeriod?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -210,7 +204,6 @@ export type PhaseNutrientGroupByOutputType = {
   nutrientId: string
   doseMlPerL: number
   sortOrder: number
-  appliesToPeriod: $Enums.DayNightPeriod
   createdAt: Date
   updatedAt: Date
   _count: PhaseNutrientCountAggregateOutputType | null
@@ -242,7 +235,6 @@ export type PhaseNutrientWhereInput = {
   nutrientId?: Prisma.StringFilter<'PhaseNutrient'> | string
   doseMlPerL?: Prisma.FloatFilter<'PhaseNutrient'> | number
   sortOrder?: Prisma.IntFilter<'PhaseNutrient'> | number
-  appliesToPeriod?: Prisma.EnumDayNightPeriodFilter<'PhaseNutrient'> | $Enums.DayNightPeriod
   createdAt?: Prisma.DateTimeFilter<'PhaseNutrient'> | Date | string
   updatedAt?: Prisma.DateTimeFilter<'PhaseNutrient'> | Date | string
   growPhase?: Prisma.XOR<Prisma.GrowPhaseScalarRelationFilter, Prisma.GrowPhaseWhereInput>
@@ -255,7 +247,6 @@ export type PhaseNutrientOrderByWithRelationInput = {
   nutrientId?: Prisma.SortOrder
   doseMlPerL?: Prisma.SortOrder
   sortOrder?: Prisma.SortOrder
-  appliesToPeriod?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   growPhase?: Prisma.GrowPhaseOrderByWithRelationInput
@@ -265,7 +256,7 @@ export type PhaseNutrientOrderByWithRelationInput = {
 export type PhaseNutrientWhereUniqueInput = Prisma.AtLeast<
   {
     id?: string
-    growPhaseId_nutrientId_appliesToPeriod?: Prisma.PhaseNutrientGrowPhaseIdNutrientIdAppliesToPeriodCompoundUniqueInput
+    growPhaseId_nutrientId?: Prisma.PhaseNutrientGrowPhaseIdNutrientIdCompoundUniqueInput
     AND?: Prisma.PhaseNutrientWhereInput | Prisma.PhaseNutrientWhereInput[]
     OR?: Prisma.PhaseNutrientWhereInput[]
     NOT?: Prisma.PhaseNutrientWhereInput | Prisma.PhaseNutrientWhereInput[]
@@ -273,13 +264,12 @@ export type PhaseNutrientWhereUniqueInput = Prisma.AtLeast<
     nutrientId?: Prisma.StringFilter<'PhaseNutrient'> | string
     doseMlPerL?: Prisma.FloatFilter<'PhaseNutrient'> | number
     sortOrder?: Prisma.IntFilter<'PhaseNutrient'> | number
-    appliesToPeriod?: Prisma.EnumDayNightPeriodFilter<'PhaseNutrient'> | $Enums.DayNightPeriod
     createdAt?: Prisma.DateTimeFilter<'PhaseNutrient'> | Date | string
     updatedAt?: Prisma.DateTimeFilter<'PhaseNutrient'> | Date | string
     growPhase?: Prisma.XOR<Prisma.GrowPhaseScalarRelationFilter, Prisma.GrowPhaseWhereInput>
     nutrient?: Prisma.XOR<Prisma.NutrientScalarRelationFilter, Prisma.NutrientWhereInput>
   },
-  'id' | 'growPhaseId_nutrientId_appliesToPeriod'
+  'id' | 'growPhaseId_nutrientId'
 >
 
 export type PhaseNutrientOrderByWithAggregationInput = {
@@ -288,7 +278,6 @@ export type PhaseNutrientOrderByWithAggregationInput = {
   nutrientId?: Prisma.SortOrder
   doseMlPerL?: Prisma.SortOrder
   sortOrder?: Prisma.SortOrder
-  appliesToPeriod?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.PhaseNutrientCountOrderByAggregateInput
@@ -311,9 +300,6 @@ export type PhaseNutrientScalarWhereWithAggregatesInput = {
   nutrientId?: Prisma.StringWithAggregatesFilter<'PhaseNutrient'> | string
   doseMlPerL?: Prisma.FloatWithAggregatesFilter<'PhaseNutrient'> | number
   sortOrder?: Prisma.IntWithAggregatesFilter<'PhaseNutrient'> | number
-  appliesToPeriod?:
-    | Prisma.EnumDayNightPeriodWithAggregatesFilter<'PhaseNutrient'>
-    | $Enums.DayNightPeriod
   createdAt?: Prisma.DateTimeWithAggregatesFilter<'PhaseNutrient'> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<'PhaseNutrient'> | Date | string
 }
@@ -322,7 +308,6 @@ export type PhaseNutrientCreateInput = {
   id?: string
   doseMlPerL: number
   sortOrder?: number
-  appliesToPeriod: $Enums.DayNightPeriod
   createdAt?: Date | string
   updatedAt?: Date | string
   growPhase: Prisma.GrowPhaseCreateNestedOneWithoutPhaseNutrientsInput
@@ -335,7 +320,6 @@ export type PhaseNutrientUncheckedCreateInput = {
   nutrientId: string
   doseMlPerL: number
   sortOrder?: number
-  appliesToPeriod: $Enums.DayNightPeriod
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -344,7 +328,6 @@ export type PhaseNutrientUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   doseMlPerL?: Prisma.FloatFieldUpdateOperationsInput | number
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
-  appliesToPeriod?: Prisma.EnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   growPhase?: Prisma.GrowPhaseUpdateOneRequiredWithoutPhaseNutrientsNestedInput
@@ -357,7 +340,6 @@ export type PhaseNutrientUncheckedUpdateInput = {
   nutrientId?: Prisma.StringFieldUpdateOperationsInput | string
   doseMlPerL?: Prisma.FloatFieldUpdateOperationsInput | number
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
-  appliesToPeriod?: Prisma.EnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -368,7 +350,6 @@ export type PhaseNutrientCreateManyInput = {
   nutrientId: string
   doseMlPerL: number
   sortOrder?: number
-  appliesToPeriod: $Enums.DayNightPeriod
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -377,7 +358,6 @@ export type PhaseNutrientUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   doseMlPerL?: Prisma.FloatFieldUpdateOperationsInput | number
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
-  appliesToPeriod?: Prisma.EnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -388,7 +368,6 @@ export type PhaseNutrientUncheckedUpdateManyInput = {
   nutrientId?: Prisma.StringFieldUpdateOperationsInput | string
   doseMlPerL?: Prisma.FloatFieldUpdateOperationsInput | number
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
-  appliesToPeriod?: Prisma.EnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -403,10 +382,9 @@ export type PhaseNutrientOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
-export type PhaseNutrientGrowPhaseIdNutrientIdAppliesToPeriodCompoundUniqueInput = {
+export type PhaseNutrientGrowPhaseIdNutrientIdCompoundUniqueInput = {
   growPhaseId: string
   nutrientId: string
-  appliesToPeriod: $Enums.DayNightPeriod
 }
 
 export type PhaseNutrientCountOrderByAggregateInput = {
@@ -415,7 +393,6 @@ export type PhaseNutrientCountOrderByAggregateInput = {
   nutrientId?: Prisma.SortOrder
   doseMlPerL?: Prisma.SortOrder
   sortOrder?: Prisma.SortOrder
-  appliesToPeriod?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -431,7 +408,6 @@ export type PhaseNutrientMaxOrderByAggregateInput = {
   nutrientId?: Prisma.SortOrder
   doseMlPerL?: Prisma.SortOrder
   sortOrder?: Prisma.SortOrder
-  appliesToPeriod?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -442,7 +418,6 @@ export type PhaseNutrientMinOrderByAggregateInput = {
   nutrientId?: Prisma.SortOrder
   doseMlPerL?: Prisma.SortOrder
   sortOrder?: Prisma.SortOrder
-  appliesToPeriod?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -636,7 +611,6 @@ export type PhaseNutrientCreateWithoutGrowPhaseInput = {
   id?: string
   doseMlPerL: number
   sortOrder?: number
-  appliesToPeriod: $Enums.DayNightPeriod
   createdAt?: Date | string
   updatedAt?: Date | string
   nutrient: Prisma.NutrientCreateNestedOneWithoutPhaseNutrientsInput
@@ -647,7 +621,6 @@ export type PhaseNutrientUncheckedCreateWithoutGrowPhaseInput = {
   nutrientId: string
   doseMlPerL: number
   sortOrder?: number
-  appliesToPeriod: $Enums.DayNightPeriod
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -704,7 +677,6 @@ export type PhaseNutrientScalarWhereInput = {
   nutrientId?: Prisma.StringFilter<'PhaseNutrient'> | string
   doseMlPerL?: Prisma.FloatFilter<'PhaseNutrient'> | number
   sortOrder?: Prisma.IntFilter<'PhaseNutrient'> | number
-  appliesToPeriod?: Prisma.EnumDayNightPeriodFilter<'PhaseNutrient'> | $Enums.DayNightPeriod
   createdAt?: Prisma.DateTimeFilter<'PhaseNutrient'> | Date | string
   updatedAt?: Prisma.DateTimeFilter<'PhaseNutrient'> | Date | string
 }
@@ -713,7 +685,6 @@ export type PhaseNutrientCreateWithoutNutrientInput = {
   id?: string
   doseMlPerL: number
   sortOrder?: number
-  appliesToPeriod: $Enums.DayNightPeriod
   createdAt?: Date | string
   updatedAt?: Date | string
   growPhase: Prisma.GrowPhaseCreateNestedOneWithoutPhaseNutrientsInput
@@ -724,7 +695,6 @@ export type PhaseNutrientUncheckedCreateWithoutNutrientInput = {
   growPhaseId: string
   doseMlPerL: number
   sortOrder?: number
-  appliesToPeriod: $Enums.DayNightPeriod
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -775,7 +745,6 @@ export type PhaseNutrientCreateManyGrowPhaseInput = {
   nutrientId: string
   doseMlPerL: number
   sortOrder?: number
-  appliesToPeriod: $Enums.DayNightPeriod
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -784,7 +753,6 @@ export type PhaseNutrientUpdateWithoutGrowPhaseInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   doseMlPerL?: Prisma.FloatFieldUpdateOperationsInput | number
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
-  appliesToPeriod?: Prisma.EnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   nutrient?: Prisma.NutrientUpdateOneRequiredWithoutPhaseNutrientsNestedInput
@@ -795,7 +763,6 @@ export type PhaseNutrientUncheckedUpdateWithoutGrowPhaseInput = {
   nutrientId?: Prisma.StringFieldUpdateOperationsInput | string
   doseMlPerL?: Prisma.FloatFieldUpdateOperationsInput | number
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
-  appliesToPeriod?: Prisma.EnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -805,7 +772,6 @@ export type PhaseNutrientUncheckedUpdateManyWithoutGrowPhaseInput = {
   nutrientId?: Prisma.StringFieldUpdateOperationsInput | string
   doseMlPerL?: Prisma.FloatFieldUpdateOperationsInput | number
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
-  appliesToPeriod?: Prisma.EnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -815,7 +781,6 @@ export type PhaseNutrientCreateManyNutrientInput = {
   growPhaseId: string
   doseMlPerL: number
   sortOrder?: number
-  appliesToPeriod: $Enums.DayNightPeriod
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -824,7 +789,6 @@ export type PhaseNutrientUpdateWithoutNutrientInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   doseMlPerL?: Prisma.FloatFieldUpdateOperationsInput | number
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
-  appliesToPeriod?: Prisma.EnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   growPhase?: Prisma.GrowPhaseUpdateOneRequiredWithoutPhaseNutrientsNestedInput
@@ -835,7 +799,6 @@ export type PhaseNutrientUncheckedUpdateWithoutNutrientInput = {
   growPhaseId?: Prisma.StringFieldUpdateOperationsInput | string
   doseMlPerL?: Prisma.FloatFieldUpdateOperationsInput | number
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
-  appliesToPeriod?: Prisma.EnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -845,7 +808,6 @@ export type PhaseNutrientUncheckedUpdateManyWithoutNutrientInput = {
   growPhaseId?: Prisma.StringFieldUpdateOperationsInput | string
   doseMlPerL?: Prisma.FloatFieldUpdateOperationsInput | number
   sortOrder?: Prisma.IntFieldUpdateOperationsInput | number
-  appliesToPeriod?: Prisma.EnumDayNightPeriodFieldUpdateOperationsInput | $Enums.DayNightPeriod
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -859,7 +821,6 @@ export type PhaseNutrientSelect<
     nutrientId?: boolean
     doseMlPerL?: boolean
     sortOrder?: boolean
-    appliesToPeriod?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     growPhase?: boolean | Prisma.GrowPhaseDefaultArgs<ExtArgs>
@@ -877,7 +838,6 @@ export type PhaseNutrientSelectCreateManyAndReturn<
     nutrientId?: boolean
     doseMlPerL?: boolean
     sortOrder?: boolean
-    appliesToPeriod?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     growPhase?: boolean | Prisma.GrowPhaseDefaultArgs<ExtArgs>
@@ -895,7 +855,6 @@ export type PhaseNutrientSelectUpdateManyAndReturn<
     nutrientId?: boolean
     doseMlPerL?: boolean
     sortOrder?: boolean
-    appliesToPeriod?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     growPhase?: boolean | Prisma.GrowPhaseDefaultArgs<ExtArgs>
@@ -910,7 +869,6 @@ export type PhaseNutrientSelectScalar = {
   nutrientId?: boolean
   doseMlPerL?: boolean
   sortOrder?: boolean
-  appliesToPeriod?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
@@ -918,14 +876,7 @@ export type PhaseNutrientSelectScalar = {
 export type PhaseNutrientOmit<
   ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
 > = runtime.Types.Extensions.GetOmit<
-  | 'id'
-  | 'growPhaseId'
-  | 'nutrientId'
-  | 'doseMlPerL'
-  | 'sortOrder'
-  | 'appliesToPeriod'
-  | 'createdAt'
-  | 'updatedAt',
+  'id' | 'growPhaseId' | 'nutrientId' | 'doseMlPerL' | 'sortOrder' | 'createdAt' | 'updatedAt',
   ExtArgs['result']['phaseNutrient']
 >
 export type PhaseNutrientInclude<
@@ -962,7 +913,6 @@ export type $PhaseNutrientPayload<
       nutrientId: string
       doseMlPerL: number
       sortOrder: number
-      appliesToPeriod: $Enums.DayNightPeriod
       createdAt: Date
       updatedAt: Date
     },
@@ -1568,7 +1518,6 @@ export interface PhaseNutrientFieldRefs {
   readonly nutrientId: Prisma.FieldRef<'PhaseNutrient', 'String'>
   readonly doseMlPerL: Prisma.FieldRef<'PhaseNutrient', 'Float'>
   readonly sortOrder: Prisma.FieldRef<'PhaseNutrient', 'Int'>
-  readonly appliesToPeriod: Prisma.FieldRef<'PhaseNutrient', 'DayNightPeriod'>
   readonly createdAt: Prisma.FieldRef<'PhaseNutrient', 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<'PhaseNutrient', 'DateTime'>
 }

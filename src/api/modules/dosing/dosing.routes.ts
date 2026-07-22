@@ -24,11 +24,7 @@ export default async function dosingRoutes(app: FastifyInstance) {
       try {
         return reply.send(
           cast<typeof DosingPreviewResponseSchema.static>(
-            await controller.preview(
-              request.params.growPhaseId,
-              request.body.period,
-              request.body.reservoirLiters,
-            ),
+            await controller.preview(request.params.growPhaseId, request.body.reservoirLiters),
           ),
         )
       } catch (error) {

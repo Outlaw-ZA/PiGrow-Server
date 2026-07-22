@@ -77,12 +77,14 @@ export async function handleTelemetry(topic: string, messageBuffer: Buffer): Pro
     // The heartbeat endpoint is unreachable — telemetry presence is the only
     // Reliable liveness signal.
     if (sensor.controller.status !== 'ONLINE') {
-      await prisma.controller.update({
-        data: { status: 'ONLINE', updatedAt: new Date() },
-        where: { id: sensor.controller.id },
-      }).catch((error: Error) =>
-        console.error('[telemetry] Failed to update controller status:', error),
-      )
+      await prisma.controller
+        .update({
+          data: { status: 'ONLINE', updatedAt: new Date() },
+          where: { id: sensor.controller.id },
+        })
+        .catch((error: Error) =>
+          console.error('[telemetry] Failed to update controller status:', error),
+        )
     }
 
     console.log(

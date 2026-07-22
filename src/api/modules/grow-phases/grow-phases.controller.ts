@@ -10,6 +10,9 @@ interface CreatePhaseInput {
   endAt?: string
   dayStartMinutes?: number
   dayDurationMinutes?: number
+  phMin?: number | null
+  phTarget?: number | null
+  phMax?: number | null
 }
 
 interface UpdatePhaseInput {
@@ -21,6 +24,9 @@ interface UpdatePhaseInput {
   endAt?: string
   dayStartMinutes?: number
   dayDurationMinutes?: number
+  phMin?: number | null
+  phTarget?: number | null
+  phMax?: number | null
 }
 
 export class GrowPhasesController {

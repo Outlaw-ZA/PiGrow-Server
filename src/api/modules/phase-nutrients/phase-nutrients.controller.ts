@@ -18,10 +18,10 @@ export class PhaseNutrientsError extends Error {
 export class PhaseNutrientsController {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async list(growPhaseId: string, period?: 'DAY' | 'NIGHT') {
+  async list(growPhaseId: string) {
     return await this.prisma.phaseNutrient.findMany({
-      orderBy: [{ appliesToPeriod: 'asc' }, { sortOrder: 'asc' }, { createdAt: 'asc' }],
-      where: { ...(period ? { appliesToPeriod: period } : {}), growPhaseId },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+      where: { growPhaseId },
     })
   }
 
@@ -34,7 +34,6 @@ export class PhaseNutrientsController {
     try {
       return await this.prisma.phaseNutrient.create({
         data: {
-          appliesToPeriod: payload.appliesToPeriod,
           doseMlPerL: payload.doseMlPerL,
           growPhaseId,
           nutrientId: payload.nutrientId,
@@ -47,18 +46,14 @@ export class PhaseNutrientsController {
       }
       const existing = await this.prisma.phaseNutrient.findFirst({
         select: { id: true },
-        where: {
-          appliesToPeriod: payload.appliesToPeriod,
-          growPhaseId,
-          nutrientId: payload.nutrientId,
-        },
+        where: { growPhaseId, nutrientId: payload.nutrientId },
       })
       throw new PhaseNutrientsError('PHASE_NUTRIENT_CONFLICT', 409, existing?.id)
     }
   }
 
   async update(growPhaseId: string, id: string, payload: UpdatePhaseNutrientPayload) {
-    const existing = await this.prisma.phaseNutrient.findUnique({ where: { id, growPhaseId } })
+    const existing = await this.prisma.phaseNutrient.findUnique({ where: { growPhaseId, id } })
     if (!existing) {
       throw new PhaseNutrientsError('PHASE_NUTRIENT_NOT_FOUND', 404)
     }
@@ -66,9 +61,6 @@ export class PhaseNutrientsController {
     try {
       return await this.prisma.phaseNutrient.update({
         data: {
-          ...(payload.appliesToPeriod !== undefined
-            ? { appliesToPeriod: payload.appliesToPeriod }
-            : {}),
           ...(payload.doseMlPerL !== undefined ? { doseMlPerL: payload.doseMlPerL } : {}),
           ...(payload.sortOrder !== undefined ? { sortOrder: payload.sortOrder } : {}),
         },
@@ -81,9 +73,6 @@ export class PhaseNutrientsController {
       const conflicting = await this.prisma.phaseNutrient.findFirst({
         select: { id: true },
         where: {
-          ...(payload.appliesToPeriod !== undefined
-            ? { appliesToPeriod: payload.appliesToPeriod }
-            : { appliesToPeriod: existing.appliesToPeriod }),
           growPhaseId: existing.growPhaseId,
           id: { not: id },
           nutrientId: existing.nutrientId,
@@ -94,7 +83,7 @@ export class PhaseNutrientsController {
   }
 
   async remove(growPhaseId: string, id: string) {
-    const existing = await this.prisma.phaseNutrient.findUnique({ where: { id, growPhaseId } })
+    const existing = await this.prisma.phaseNutrient.findUnique({ where: { growPhaseId, id } })
     if (!existing) {
       throw new PhaseNutrientsError('PHASE_NUTRIENT_NOT_FOUND', 404)
     }
