@@ -14,8 +14,6 @@ describe('Dosing preview API', () => {
     const testApp = await createTestApp()
     app = testApp.server
     prismaClient = testApp.prisma
-    await prismaClient.phaseNutrient.deleteMany()
-    await prismaClient.phaseEnvironment.deleteMany()
     await prismaClient.nutrient.deleteMany({ where: { name: { startsWith: 'DosingTest-' } } })
 
     const controller = await prismaClient.controller.create({
