@@ -6,7 +6,7 @@ import { commandTracker } from './command-tracker.js'
 import { getSocketEmitter } from './socket-emitter.js'
 import type { DeviceAction as DeviceActionLiteral } from '../generated/client/enums.js'
 
-const TICK_MS = 60_000
+const TICK_MS = 30_000
 
 /**
  * Automation scheduler. Runs every TICK_MS. For each controller with an active

@@ -30,6 +30,8 @@ services:
     depends_on:
       - mqtt-broker
       - postgres-db # Ensures the database starts before the backend server
+    ports:
+      - 4000:4000
     networks:
       - iot-network
 
