@@ -19,7 +19,7 @@ export function getWarningCodes(): readonly WarningCode[] {
 }
 
 export const DosingPreviewRequestSchema = Type.Object({
-  reservoirLiters: Type.Number({ maximum: 100000, minimum: 0 }),
+  reservoirLiters: Type.Number({ maximum: 100_000, minimum: 0 }),
 })
 
 export const DosingPreviewResponseSchema = Type.Object({

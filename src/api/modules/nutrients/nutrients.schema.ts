@@ -11,13 +11,13 @@ export const NutrientSchema = Type.Object({
 
 export const CreateNutrientSchema = Type.Object({
   brand: Type.Optional(Type.String({ maxLength: 200 })),
-  name: Type.String({ minLength: 1, maxLength: 200 }),
+  name: Type.String({ maxLength: 200, minLength: 1 }),
   notes: Type.Optional(Type.String()),
 })
 
 export const UpdateNutrientSchema = Type.Object({
   brand: Type.Optional(Type.String({ maxLength: 200 })),
-  name: Type.Optional(Type.String({ minLength: 1, maxLength: 200 })),
+  name: Type.Optional(Type.String({ maxLength: 200, minLength: 1 })),
   notes: Type.Optional(Type.String()),
 })
 
